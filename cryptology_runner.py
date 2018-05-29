@@ -8,6 +8,7 @@ import datetime # to be used in fileName
 
 
 
+
 encryption_set = {"vigenere", "vigenere_multiplicative", # the set containing available encryption options
                   "vigenere_exponential", "rotation"}
 
