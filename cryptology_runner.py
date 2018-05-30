@@ -8,7 +8,7 @@ import datetime # to be used in fileName
 
 
 
-
+# Sets containing available options for encryption/decryption. Add to this.
 encryption_set = {"vigenere", "vigenere_multiplicative", # the set containing available encryption options
                   "vigenere_exponential", "rotation"}
 
@@ -36,7 +36,7 @@ def main():
 
 
     # forever while loop to continually take in user input and executing commands
-    while(True):
+    while True:
 
         # Obtain information from the user command
         cipher, encrypt, data, output_location = parse_user_input()
@@ -58,6 +58,7 @@ def usage():
     print(*both_set, sep=', ')
     print(*decryption_only_set, sep='(Decryption only), ')
 
+
 # Parse user input and return relevant information
 def parse_user_input():
     """
@@ -70,24 +71,13 @@ def parse_user_input():
     """
 
 
-    # Default return variables
-    cipher = ""  # This stores the cipher type that the user wants to use
-    encrypt = None  # This decides whether encryption or decryption is used
-    data = ""  # This is the info to be processed
-    output_location = ""  # the output location of the generated file
-
 
 
     statement = input("Enter statement: ") # obtain user input
 
     # While the statement is invalid, keep prompting the user. If valid, break from loop
-    while(True):
+    while True:
 
-        # Refresh important variables for the next command
-        cipher = ""  # This stores the cipher type that the user wants to use
-        encrypt = None  # This decides whether encryption or decryption is used
-        data = ""  # This is the info to be processed
-        output_location = ""  # the output location of the generated file
 
         commands = statement.split() #  split the statement into an array of words
 
@@ -257,15 +247,17 @@ def parse_user_input():
 
     return cipher, encrypt, data, output_location
 
+
 # Print data and the output location
 def print_data_and_location(data, output_location):
 
     print("\nTHIS IS THE DATA: \n" + data)
-    print(("*******************************************************"))
+    print("*******************************************************")
     print("\nNEW FILE LOCATED HERE: " + output_location)
     print("TYPE \"info\" FOR MORE INFORMATION ON FURTHER PROMPTS.\n")
 
-# execute encryption/decryption on the data, save the output, and print out eh output
+
+# execute encryption/decryption on the data, save the output, and print out the output
 def execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
 
 
@@ -276,13 +268,18 @@ def execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
         exec("from Cryptanalysis import " + cipher)
         output = eval(cipher + ".decrypt(data, output_location)")
 
-    print(("*******************************************************"))
+    print("*******************************************************")
     print("\nTHIS IS THE OUTPUT:\n" + output)
 
     #  WRITE TO THE PROPER FILE
     new_file = open(output_location, "w", encoding="utf-8")
     new_file.write(output)
     new_file.close()
+
+
+
+
+
 
 
 # Call the main function
