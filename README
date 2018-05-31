@@ -12,6 +12,7 @@ To decrypt, type: "-d " + "text*" + decryption_type + name_and_location_of_decry
 
 To print out the available cipher types, type "help"
 To exit the program, type "exit"
+To clear files in decrypted and encrypted, type "clear"
 
 Encryption/Decryption types available: vigenere, rotation, ...
 

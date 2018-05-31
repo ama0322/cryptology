@@ -15,7 +15,7 @@ def take_char_set(char_sets):
     in order to make sure that it is a valid selection
 
     :param char_sets: the list of all character sets
-    :return: the selection
+    :return: (string) the selection
     """
 
 

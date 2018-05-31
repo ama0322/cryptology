@@ -1,5 +1,5 @@
 import datetime # to be used in fileName
-
+import os # to delete files in decrypted and encrypted
 
 
 
@@ -18,8 +18,7 @@ decryption_set = {"vigenere", "vigenere_multiplicative", # the set containing av
 both_set = encryption_set & decryption_set # the set containing options in both encryption_list and decryption_list
 decryption_only_set = decryption_set - encryption_set # the set containing options only in decryption_list
 
-
-
+last = "" # Store the path to the last created encrypted file
 
 
 
@@ -40,6 +39,8 @@ def main():
 
         # Obtain information from the user command
         cipher, encrypt, data, output_location = parse_user_input()
+        global last
+        last = output_location
 
         # print out the data, and let the user know where the output location is
         print_data_and_location( data, output_location )
@@ -90,7 +91,6 @@ def parse_user_input():
 
 
 
-
         # PROCESS THE FIRST WORD IN THE STATEMENT
         # If command is "help", print usage, and ask for another statement
         if commands[0] == "help":
@@ -117,6 +117,18 @@ def parse_user_input():
                 statement = input("No arguments are supplied! Try again: ")
                 continue
 
+        elif commands[0] == "clear":
+            # delete files in /Decrypted
+            for file in os.listdir("Decrypted"):
+                    os.unlink("Decrypted/" + file)
+            # delete files in /Encrypted
+            for file in os.listdir("Encrypted"):
+                    os.unlink("Encrypted/" + file)
+
+            # Obtain next command
+            statement = input("Enter statement: ")  # obtain user input
+            continue
+
         else:
             statement = input("Unrecognized command! Try again: ")
             continue
@@ -130,7 +142,23 @@ def parse_user_input():
 
         # PROCESS THE INPUT TEXT/FILE (second part) in the statement.
         index = 1  # This is the current index for the array statement
-        if commands[index][0] == "\"": # Test if a string is entered(with quotation marks)
+        if commands[index] == "last":
+
+            file_given = True # update file_given
+
+            #  open the file and store its contents in the string data
+            try:
+                my_file = open(last, "r", encoding="utf-8")
+                data = my_file.read()
+                my_file.close()
+            except IOError:
+                statement = input("There is no last file! Try again: ")
+                continue
+
+            # update index
+            index = index + 1
+
+        elif commands[index][0] == "\"": # Test if a string is entered(with quotation marks)
 
             file_given = False # update file_given
 
@@ -151,8 +179,7 @@ def parse_user_input():
         # Otherwise, a file is given
         else:
 
-            # update file_given
-            file_given = True
+            file_given = True # update file_given
 
             #  open the file and store its contents in the string data
             try:
@@ -262,10 +289,10 @@ def execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
 
 
     if encrypt:
-        exec("from Cryptography import " + cipher)
+        exec("from Encryption import " + cipher)
         output = eval(cipher + ".encrypt(data, output_location)")
     else:
-        exec("from Cryptanalysis import " + cipher)
+        exec("from Decryption import " + cipher)
         output = eval(cipher + ".decrypt(data, output_location)")
 
     print("*******************************************************")
