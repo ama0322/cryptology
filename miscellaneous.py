@@ -1,9 +1,13 @@
 char_sets = ["unicode", "ascii", "extended_ascii"] #  unicode has max val of 1114111,
-                                                   #  ascii has max val of 128
-                                                   #  extended_ascii has max val of 128
+                                                   #  ascii has max val of 127
+                                                   #  extended_ascii has max val of 255
 
 
-
+char_set_to_end_char = {
+    "ascii": 127,
+    "extended_ascii": 255,
+    "unicode": 1114111
+}
 
 
 
@@ -16,6 +20,7 @@ def take_char_set(char_sets):
 
     :param char_sets: the list of all character sets
     :return: (string) the selection
+    :return: (integer) the integer form of the last character of the character set
     """
 
 
@@ -46,15 +51,21 @@ def take_char_set(char_sets):
         if broken:
             break
 
-
         # If here, that means the entry was invalid. Loop again
         previous_entry_invalid = True
 
 
-        # END OF FOREVER LOOP TO TAKE A CHARACTER SET
+    # END OF FOREVER LOOP TO TAKE A CHARACTER SET
 
 
-    return selection
+
+    # figure out the end_char of the character set
+    end_char = char_set_to_end_char.get(selection)
+
+
+
+
+    return selection, end_char
 #  END OF DEF TAKE_CHAR_SET
 
 

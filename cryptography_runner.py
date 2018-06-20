@@ -39,6 +39,8 @@ def main():
 
         # Obtain information from the user command
         cipher, encrypt, data, output_location = parse_user_input()
+
+        # Set up the global variable last for next iteration
         global last
         last = output_location
 
@@ -118,12 +120,12 @@ def parse_user_input():
                 continue
 
         elif commands[0] == "clear":
-            # delete files in /Decrypted
-            for file in os.listdir("Decrypted"):
-                    os.unlink("Decrypted/" + file)
-            # delete files in /Encrypted
-            for file in os.listdir("Encrypted"):
-                    os.unlink("Encrypted/" + file)
+            # delete files in /Files_Decrypted
+            for file in os.listdir("Files_Decrypted"):
+                    os.unlink("Files_Decrypted/" + file)
+            # delete files in /Files_Encrypted
+            for file in os.listdir("Files_Encrypted"):
+                    os.unlink("Files_Encrypted/" + file)
 
             # Obtain next command
             statement = input("Enter statement: ")  # obtain user input
@@ -239,15 +241,15 @@ def parse_user_input():
             # encrypted.txt
             if file_given:
                 try:
-                    output_location = "Encrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_" + cipher + \
+                    output_location = "Files_Encrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_" + cipher + \
                                       "_encrypted_" + \
                                       commands[1][commands[1].rindex("/") + 1:]
                 except ValueError:
-                    output_location = "Encrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_" + cipher + \
+                    output_location = "Files_Encrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_" + cipher + \
                                       "_encrypted_" + \
                                       commands[1]
             else:
-                output_location = "Encrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_" + cipher + "_encrypted"
+                output_location = "Files_Encrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_" + cipher + "_encrypted"
 
         # else decrypt
         else:
@@ -255,13 +257,13 @@ def parse_user_input():
             # decrypted.txt
             if file_given:
                 try:
-                    output_location = "Decrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_DECRYPTED_" + \
+                    output_location = "Files_Decrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_DECRYPTED_" + \
                                       commands[1][commands[1].rindex("/") + 1:]
                 except ValueError:
-                    output_location = "Decrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_DECRYPTED_" + \
+                    output_location = "Files_Decrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_DECRYPTED_" + \
                                       commands[1]
             else:
-                output_location = "Decrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_DECRYPTED"
+                output_location = "Files_Decrypted/" + now.strftime("%Y-%m-%d_h%Hm%Ms%S") + "_DECRYPTED"
 
         # take input for the location of the output(if there is one)
         if index < len(commands):

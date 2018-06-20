@@ -13,6 +13,7 @@ To decrypt, type: "-d " + "text*" + decryption_type + name_and_location_of_decry
 To print out the available cipher types, type "help"
 To exit the program, type "exit"
 To clear files in decrypted and encrypted, type "clear"
+To enter testing mode, enter "test"
 
 Encryption/Decryption types available: vigenere, rotation, ...
 
@@ -44,76 +45,54 @@ EXAMPLES
 
 
 
+DOCUMENTATION
+
 PROJECT STRUCTURE
     This project has four main components, as well as three folders for storage.
 
         The three main components are:
-            -main.py - this file holds the main runner program that takes in user input, and performs the
-                      encryption/decryption
-            - miscellanous - this file holds functions that may be useful anywhere.
-            -package Cryptanalysis - this package holds all files necessary to perform a decryption
-            -package Cryptograhpy - this package holds all files necessary to perform an encryption
+            -cryptography_runner.py - this file holds the main runner program that takes in user input, and performs the
+                      encryption/decryption.
+            -miscellanous.py - this file holds functions that may be useful anywhere. Mostly handles user input.
+            -test.py - this file runs the decryption/encryption functions and tests for correctness and performance
+            -package Decryption - this package holds all files necessary to perform a decryption
+            -package Encryption - this package holds all files necessary to perform an encryption
 
         The three folders are:
             -Library - this folder stores all text files you want to use with this program
-            -Decrypted - this is where the generated decrypted files go
-            -Encrypted - this is where the generated encrypetd files go
+            -Files_Decrypted - this is where the generated decrypted files go
+            -Files_Encrypted - this is where the generated encrypetd files go
 
 
-MAIN.PY
-    main.py has two main parts to it: the initialization, and the forever loop
-
-        INITIALIZATION:
-
-            datetime is imported for use in naming the files
-            def usage() - this prints out the available encryption/decryption types
-            Important variables - this stores information on the specific statement that the user inputs. It stores:
-                -name of the cipher,
-                -whether encryption or decryption is to be used,
-                -the data (the text on which the encryption/decryption is performed),
-                -whether or not a file is given,
-                -the output of the generated file
-            Some useful information is printed out for the user
-            Error booleans are created for use later in the loop. They keep track of what sort of error occurs, and they
-                are False by default. When they become True, this indicates an error
-
-        FOREVER LOOP:
-
-            The important variables are refreshed for the command
-            Either the default user prompt is printed, or an error message is printed. Either way, the user enters in
-                another statement
-            The statement is split into an array named "commands"
-            The first word is processed. It either sets encrypt to True or False, prints helpful info, exits, or returns
-                an error
-            The next part(the text data) is set into the important variable. First, it is tested whether the user types
-                out the text. If so, the data is taken from between the first and last quotation marks. If not, the data
-                is retrieved from the location the user has provided
-            Next, the cipher type is checked and set. If there is an error, it is returned
-            Then, a default location is created for the generated file. If the user has provided a location, user that
-                instead.
-            Lastly, the encryption/decryption is performed on the data, and its output is written into the output
-                location and printed out on the console
+CRYPTOGRAPHY_RUNNER.PY
 
 
 
+MISCELLANEOUS.PY
 
-CRYPTOGRAPHY
+
+TEST.PY
 
 
-    (I elected to put all the vigenere ciphers in different modules in an attempt to give the user the exact vigenere        choice up front instead of later. In addition, there was no need to create any sort of hierarchy for the vigenere
-     ciphers because it is obvious from the naming convention used that they are all related)
+ENCRYPTION
+
+
     VIGENERE.PY - This is the regular vigenere that does what is expected
-    VIGENERE_MULTIPLICATIVE.PY - This vigenere multiplies the character values instead of add. I added this to access
+
+    VIGENERE_MULTIPLICATIVE.PY - This vigenere multipliees the character values instead of add. I added this to access
                                  more of the characters in unicode.* For ascii, and extended_ascii, the characters are
                                  displayed as numbers instead of in real characters, due to limitations.
-    VIGENERE_EXPONENTIAL.PY - This vigenere takes the plaintext value to the power of the keyword character value. This
-                              results in a ciphertext whose characters are even more evenly distributed in unicode.*
-        * Unicode has certain characters called surrogates. These are unprintable. As a result, I had to adjust my
+
+          * Unicode has certain characters called surrogates. These are unprintable. As a result, I had to adjust my
           numbers so that any values that would match surrogates are pushed into the corresponding character. This
           corresponding character is as far away from the end of the surrogates as the "before" value is from the
           start of the surrogates
 
+    VIGENERE_EXPONENTIAL.PY - This vigenere takes the plaintext value to the power of the keyword character value. This
+                              results in a ciphertext whose characters are even more evenly distributed in unicode.
 
 
 
-CRYPTANALYSIS
+
+
+DECRYPTION
