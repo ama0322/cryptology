@@ -15,8 +15,8 @@ def encrypt(data, output_location):
     This function asks the user for more information to conduct the vigenere cipher. Then, it passes this information to
     the specific functions located below(in the format "vig_characterset"). Finally, it returns the encrypted data
 
-    :param data: the data to be encrypted
-    :return: the encrypted data
+    :param data: (string) the data to be encrypted
+    :return: (string) the encrypted data
     """
 
 

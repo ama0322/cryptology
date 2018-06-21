@@ -9,10 +9,10 @@ import test # to run testingmode
 
 
 # Sets containing available options for encryption/decryption. Add to this.
-encryption_set = {"vigenere", "vigenere_multiplicative", # the set containing available encryption options
+encryption_set = {"vigenere", "vigenere_multiplicative",
                   "vigenere_exponential", "rotation"}
 
-decryption_set = {"vigenere", "vigenere_multiplicative", # the set containing available decryption options
+decryption_set = {"vigenere", "vigenere_multiplicative",
                   "vigenere_exponential", "rotation", "rotation_unknown"}
 
 both_set = encryption_set & decryption_set # the set containing options in both encryption_list and decryption_list
@@ -49,6 +49,7 @@ def main():
 
         # execute the encryption/decryption on the data
         execute_encryption_or_decryption( encrypt, cipher, data, output_location )
+
     # End of forever while loop
 ######################################################################################## END OF MAIN FUNCTION ##########
 
@@ -302,7 +303,7 @@ def execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
     print("*******************************************************")
     print("\nTHIS IS THE OUTPUT:\n" + output)
 
-    #  WRITE TO THE PROPER FILE
+    #  WRITE THE ENCRYPTED/DECRYPTED TEXT TO THE PROPER FILE
     new_file = open(output_location, "w", encoding="utf-8")
     new_file.write(output)
     new_file.close()

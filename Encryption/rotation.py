@@ -8,7 +8,7 @@ import time
 
 
 
-
+# Encrypt using user-entered info. Write relevant information and return encrypted text for cryptography_runner
 def execute(data, output_location):
     """
     This function asks the user for more information to conduct the cipher. Then it encrypt the information using the
@@ -19,15 +19,10 @@ def execute(data, output_location):
     :return: (string) the encrypted data
     """
 
-    # Obtain the char_set and the endchar
-    char_set, num_chars = miscellaneous.take_char_set(miscellaneous.char_sets)
+    # Obtain the encrypted text. Also write statistics and relevant info a file
+    encrypted = miscellaneous.encrypt_or_decrypt_with_single_char_key(data, output_location,
+                                                                      "Encryption", "rotation", "encrypt")
 
-    # Take a single character key from the user
-    key = miscellaneous.get_single_char_key()
-
-    # Execute encryption and write into
-    encrypted = miscellaneous.execute_and_write_info(data, key, char_set, output_location,
-                                                     "Encryption", "rotation", "encrypt")
 
     # Return encrypted text to be written in cryptography_runner
     return encrypted
@@ -50,10 +45,10 @@ def encrypt(plain_text, key, num_chars):
 
 
     for x in plain_text:
-        #  figure out the ascii value for the current character
+        #  figure out the unicode value for the current character
         uni_val_plain = ord(x)
 
-        #  figure out the ascii value for the right character in the key
+        #  figure out the unicode value for the right character in the key
         key_char = key[key_index]
         uni_val_key = ord(key_char)
 
