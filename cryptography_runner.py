@@ -1,6 +1,6 @@
 import datetime # to be used in fileName
 import os # to delete files in decrypted and encrypted
-
+import test # to run testingmode
 
 
 
@@ -103,6 +103,10 @@ def parse_user_input():
         # If command is "exit", then exit
         elif commands[0] == "exit":
             exit()
+
+        # If command is "test", then enter testing mode
+        elif commands[0] == "test":
+            test.testing_mode()
 
         # If command is "-e", then set encrypt and check for the following argument
         elif commands[0] == "-e":

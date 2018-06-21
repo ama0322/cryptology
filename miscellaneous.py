@@ -3,10 +3,10 @@ char_sets = ["unicode", "ascii", "extended_ascii"] #  unicode has max val of 111
                                                    #  extended_ascii has max val of 255
 
 
-char_set_to_end_char = {
-    "ascii": 127,
-    "extended_ascii": 255,
-    "unicode": 1114111
+char_set_to_num_chars = {
+    "ascii": 128,
+    "extended_ascii": 256,
+    "unicode": 1114112
 }
 
 
@@ -20,7 +20,7 @@ def take_char_set(char_sets):
 
     :param char_sets: the list of all character sets
     :return: (string) the selection
-    :return: (integer) the integer form of the last character of the character set
+    :return: (integer) the number of characters in the selected character set
     """
 
 
@@ -69,6 +69,38 @@ def take_char_set(char_sets):
 #  END OF DEF TAKE_CHAR_SET
 
 
+# This function obtain a single char key from the user and returns that
+def get_single_char_key():
+
+    # TAKE A KEY
+    key = input("Enter a key (single character only): ")
+
+    # IF THE USER DID NOT GIVE ANYTHING, SEND AN ERROR MESSAGE AND FORCE THE USER TO ENTER IT AGAN
+    while key == "":
+        key = input("No key given! Enter a key (single character only): ")
+
+    # IF THE USER DID NOT GIVE A SINGLE CHARACTER, FORCE THE USER TO ENTER IT AGAN
+    while not len(key) == 1:
+        key = input("Not a single character! Enter a key (single character only): ")
+
+    return key
+# END OF DEF GET_KEY
+
+
+
+# This function obtain a general key fro the user and returns that
+def get_key():
+
+    # TAKE A KEY
+    key = input("Enter a key: ")
+
+    # IF THE USER DID NOT GIVE ANYTHING, SEND AN ERROR MESSAGE AND FORCE THE USER TO ENTER IT AGAN
+    while key == "":
+        key = input("No key given! Enter a key (single character only): ")
+
+
+    return key
+# END OF DEF GET_KEY
 
 
 
