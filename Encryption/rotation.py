@@ -1,5 +1,5 @@
-import miscellaneous
-import time
+import miscellaneous # To handle user input and miscellaneous
+
 
 
 
@@ -29,7 +29,7 @@ def execute(data, output_location):
 
 
 
-# This function encrypts using our desired configuration and returns the encrypted text.
+# This function contains the actual algorithm to encrypt in a rotation cipher using a key
 def encrypt(plain_text, key, num_chars):
     """
     This function encrypts the plain text using the set of unicode characters from 0 to end_char.

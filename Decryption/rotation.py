@@ -7,49 +7,24 @@ import time
 
 
 
-def decrypt(data, output_location):
+def execute(data, output_location):
     """
-    This function decrypts data using a key.
+    This function decrypts data using a user-provided key.
 
-    :param data: the data to be decrypted
+    :param data: (string) the data to be decrypted
+    :param output_location: (string) the location to write out relevant info and statistics
     :return: the decrypted data
     """
 
-    #  FIGURE OUT THE CHARACTER SET THAT THE USER WANTS TO USE
-    vig_type = miscellaneous.take_char_set(miscellaneous.char_sets)
+    # Obtain the decrypted text. Also write statistics and relevant info a file
+    decrypted = miscellaneous.encrypt_or_decrypt_with_single_char_key(data, output_location,
+                                                                      "Decryption", "rotation", "decrypt")
 
-    #  TAKE A KEY
-    key = input("Enter the key exactly (single character): ")
 
-    # IF THE USER DIDN"T ENTER ANYTHING, SEND AN ERROR MESSAGE AND ASK AGAIN
-    while key == "":
-        key = input("No key entered! Enter a key: ")
-
-    # IF THE USER DIDN"T ENTER A SINGLE CHARACTER, SENT AN ERROR MESSAGE AND ASK AGAN
-    while not len(key) == 1:
-        key = input("Not a single character! Enter the key again: ")
-
-    # START THE TIMER
-    start_time = time.time()
-
-    # EXECUTE THE SPECIFIC DECRYPTION METHOD
-    decrypted = eval("vig_" + vig_type + "(data, key)")
-
-    #  END THE TIMER
-    elapsed_time = time.time() - start_time
-
-    #  WRITE TO A NEW FILE CONTAINING THE VIGENERE TYPE, KEY, AND SECONDARY KEY, AND TIME ELAPSED, AND TIME PER
-    #     CHARACTER
-    new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The character set is : " + vig_type,
-                         "\nThe key is: " + key,
-                         "\n Encoded/decoded in: " + str(elapsed_time) + " seconds.",
-                         "\n That is " + str((elapsed_time/len(decrypted) * 1000000)) + " microseconds per character."])
-
+    # Return encrypted text to be written in cryptography_runner
     return decrypted
 
 
-#  END OF DEF DECRYPT()
 
 
 
@@ -57,116 +32,37 @@ def decrypt(data, output_location):
 
 
 
-
-
-
-def vig_unicode(cipher_text, key):
+# This function contains the actual algorithm to decrypt a rotation cipher with a key
+def decrypt(cipher_text, key, num_chars):
     """
-    This function decrypts the plain text using the unicode character sets, which has a max value of 1114111. Should
-    any of the singular values exceed 1114111, it starts from 0 again. For example, 1114112 would become 0.
+    This function decrypts the cipher_text using the set of unicode characters from 0 to end_char.
 
-    :param cipher_text: the text to be decrypted
-    :param key: the key with which the decryption is done
-    :return: the decrypted text
+    :param plain_text: (string )the text to be encrypted
+    :param key: (string) the key with which the encryption is done
+    :param num_chars: (int) The number of characters in the character set
+    :return: (string) the encrypted text
     """
 
-    decrypted = ""
-    key_count = 0
-    secondary_key_count = 0
-    MAX_CHAR_SET_VAL = 1114112
-
+    encrypted = "" # the string to build up the encrypted text
+    key_index = 0 # the index in the key we are using for the vigenere encrypt
 
 
     for x in cipher_text:
-        #  figure out the unicode value for each of the characters
+        #  figure out the unicode value for the current character
         uni_val_cipher = ord(x)
 
-        #  figure out the unicode value for the right character in the key, then update for next iteration
-        key_char = key[key_count]
+        #  figure out the unicode value for the right character in the key
+        key_char = key[key_index]
         uni_val_key = ord(key_char)
-        key_count = (key_count + 1) % len(key)
 
 
+        #  figure out the character by subtracting the two ascii's, the add it to the encrypted string
+        encrypted_char = chr((uni_val_cipher - uni_val_key) % (num_chars))
+        encrypted = encrypted + encrypted_char
 
-        #  figure out the character by combining the two unicodes, the add it to the decrypted string
-        decrypted_char = chr((uni_val_cipher - uni_val_key) % MAX_CHAR_SET_VAL)
-        decrypted = decrypted + decrypted_char
+        # update key_index for next iteration
+        key_index = (key_index + 1) % len(key)
 
-    return decrypted
-
-
-
-
-
-def vig_ascii(cipher_text, key):
-    """
-    This function decrypts the plain text using the ascii character sets, which has a max value of 127. Should
-    any of the singular values exceed 127, it starts from 0 again. For example, 128 would become 0.
-
-    :param cipher_text: the text to be decrypted
-    :param key: the key with which the decryption is done
-    :return: the decrypted text
-    """
-
-    decrypted = ""
-    key_count = 0
-    secondary_key_count = 0
-    MAX_CHAR_SET_VAL = 128
+    return encrypted
 
 
-
-    for x in cipher_text:
-        #  figure out the ascii value for each of the characters
-        uni_val_cipher = ord(x)
-
-        #  figure out the ascii value for the right character in the key, then update for next iteration
-        key_char = key[key_count]
-        uni_val_key = ord(key_char)
-        key_count = (key_count + 1) % len(key)
-
-
-
-        #  figure out the character by combining the two ascii's, the add it to the decrypted string
-        decrypted_char = chr((uni_val_cipher - uni_val_key) % MAX_CHAR_SET_VAL)
-        decrypted = decrypted + decrypted_char
-
-    return decrypted
-
-
-
-
-def vig_extended_ascii(cipher_text, key):
-    """
-    This function decrypts the plain text using the extended_ascii character sets, which has a max value of 255. Should
-    any of the singular values exceed 255, it starts from 0 again. For example, 256 would become 0.
-
-    :param cipher_text: the text to be decrypted
-    :param key: the key with which the decryption is done
-    :return: the decrypted text
-    """
-
-    decrypted = ""
-    key_count = 0
-    secondary_key_count = 0
-    MAX_CHAR_SET_VAL = 256
-
-
-
-    for x in cipher_text:
-        #  figure out the ascii value for each of the characters
-        uni_val_cipher = ord(x)
-
-        #  figure out the ascii value for the right character in the key, then update for next iteration
-        key_char = key[key_count]
-        uni_val_key = ord(key_char)
-        key_count = (key_count + 1) % len(key)
-
-
-
-
-
-        #  figure out the character by combining the two ascii's, the add it to the decrypted string
-        decrypted_char = chr((uni_val_cipher - uni_val_key) % MAX_CHAR_SET_VAL)
-        decrypted = decrypted + decrypted_char
-
-    return decrypted

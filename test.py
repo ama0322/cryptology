@@ -2,4 +2,8 @@
 
 
 def testing_mode():
-        print("Testing")
+
+        # Forever while loop to take in user commands and execute them
+        while True:
+
+                print("Testing")

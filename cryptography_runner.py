@@ -295,10 +295,10 @@ def execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
 
     if encrypt:
         exec("from Encryption import " + cipher)
-        output = eval(cipher + ".encrypt(data, output_location)")
+        output = eval(cipher + ".execute(data, output_location)")
     else:
         exec("from Decryption import " + cipher)
-        output = eval(cipher + ".decrypt(data, output_location)")
+        output = eval(cipher + ".execute(data, output_location)")
 
     print("*******************************************************")
     print("\nTHIS IS THE OUTPUT:\n" + output)

@@ -79,7 +79,7 @@ ENCRYPTION
 
     VIGENERE.PY - This is the regular vigenere that does what is expected
 
-    VIGENERE_MULTIPLICATIVE.PY - This vigenere multipliees the character values instead of add. I added this to access
+    VIGENERE_MULTIPLICATIVE.PY - This vigenere multiplies the character values instead of add. I added this to access
                                  more of the characters in unicode.* For ascii, and extended_ascii, the characters are
                                  displayed as numbers instead of in real characters, due to limitations.
 
