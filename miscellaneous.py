@@ -12,6 +12,9 @@ char_set_to_num_chars = {
     "unicode": 1114112
 }
 
+######################################################################### USER INTERFACING AND FUNCTION CALLS ##########
+
+
 
 # This function runs encryption/decryption on a single char key. It asks for user info and runs everything
 def encrypt_or_decrypt_with_single_char_key(data, output_location, package, module, encrypt_or_decrypt):
@@ -76,6 +79,67 @@ def encrypt_or_decrypt_with_general_key(data, output_location, package, module, 
 
 
 
+########################################################################################### USEFUL ALGORITHMS ##########
+
+# This function figures out what character set the encrypted data is in. NOT 100% accurate
+def char_set_of_cipher_text(cipher_text):
+    """
+    This fucntion iterates through all the characters in the cipher text and checks what sort of character set they are
+    in. Note that this does not 100% guarantee that the plain_text was encrypted using this particular character
+    set. More accurate for longer cipher_texts.
+
+    :param cipher_text: (string) the cipher text
+    :return: (string) the character set the cipher_text was most likely encrypted in
+    """
+
+    # first pass through cipher_text, check if there are unicode characters (256 and above)
+    for x in cipher_text:
+        if ord(x) >= 256:
+            return "unicode"
+
+    # second pass through cipher_text, check if there are extended_ascii characters(128 and above)
+    for x in cipher_text:
+        if ord(x) >= 128:
+            return "extended_ascii"
+
+    # Otherwise, only ascii characters
+        return "ascii"
+
+
+# This function figures out whether the data is in English. Adjust threshold as necessary. Also return percent english
+def is_english(data):
+    """
+    This function checks a string of data for English words. If it is mostly in English, the decryption has probably
+    succeeded
+
+    :param data: (string) Check this for English
+    :return: (boolean) indicates whether or not the text is in english
+    """
+
+    #  Load the text of English_Words.txt as a set
+    english_words = set(line.strip() for line in open("Library/English_Words.txt"))
+
+    # Percent of text that is english needed to pass as plaintext
+    PERCENT_ENGLISH_THRESHOLD = 0.15
+
+
+    total_words = len(data.split())
+    english_word_counter = 0
+
+    for word in data.split():
+        if word in english_words:
+            english_word_counter = english_word_counter + 1
+
+    #  If it passes the percent english threshold, return true and the percent english
+    if (english_word_counter / total_words) >= PERCENT_ENGLISH_THRESHOLD:
+        return True, (english_word_counter / total_words)
+
+
+    # Else, return False and also the percent english
+    return False, (english_word_counter / total_words)
+
+
+############################################################################################ HELPER FUNCTIONS ##########
 
 #  This helper function asks the user for a character set. It will only accept character sets that are available.
 def _take_char_set(char_sets):
@@ -171,7 +235,7 @@ def _get_general_key():
 
 
 
-# This helper function executes the specified encryption/decryption type and writes to a file encryption/decryption stats
+# This helper function executes the specified encryption/decryption type and writes to a file encryption/decryption stat
 def _execute_and_write_info(data, key, char_set, output_location, package, module, encrypt_decrypt):
     """
     This function executes the specified encryption/decryption method

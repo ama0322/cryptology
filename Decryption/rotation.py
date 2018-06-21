@@ -1,22 +1,21 @@
 import miscellaneous
-import time
 
 
 
 
 
 
-
+# Decrypt using user-entered info. Write relevant information and return decrypted text for cryptography_runner
 def execute(data, output_location):
     """
     This function decrypts data using a user-provided key.
 
     :param data: (string) the data to be decrypted
     :param output_location: (string) the location to write out relevant info and statistics
-    :return: the decrypted data
+    :return: (string) the decrypted data
     """
 
-    # Obtain the decrypted text. Also write statistics and relevant info a file
+    # Obtain the decrypted text. Also write statistics and relevant info to a file
     decrypted = miscellaneous.encrypt_or_decrypt_with_single_char_key(data, output_location,
                                                                       "Decryption", "rotation", "decrypt")
 
@@ -26,7 +25,7 @@ def execute(data, output_location):
 
 
 
- 
+
 
 
 

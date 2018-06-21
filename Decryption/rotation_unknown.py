@@ -3,72 +3,60 @@ import time
 
 
 
-#  Load the text of English_Words.txt as a set
-english_words = set(line.strip() for line in open("Library/English_Words.txt"))
 
 
-
-
-def decrypt(data, output_location):
+# Decrypt without a key. Write relevant information and return decrypted text for cryptography_runner
+def execute(data, output_location):
     """
-    This function decrypts data without a key
+    This function decrypts data without a key.
 
-    :param data: the data to be decrypted
-    :return: the decrypted data
+    :param data: (string) the data to be decrypted
+    :param output_location: (string) the file to write relevant information in
+    :return: (string) the decrypted data
     """
-
-
-    #  FIGURE OUT THE CHARACTER SET THAT THE USER WANTS TO USE
-    vig_type, end_char = miscellaneous.take_char_set(miscellaneous.char_sets)
-
 
     # START THE TIMER
     start_time = time.time()
 
     # EXECUTE THE SPECIFIC DECRYPTION METHOD
-    decrypted = eval("vig_" + vig_type + "(data)")
+    decrypted, char_set = decrypt(data)
 
     #  END THE TIMER
     elapsed_time = time.time() - start_time
 
-    #  WRITE TO A NEW FILE CONTAINING THE VIGENERE TYPE, KEY, AND SECONDARY KEY, AND TIME ELAPSED, AND TIME PER
-    #     CHARACTER
+    #  WRITE TO A NEW FILE CONTANING RELEVANT INFO FOR ROTATION_UNKNOWN
     new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The character set is : " + vig_type,
+    new_file.writelines(["The character set is : " + char_set,
                          "\nThe key is: " + key,
                          "\nThe percent of words that are English are : " + str(percent_english),
                          "\nEncoded/decoded in: " + str(elapsed_time) + " seconds.",
-                         "\nThat is " + str((elapsed_time/len(decrypted) * 1000000)) + " microseconds per character.",
-                         "\nThat is " + str((elapsed_time/ord(key) * 1000)) + " milliseconds per rotation."])
+                         "\nThat is " + str((elapsed_time / len(decrypted) * 1000000)) + " microseconds per character.",
+                         "\nThat is " + str((elapsed_time / ord(key) * 1000)) + " milliseconds per rotation."])
 
     return decrypted
-#  END OF DEF DECRYPT()
 
 
 
 
-def vig_unicode(cipher_text):
+
+
+# Actual algorithm to decryption using a rotation cipher without a key
+def decrypt(cipher_text):
     """
-    This function decrypts the plain text using the unicode character sets, which has a max value of 1114111. Should
-    any of the singular values exceed 1114111, it starts from 0 again. For example, 1114112 would become 0. Because the
-    key is unknown, I try all unicode values as a possible key. Once I have done that, I will look at the words in
-    the result, and I will see if it is deciphered. If it is deciphered, almost every single word will be found in the
-    english_words list that I have imported.
 
-    :param cipher_text: the text to be decrypted
-    :return: the decrypted text
+    :param cipher_text: (string) the cipher text to be decrypted
+    :return: (string) the decrypted text
     """
 
     decrypted = ""
-    key_count = 0
-    secondary_key_count = 0
-    MAX_CHAR_SET_VAL = 1114112
-    PERCENT_ENGLISH_THRESHOLD = 0.15
 
+    # Figure out the most likely character set of the cipher_text
+    char_set = miscellaneous.char_set_of_cipher_text(cipher_text)
+    num_chars = miscellaneous.char_set_to_num_chars.get(char_set)
 
 
     # Decrypt the encrypted text using every possible unicode value
-    for uni_val_key in range(0, MAX_CHAR_SET_VAL):
+    for uni_val_key in range(0, num_chars):
 
         #  refresh decrypted for this cycle
         decrypted = ""
@@ -80,31 +68,26 @@ def vig_unicode(cipher_text):
 
 
             #  figure out the character by combining the two unicodes, the add it to the decrypted string
-            decrypted_char = chr((uni_val_cipher - uni_val_key) % MAX_CHAR_SET_VAL)
+            decrypted_char = chr((uni_val_cipher - uni_val_key) % num_chars)
             decrypted = decrypted + decrypted_char
 
 
-        total_words = len(decrypted.split())
-        english_word_counter = 0
+        # Check if the decrypted text is in English
+        global percent_english
+        is_english, percent_english = miscellaneous.isenglish(decrypted)
 
-        for word in decrypted.split():
-            if word in english_words:
-                english_word_counter = english_word_counter + 1
-
-        #  check if there is moslty english words. If so, break and return decrypted. also tell what the key is
-        if english_word_counter / total_words >= PERCENT_ENGLISH_THRESHOLD:
+        # If english, then break and return decrypted. Also, tell what the key is
+        if is_english:
             global key
             key = chr(uni_val_key)
-
-            global percent_english
-            percent_english = english_word_counter / total_words
             break
+
 
 
         # print updates
         print("Done with: " + chr(uni_val_key))
 
-    return decrypted
+    return decrypted, char_set
 
 
-#  END OF DEF_VIG_UNICODE
+
