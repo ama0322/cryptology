@@ -49,8 +49,6 @@ def main():
 
         # execute the encryption/decryption on the data
         execute_encryption_or_decryption( encrypt, cipher, data, output_location )
-
-
     # End of forever while loop
 ######################################################################################## END OF MAIN FUNCTION ##########
 
