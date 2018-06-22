@@ -2,7 +2,7 @@ import cryptography_runner # for decryption_set
 import time # for timing
 import datetime # for labelling the date that files are created
 import miscellaneous
-
+import os # for deleting files
 
 
 plain_text_source = "Library/Around_the_World_in_80_Days.txt"
@@ -69,7 +69,7 @@ def _parse_user_input():
         """
 
         # Prompt the user for a command
-        statement = input("Enter a command: ")
+        statement = input("Enter a testing mode command: ")
 
         # Loop until the user enters a legitimate decryption type
         while True:
@@ -77,12 +77,21 @@ def _parse_user_input():
                 # split the statement into an array of words
                 command = statement.split()
 
+                # Check if the user decides to clear logs
+                if command[0] == "clear":
+                        # delete files in /Files_Logs
+                        for file in os.listdir("Files_Logs"):
+                                os.unlink("Files_Logs/" + file)
+
+                        statement = input("Logs cleared. Enter a testing mode command: ")
+                        continue
+
                 # Check if the user decides to set plaintext
                 if command[0] == "set":
 
                         # If len(commands) < 2, insufficient arguments
                         if len(command) < 2:
-                                statement = input("Insufficient arguments! Enter a command: ")
+                                statement = input("Insufficient arguments! Enter a testing mode command: ")
                                 continue
 
                         # If len(commands) > 2, excessive arguments
@@ -96,9 +105,11 @@ def _parse_user_input():
 
                                 global plain_text_source
                                 plain_text_source = command[1]
-                                statement = input("Plaintext source updated. Enter a command: ")
+                                statement = input("Plaintext source updated. Enter a testing mode command: ")
+                                continue
+
                         except IOError:
-                                statement = input("No such file or directory! Enter a command: ")
+                                statement = input("No such file or directory! Enter a testing mode command: ")
                                 continue
 
 
@@ -107,7 +118,7 @@ def _parse_user_input():
                         break
 
                 # Prompt the user for a command again
-                statement = input("Invalid command! Try again: ")
+                statement = input("Invalid command! Enter a testing mode command: ")
 
         return statement
 

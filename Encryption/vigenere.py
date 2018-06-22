@@ -16,6 +16,7 @@ def execute(data, output_location):
     the specific functions located below(in the format "vig_characterset"). Finally, it returns the encrypted data
 
     :param data: (string) the data to be encrypted
+    :param output_location: (string) the file to write relevant information into
     :return: (string) the encrypted data
     """
 
@@ -60,9 +61,9 @@ def encrypt(plain_text, key, char_set_size):
 
         #  figure out the character by combining the two unicodes, the add it to the encrypted string
         encrypted_char = chr((uni_val_plain + uni_val_key) % char_set_size)
-        encrypted = encrypted + encrypted_char
+        cipher_text = cipher_text + encrypted_char
 
-    return encrypted
+    return cipher_text
 
 
 

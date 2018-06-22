@@ -41,7 +41,7 @@ def testing_execute(cipher_text, output_location, plain_text, key, char_set_size
     :return: None
     """
 
-    # Run the decryption algorith on the cipher_text
+    # Run the decryption algorithm on the cipher_text
     start_time = time.time()
     decrypted = decrypt(cipher_text, key, char_set_size)
     decryption_time = time.time() - start_time
@@ -51,9 +51,9 @@ def testing_execute(cipher_text, output_location, plain_text, key, char_set_size
 
     # Set up a space for notes
     if decrypted == plain_text:
-        new_file.writelines(["CORRECT \nNotes: "])
+        new_file.writelines(["Rotation\nCORRECT \nNotes: "])
     else:
-        new_file.writelines(["INCORRECT \nNotes: "])
+        new_file.writelines(["Rotation\nINCORRECT \nNotes: "])
 
     # Encryption information
     new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
@@ -87,7 +87,7 @@ def decrypt(cipher_text, key, char_set_size):
     """
     This function decrypts the cipher_text using the set of unicode characters from 0 to end_char.
 
-    :param plain_text: (string )the text to be encrypted
+    :param cipher_text: (string )the text to be encrypted
     :param key: (string) the key with which the encryption is done
     :param char_set_size: (int) The number of characters in the character set
     :return: (string) the encrypted text

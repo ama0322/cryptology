@@ -49,9 +49,9 @@ def testing_execute(cipher_text, output_location, plain_text, encryption_time):
 
     # Set up a space for notes
     if decrypted == plain_text:
-        new_file.writelines(["CORRECT \nNotes: "])
+        new_file.writelines(["Rotation without key\nCORRECT \nNotes: "])
     else:
-        new_file.writelines(["INCORRECT \nNotes: "])
+        new_file.writelines(["Rotation without key\nINCORRECT \nNotes: "])
 
     # Encryption information
     new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
