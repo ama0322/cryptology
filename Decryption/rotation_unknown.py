@@ -1,5 +1,5 @@
 import miscellaneous
-import time
+import time # To time decryption. This information will be written to a file
 
 
 
@@ -15,25 +15,64 @@ def execute(data, output_location):
     :return: (string) the decrypted data
     """
 
-    # START THE TIMER
+    # Obtain the decrypted text. Also write statistics and relevant info to a file
+    decrypted = miscellaneous.encrypt_or_decrypt_without_key(data, output_location,
+                                                                      "Decryption", "rotation_unknown", "decrypt")
+
+
+    # Return encrypted text to be written in cryptography_runner
+    return decrypted
+
+
+
+
+# Decrypt in testing form. This means to add some more statistics about performance. Also check for correctness
+def testing_execute(cipher_text, output_location, plain_text, encryption_time):
+    """
+    This function executes the deciphering in testing mode. So add more statistics about performance and correctness.
+
+    :param cipher_text: (string) the cipher text to be decrypted
+    :param output_location: (string) the file to write information to
+    :param plain_text: (string) the unencrypted plain text
+    :param encryption_time: (integer) the time it took for the plain text to be encrypted
+    :return:
+    """
+
+
+    # Run the decryption algorith on the cipher_text
     start_time = time.time()
+    decrypted, char_set, key = decrypt(cipher_text)
+    decryption_time = time.time() - start_time
 
-    # EXECUTE THE SPECIFIC DECRYPTION METHOD
-    decrypted, char_set = decrypt(data)
+    # Open file for writing
+    new_file = open(output_location, "w", encoding="utf-8")
 
-    #  END THE TIMER
-    elapsed_time = time.time() - start_time
+    # Set up a space for notes
+    if decrypted == plain_text:
+        new_file.writelines(["CORRECT \nNotes: "])
+    else:
+        new_file.writelines(["INCORRECT \nNotes: "])
 
-    #  WRITE TO A NEW FILE CONTANING RELEVANT INFO FOR ROTATION_UNKNOWN
-    new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The character set is : " + char_set,
+    # Encryption information
+    new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
+                         "\nThe key is: " + key,
+                         "\nEncrypted in: " + str(encryption_time) + " seconds.",
+                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
+                         "\nThat is " + str((encryption_time / len(decrypted) * 1000000))
+                                      + " microseconds per character."])
+
+
+    # Decryption information
+    new_file.writelines(["\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption",
+                         "\nThe character set is : " + char_set,
                          "\nThe key is: " + key,
                          "\nThe percent of words that are English are : " + str(percent_english),
-                         "\nEncoded/decoded in: " + str(elapsed_time) + " seconds.",
-                         "\nThat is " + str((elapsed_time / len(decrypted) * 1000000)) + " microseconds per character.",
-                         "\nThat is " + str((elapsed_time / ord(key) * 1000)) + " milliseconds per rotation."])
-
-    return decrypted
+                         "\nDecrypted in: " + str(decryption_time) + " seconds.",
+                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
+                         "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
+                                      + " microseconds per character.",
+                         "\nThat is " + str((decryption_time / (ord(key) + 1) * 1000)) + " milliseconds per rotation."])
+    new_file.close()
 
 
 
@@ -43,42 +82,58 @@ def execute(data, output_location):
 # Actual algorithm to decryption using a rotation cipher without a key
 def decrypt(cipher_text):
     """
+    This function attempts to decrypt the cipher text by running through all the characters in unicode and performing
+    a reverse rotation on the cipher_text. The result is checked for English content as confirmation that it is decoded.
 
     :param cipher_text: (string) the cipher text to be decrypted
     :return: (string) the decrypted text
+    :return: (string) the character set that was used for encryption
+    :return: (string) the key that was used for encryption
     """
 
     decrypted = ""
 
     # Figure out the most likely character set of the cipher_text
     char_set = miscellaneous.char_set_of_cipher_text(cipher_text)
-    num_chars = miscellaneous.char_set_to_num_chars.get(char_set)
+    char_set_size = miscellaneous.char_set_to_char_set_size.get(char_set)
 
 
     # Decrypt the encrypted text using every possible unicode value
-    for uni_val_key in range(0, num_chars):
+    for uni_val_key in range(0, char_set_size):
 
         #  refresh decrypted for this cycle
         decrypted = ""
 
-        #  DECRYPTION PROCESS
-        for x in cipher_text:
-            #  figure out the unicode value for each of the characters
-            uni_val_cipher = ord(x)
 
+        # Shortened decryption process(First 10,000 letters or less, whichever comes first)
+        max = min(9999, len(cipher_text))
+        for x in range(0, max):
+            decrypted += (chr((ord(cipher_text[x]) - uni_val_key) % char_set_size))
+        global percent_english
+        is_english, percent_english = miscellaneous.is_english_bag_of_words(decrypted)
+
+        # If not english, continue to the next uni_val_key
+        if not is_english:
+
+            # print updates
+            print("Done with: " + chr(uni_val_key) + "\tPercent English: " + str(percent_english))
+            continue
+
+
+        #  Full DECRYPTION PROCESS
+        decrypted = ""
+        for x in cipher_text:
 
             #  figure out the character by combining the two unicodes, the add it to the decrypted string
-            decrypted_char = chr((uni_val_cipher - uni_val_key) % num_chars)
-            decrypted = decrypted + decrypted_char
+            decrypted += (chr((ord(x) - uni_val_key) % char_set_size))
+
 
 
         # Check if the decrypted text is in English
-        global percent_english
-        is_english, percent_english = miscellaneous.isenglish(decrypted)
+        is_english, percent_english = miscellaneous.is_english_bag_of_words(decrypted)
 
         # If english, then break and return decrypted. Also, tell what the key is
         if is_english:
-            global key
             key = chr(uni_val_key)
             break
 
@@ -87,7 +142,7 @@ def decrypt(cipher_text):
         # print updates
         print("Done with: " + chr(uni_val_key))
 
-    return decrypted, char_set
+    return decrypted, char_set, key
 
 
 

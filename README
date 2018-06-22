@@ -14,6 +14,9 @@ To print out the available cipher types, type "help"
 To exit the program, type "exit"
 To clear files in decrypted and encrypted, type "clear"
 To enter testing mode, enter "test"
+    Testing mode usage:
+        Type "set" followed by a file location to specify a plaintext. If not done, a default one is used
+        Type the cipher type to run tests
 
 Encryption/Decryption types available: vigenere, rotation, ...
 
