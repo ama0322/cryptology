@@ -13,12 +13,11 @@ To decrypt, type: "-d " + "text*" + decryption_type + name_and_location_of_decry
 To print out the available cipher types, type "help"
 To exit the program, type "exit"
 To clear files in decrypted and encrypted, type "clear"
-To enter testing mode, enter "test"
-    Testing mode usage:
-        Type "set" followed by a file location to specify a plaintext. If not done, a default one is used
-        Type the cipher type to run tests
 
-Encryption/Decryption types available: vigenere, rotation, ...
+To enter testing mode, enter "test"
+    In testing mode, type "clear" to clear logs
+    Manually change the code in test.py in order to change options.
+
 
 
 
@@ -48,15 +47,15 @@ EXAMPLES
 
 
 
-DOCUMENTATION
+DOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATION
 
 PROJECT STRUCTURE
-    This project has four main components, as well as three folders for storage.
+    This project has four main components, as well as four folders for storage.
 
         The three main components are:
             -cryptography_runner.py - this file holds the main runner program that takes in user input, and performs the
                       encryption/decryption.
-            -miscellanous.py - this file holds functions that may be useful anywhere. Mostly handles user input.
+            -miscellanous.py - this file holds functions and resources useful throughout the project.
             -test.py - this file runs the decryption/encryption functions and tests for correctness and performance
             -package Decryption - this package holds all files necessary to perform a decryption
             -package Encryption - this package holds all files necessary to perform an encryption
@@ -65,6 +64,7 @@ PROJECT STRUCTURE
             -Library - this folder stores all text files you want to use with this program
             -Files_Decrypted - this is where the generated decrypted files go
             -Files_Encrypted - this is where the generated encrypetd files go
+            -Files_Logs - where the logs from testig go
 
 
 CRYPTOGRAPHY_RUNNER.PY
@@ -72,6 +72,22 @@ CRYPTOGRAPHY_RUNNER.PY
 
 
 MISCELLANEOUS.PY
+    This file holds functions and resources useful throughout the project
+
+    Structure:
+        I. Resources - this area hold resources that generally deal with the type of encryptions/decryptions and
+        character sets available. Also, some resources necessary for algorithms in the same file is also stored here.
+
+        II. User Interfacing and Function Calls - these functions are called from files from Decryption and Encryption
+        when their execute() function is called. It makes calls to Section IV in order to get
+        user data and write down useful information. These functions also return the encrypted/decrypted text back to
+        execute()
+
+        III. Useful Algorithms - this contains algorithms that are used in encrypt() and decrypt() from files in
+        Encryption and Decryption
+
+        IV. Helper Functions - functions to process user input and write down relevant information. Called from
+        functions in Section II for convenience.
 
 
 TEST.PY
@@ -79,12 +95,25 @@ TEST.PY
 
 ENCRYPTION
 
+    GENERAL FILE FORMAT
+        def execute() - this function makes a call to miscellaneous's function to encrypt/decrypt in the section:
+        USER INTERFACING AND FUNCTION CALLS. miscellaneous's function asks for user input and and writes down
+        relevant information to a file. It also returns the encrypted text for this function(execute) to return
+        back to cryptography_runner.py. This function is called from cryptography_runner.py
+
+        def encrypt() - this function contains the actual algorithm to encrypt the plain text. It is generally called
+        from miscellaneous' encrypt/decrypt function. When in testing mode, however, it is called from test.py
+
 
     VIGENERE.PY - This is the regular vigenere that does what is expected
 
     VIGENERE_MULTIPLICATIVE.PY - This vigenere multiplies the character values instead of add. I added this to access
                                  more of the characters in unicode.* For ascii, and extended_ascii, the characters are
                                  displayed as numbers instead of in real characters, due to limitations.
+
+                                 Note: Vigenere_multiplicative stores the numbers in a list and then concatenates the
+                                 list together into a single string later on. Because of the large amount of text
+                                 involved, handling the numbers in a list is much faster.
 
           * Unicode has certain characters called surrogates. These are unprintable. As a result, I had to adjust my
           numbers so that any values that would match surrogates are pushed into the corresponding character. This
@@ -94,8 +123,24 @@ ENCRYPTION
     VIGENERE_EXPONENTIAL.PY - This vigenere takes the plaintext value to the power of the keyword character value. This
                               results in a ciphertext whose characters are even more evenly distributed in unicode.
 
+                              Note: Decryption assumes that the plain text uses only ascii characters(for performance)
+
 
 
 
 
 DECRYPTION
+
+    GENERAL FILE FORMAT
+        def execute() - this function makes a call to miscellaneous's function to encrypt/decrypt in the section:
+         USER INTERFACING AND FUNCTION CALLS. miscellaneous's function asks for user input if necessary and and writes
+         down relevant information to a file. It also returns the decrypted text for this function(execute) to return
+         back to cryptography_runner.py. This function is called from cryptography_runner.py
+
+        def testing_execute() - this function is called from test.py. It is the testing form of execute, which means
+        that file are not generated in Files_Encrypted or Files_Decrypted. Instead, it writes statistics and
+        plain and cipher text to a file in Files_Logs. This function calles decrypt() directly. This function is called
+        fro test.py
+
+        def decrypt() - this function contains the actual algorithm to decrypt the cipher text. It is generally called
+        from miscellaneous' encrypt/decrypt function. When in testing mode, however, it is called from testing_execute()

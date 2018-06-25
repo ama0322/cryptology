@@ -1,6 +1,7 @@
 import datetime # to be used in fileName
 import os # to delete files in decrypted and encrypted
 import test # to run testingmode
+import miscellaneous
 
 
 
@@ -8,15 +9,7 @@ import test # to run testingmode
 
 
 
-# Sets containing available options for encryption/decryption. Add to this.
-encryption_set = {"vigenere", "vigenere_multiplicative",
-                  "vigenere_exponential", "rotation"}
 
-decryption_set = {"vigenere", "vigenere_multiplicative",
-                  "vigenere_exponential", "rotation", "rotation_unknown"}
-
-both_set = encryption_set & decryption_set # the set containing options in both encryption_list and decryption_list
-decryption_only_set = decryption_set - encryption_set # the set containing options only in decryption_list
 
 last = "" # Store the path to the last created encrypted file
 
@@ -27,11 +20,13 @@ def main():
 
 
     #  Print out info when the program first begins
-    print()
-    print("See README for usage."
-           + "\nTo print out the available cipher types, type \"help\".")
-    print()
-    usage()
+    global last;
+    if last == "":
+        print()
+        print("See README for usage."
+              + "\nTo print out the available cipher types, type \"help\".")
+        print()
+        usage()
 
 
     # forever while loop to continually take in user input and executing commands
@@ -41,7 +36,6 @@ def main():
         cipher, encrypt, data, output_location = parse_user_input()
 
         # Set up the global variable last for next iteration
-        global last
         last = output_location
 
         # print out the data, and let the user know where the output location is
@@ -57,8 +51,8 @@ def main():
 # Print out available Encryption/Decryption types
 def usage():
     print("Encryption/Decryption types available: ")
-    print(*both_set, sep=', ')
-    print(*decryption_only_set, sep='(Decryption only), ')
+    print(*miscellaneous.both_set, sep=', ')
+    print(*miscellaneous.decryption_only_set, sep='(Decryption only), ')
 
 
 # Parse user input and return relevant information
@@ -131,7 +125,7 @@ def parse_user_input():
                     os.unlink("Files_Encrypted/" + file)
 
             # Obtain next command
-            statement = input("Enter statement: ")  # obtain user input
+            statement = input("Files deleted. Enter statement: ")  # obtain user input
             continue
 
         else:
@@ -217,12 +211,12 @@ def parse_user_input():
 
             #  make sure that the given cipher is a valid type for encryption
             if encrypt:
-                if given_cipher in encryption_set:
+                if given_cipher in miscellaneous.encryption_set:
                         cipher = given_cipher
 
             # if in decryption mode, make sure a valid decryption cipher is chosen
             else:
-                if given_cipher in decryption_set:
+                if given_cipher in miscellaneous.decryption_set:
                         cipher = given_cipher
 
             # if there is no valid cipher, return error

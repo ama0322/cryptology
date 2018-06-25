@@ -5,8 +5,8 @@ import miscellaneous
 import os # for deleting files
 
 
-plain_text_source = "Library/Around_the_World_in_80_Days.txt"
-char_set_size = 256
+plain_text_source = "Library/Eleonora.txt"
+char_set_size = miscellaneous.char_set_to_char_set_size.get("unicode")
 
 
 # This function enters the testing mode where the user can enter commands to see check ciphers and see stats
@@ -17,7 +17,7 @@ def testing_mode():
 
                 # Get the decryption type and the encryption type
                 decryption = _parse_user_input()
-                encryption = miscellaneous.decryption_corresponding_encryption.get(decryption)
+                encryption = miscellaneous.decryption_to_corresponding_encryption.get(decryption)
 
                 # Obtain the plaintext
                 my_file = open(plain_text_source, "r", encoding="utf-8")
@@ -86,35 +86,10 @@ def _parse_user_input():
                         statement = input("Logs cleared. Enter a testing mode command: ")
                         continue
 
-                # Check if the user decides to set plaintext
-                if command[0] == "set":
-
-                        # If len(commands) < 2, insufficient arguments
-                        if len(command) < 2:
-                                statement = input("Insufficient arguments! Enter a testing mode command: ")
-                                continue
-
-                        # If len(commands) > 2, excessive arguments
-                        if(len(command)):
-                                continue
-
-                        # Check that commands[1] is a legitimate plaintext source.
-                        try:
-                                my_file = open(command[1], "r", encoding="utf-8")
-                                my_file.close()
-
-                                global plain_text_source
-                                plain_text_source = command[1]
-                                statement = input("Plaintext source updated. Enter a testing mode command: ")
-                                continue
-
-                        except IOError:
-                                statement = input("No such file or directory! Enter a testing mode command: ")
-                                continue
 
 
                 # Check that the command is a legitimate decryption type. If so, break out of loop
-                if statement in cryptography_runner.decryption_set:
+                if statement in miscellaneous.decryption_set:
                         break
 
                 # Prompt the user for a command again

@@ -1,7 +1,7 @@
 import miscellaneous
 import time
-from decimal import * #  use exact decimals to calculate nth roots
-getcontext().prec = 3 #  not much precision is necessary
+#from decimal import * #  use exact decimals to calculate nth roots
+#getcontext().prec = 3 #  not much precision is necessary
 
 
 
@@ -9,7 +9,7 @@ getcontext().prec = 3 #  not much precision is necessary
 
 
 
-def decrypt(data, output_location):
+def execute(data, output_location):
     """
     This function decrypts data using a key.
 
@@ -17,107 +17,174 @@ def decrypt(data, output_location):
     :return: the decrypted data
     """
 
-    #  FIGURE OUT THE CHARACTER SET THAT THE USER WANTS TO USE
-    vig_type = miscellaneous.take_char_set(miscellaneous.char_sets)
-
-    #  TAKE A KEY
-    key = input("Enter the key exactly: ")
-
-    # IF THE USER DIDN"T ENTER ANYTHING, SEND AN ERROR MESSAGE AND ASK AGAIN
-    while key == "":
-        key = input("No key entered! Enter a key: ")
+    # Obtain the decrypted text. Also write statistics and relevant info to a file
+    decrypted = miscellaneous.encrypt_or_decrypt_with_general_key(data, output_location,
+                                                             "Decryption", "vigenere_exponential", "decrypt")
 
 
-    # START THE TIMER
-    start_time = time.time()
-
-    # EXECUTE THE SPECIFIC ENCRYPTION METHOD
-    decrypted = eval("vig_" + vig_type + "(data, key)")
-
-    #  END THE TIMER
-    elapsed_time = time.time() - start_time
-
-    #  WRITE TO A NEW FILE CONTAINING THE VIGENERE TYPE, KEY, AND SECONDARY KEY, AND TIME ELAPSED, AND TIME PER
-    #     CHARACTER
-    new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The character set is : " + vig_type,
-                         "\nThe key is: " + key,
-                         "\n Encoded/decoded in: " + str(elapsed_time) + " seconds.",
-                         "\n That is " + str((elapsed_time/len(decrypted) * 1000000)) + " microseconds per character."])
-
+    # Return encrypted text to be written in cryptography_runner
     return decrypted
 
-#  END OF DEF DECRYPT()
 
 
 
 
-
-def vig_unicode(cipher_text, key):
+# The testing form of execute
+def testing_execute(cipher_text, output_location, plain_text, key, char_set_size, encryption_time):
     """
-    This function decrypts the plain text using the unicode character sets, which has a max value of 1114111. Should
-    any of the singular values exceed 1114111, it starts from 0 again. For example, 1114112 would become 0.
+    Decrypt and save statistics.
 
-    :param cipher_text: the text to be decrypted
-    :param key: the key with which the decryption is done
-    :return: the decrypted text
+    :param cipher_text: (string) the encrypted text to decipher
+    :param output_location: (string) the file to save statistics into
+    :param plain_text: (string) the original plain text
+    :param key: (string) the key used to decrypt
+    :param char_set_size: (integer) the character set used
+    :param encryption_time: (double) the time it took to encrypt using vigenere
+    :return: None
     """
 
-    decrypted = ""
-    key_count = 0
-    MAX_CHAR_SET_VAL = 1114112
+    # Run the decryption algorithm on the cipher_text
+    start_time = time.time()
+    decrypted = decrypt(cipher_text, key, char_set_size)
+    decryption_time = time.time() - start_time
+
+    # Open file for writing
+    new_file = open(output_location, "w", encoding="utf-8")
+
+    # Set up a space for notes
+    if decrypted == plain_text:
+        new_file.writelines(["Vigenere_Exponential\nCORRECT \n\n\nNotes: "])
+    else:
+        # Calculate the number of characters that differ
+        count = sum(1 for a, b in zip(decrypted, plain_text) if a != b)
+        new_file.writelines(["Vigenere_Exponential" + "\nINCORRECT"
+                             + "\tDiffering characters: " + str(count)
+                             + "\tPercentage difference: " + str((count / len(plain_text)) * 100) + "\n\n\nNotes: "])
 
 
-    SURROGATE_LOWER_BOUND = 55296
-    SURROGATE_UPPER_BOUND = 57343
-    SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
+    # Encryption information
+    new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
+                         "\nThe key is: " + key,
+                         "\nEncrypted in: " + str(encryption_time) + " seconds.",
+                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
+                         "\nThat is " + str((encryption_time / len(decrypted) * 1000000))
+                         + " microseconds per character."])
+
+    # Decryption information
+    new_file.writelines(["\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption",
+                         "\nThe character set is : " + [char_set for char_set,
+                                                                     value in
+                                                        miscellaneous.char_set_to_char_set_size.items()
+                                                        if value == char_set_size][0],
+                         "\nThe key is: " + key,
+                         "\nDecrypted in: " + str(decryption_time) + " seconds.",
+                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
+                         "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
+                         + " microseconds per character."])
+
+    # Print out the cipher_text
+    new_file.writelines(["\n\n\nCipher text: \n" + cipher_text])
+
+    # Print out the decrypted
+    new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
+
+    # Print out the plain_text
+    new_file.writelines(["\n\n\nPlain text: \n" + plain_text])
+
+    new_file.close()
 
 
-    ADJUSTED_MAX_CHAR_SET_VAL = MAX_CHAR_SET_VAL - SURROGATE_BOUND_LENGTH
+
+
+
+
+
+# Contains the actual algorithm to decrypt with vigenere_exponential cipher
+def decrypt(cipher_text, key, char_set_size):
+    """
+    This function decrypts with vigenere. Instead of exponents, take the nth root.
+
+    :param cipher_text: (string) the cipher text to decrypt
+    :param key: (string) the string to decrypt with
+    :param char_set_size: (int) the size of the character set used
+    :return: (string) the deciphered text
+    """
+
+    plain_text = ""
+    key_index = 0
+
+    # Adjust the char set size to exclude surrogates
+    if char_set_size > 256:
+        char_set_size -= miscellaneous.SURROGATE_BOUND_LENGTH
+
+
     counter = 0
-
     for x in cipher_text:
-        #  figure out the unicode value for each of the characters
+
+
+        # Print updates (every 1000 characters)
+        if counter % 1000 == 0:
+            print("DECRYPTION\tPercent of text done: " + str(counter / len(cipher_text) * 100) )
+
+
+        #  figure out the unicode value for each of the characters(reverse surrogate adjustment in encryption if needed)
         uni_val_cipher = ord(x)
-
-
-        #  adjust uni_val_cipher to fit into the adjusted max character set (without the surrogates)
-        if uni_val_cipher >= SURROGATE_UPPER_BOUND + 1:
-            uni_val_cipher = uni_val_cipher - SURROGATE_BOUND_LENGTH
+        if uni_val_cipher >= miscellaneous.SURROGATE_LOWER_BOUND:
+            uni_val_cipher = uni_val_cipher - miscellaneous.SURROGATE_BOUND_LENGTH
 
 
         #  figure out the unicode value for the right character in the key, then update for next iteration
-        key_char = key[key_count]
+        key_char = key[key_index]
         uni_val_key = ord(key_char)
-        key_count = (key_count + 1) % len(key)
+        key_index = (key_index + 1) % len(key)
+
+
+        #  find original plain char by taking all possibilities (y) and raising that to uni_val_keyth power for match
+        def _find_plain_char(uni_val_key, char_set_size, uni_val_cipher, counter):
+
+            # TRY THE SPACE FIRST
+            if (32 ** uni_val_key) % char_set_size == uni_val_cipher:
+                return chr(32), counter + 1
+
+            # TRY LOWERCASE LETTERS
+            for y in range(97, 123):
+                # If mod_result equal to unicode value of cipher, correct plain unicode value haas been found.
+                if (y ** uni_val_key) % char_set_size == uni_val_cipher:
+                    return chr(y), counter + 1
+
+            # TRY UPPERCASE LETTERS
+            for y in range(65, 91):
+                # If mod_result equal to unicode value of cipher, correct plain unicode value haas been found.
+                if (y ** uni_val_key) % char_set_size == uni_val_cipher:
+                    return chr(y), counter + 1
+
+            # TRY THE OTHER PRINTABLES
+            for y in range(32, 128):
+                # If mod_result equal to unicode value of cipher, correct plain unicode value haas been found.
+                if (y ** uni_val_key) % char_set_size == uni_val_cipher:
+                    return chr(y), counter + 1
+
+            # TRY EVERYTHING ELSE (except null)
+            for y in range(1, 32):
+                # If mod_result equal to unicode value of cipher, correct plain unicode value haas been found.
+                if (y ** uni_val_key) % char_set_size == uni_val_cipher:
+                    return chr(y), counter + 1
+
+            # Nothing else, so return null
+            return chr(0), counter + 1
+        plain_char, counter = _find_plain_char(uni_val_key, char_set_size, uni_val_cipher, counter)
+
+
+        # Add plain char to the plain text
+        plain_text += plain_char
+    # END OF LOOP TO BUILD UP THE CIPHER_TEXT
+
+
+    return plain_text
 
 
 
-        #  cycle through all possible uni_val_plain, and take that to the power of uni_val_key
-        for y in range(1, ADJUSTED_MAX_CHAR_SET_VAL - 1):
-            power_result = y ** uni_val_key
-
-            #  check if this power result modded by ADJUSTED_MAX_CHAR_SET_VAL equal to uni_val_cipher. If yes, break
-            if power_result % ADJUSTED_MAX_CHAR_SET_VAL == uni_val_cipher:
-                uni_val_plain = y
-                break
-
-
-
-        decrypted_char = chr(uni_val_plain)
-        decrypted = decrypted + decrypted_char
-
-
-
-        #  give the user an update every thousand characters
-        if counter % 1000 == 0:
-            print("Characters decrypted: " + str(counter))
-        counter = counter + 1
-
-    #  END OF LOOP TO DECRYPT ONE CHARACTER
 
 
 
 
-    return decrypted
-#  END OF DEF VIG_UNICODE

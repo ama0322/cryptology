@@ -1,5 +1,5 @@
 import miscellaneous
-import time
+import time # For writing relevant information
 
 
 
@@ -9,103 +9,169 @@ import time
 
 
 
-
-def decrypt(data, output_location):
+# Call the proper functions to decrypt. Return decrypted text back to cryptography_runner.py
+def execute(data, output_location):
     """
     This function decrypts data using a key.
 
-    :param data: the data to be decrypted
-    :return: the decrypted data
+    :param data: (string) the data to be decrypted
+    :param output_location: (string) the file to write relevant information into
+    :return: (string) the decrypted data
     """
 
-    #  FIGURE OUT THE CHARACTER SET THAT THE USER WANTS TO USE
-    vig_type = miscellaneous.take_char_set(miscellaneous.char_sets)
 
-    #  TAKE A KEY
-    key = input("Enter the key exactly: ")
-
-    # IF THE USER DIDN"T ENTER ANYTHING, SEND AN ERROR MESSAGE AND ASK AGAIN
-    while key == "":
-        key = input("No key entered! Enter a key: ")
+    # Obtain the decrypted text. Also write statistics and relevant info to a file
+    decrypted = miscellaneous.encrypt_or_decrypt_with_general_key(data, output_location,
+                                                             "Decryption", "vigenere_multiplicative", "decrypt")
 
 
-    # START THE TIMER
+    # Return encrypted text to be written in cryptography_runner
+    return decrypted
+
+
+
+
+# The testing form of execute
+def testing_execute(cipher_text, output_location, plain_text, key, char_set_size, encryption_time):
+    """
+    Decrypt and save statistics.
+
+    :param cipher_text: (string) the encrypted text to decipher
+    :param output_location: (string) the file to save statistics into
+    :param plain_text: (string) the original plain text
+    :param key: (string) the key used to decrypt
+    :param char_set_size: (integer) the character set used
+    :param encryption_time: (double) the time it took to encrypt using vigenere
+    :return: None
+    """
+
+    # Run the decryption algorithm on the cipher_text
     start_time = time.time()
+    decrypted = decrypt(cipher_text, key, char_set_size)
+    decryption_time = time.time() - start_time
 
-    # EXECUTE THE SPECIFIC ENCRYPTION METHOD
-    decrypted = eval("vig_" + vig_type + "(data, key)")
+    # Open file for writing
+    new_file = open(output_location, "w", encoding="utf-8")
 
-    #  END THE TIMER
-    elapsed_time = time.time() - start_time
+    # Set up a space for notes
+    if decrypted == plain_text:
+        new_file.writelines(["Vigenere_Multiplicative\nCORRECT \n\n\nNotes: "])
+    else:
+        # Calculate the number of characters that differ
+        count = sum(1 for a, b in zip(decrypted, plain_text) if a != b)
+        new_file.writelines(["Vigenere_Multiplicative" + "\nINCORRECT"
+                             + "\tDiffering characters: " + str(count)
+                             + "\tPercentage difference: " + str((count / len(plain_text)) * 100) + "\n\n\nNotes: "])
 
-    #  WRITE TO A NEW FILE CONTAINING THE VIGENERE TYPE, KEY, AND SECONDARY KEY, AND TIME ELAPSED, AND TIME PER
-    #     CHARACTER
-    new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The character set is : " + vig_type,
+    # Encryption information
+    new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
                          "\nThe key is: " + key,
-                         "\n Encoded/decoded in: " + str(elapsed_time) + " seconds.",
-                         "\n That is " + str((elapsed_time/len(decrypted) * 1000000)) + " microseconds per character."])
+                         "\nEncrypted in: " + str(encryption_time) + " seconds.",
+                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
+                         "\nThat is " + str((encryption_time / len(decrypted) * 1000000))
+                         + " microseconds per character."])
 
-    return decrypted
+    # Decryption information
+    new_file.writelines(["\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption",
+                         "\nThe character set is : " + [char_set for char_set,
+                                                                     value in
+                                                        miscellaneous.char_set_to_char_set_size.items()
+                                                        if value == char_set_size][0],
+                         "\nThe key is: " + key,
+                         "\nDecrypted in: " + str(decryption_time) + " seconds.",
+                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
+                         "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
+                         + " microseconds per character."])
 
-#  END OF DEF DECRYPT()
+    # Print out the cipher_text
+    new_file.writelines(["\n\n\nCipher text: \n" + cipher_text])
+
+    # Print out the decrypted
+    new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
+
+    # Print out the plain_text
+    new_file.writelines(["\n\n\nPlain text: \n" + plain_text])
+
+    new_file.close()
 
 
 
 
-
-
-def vig_unicode(cipher_text, key):
+# Contains the actual algorithm to decrypt with vigenere_multiplicative cipher
+def decrypt(cipher_text, key, char_set_size):
     """
-    This function decrypts the plain text using the unicode character sets, which has a max value of 1114111. Should
-    any of the singular values exceed 1114111, it starts from 0 again. For example, 1114112 would become 0.
+    This function decrypts with vigenere. Instead of multiplying, divide. Read as numbers if char_set_size <=256.
+    Otherwise, read as characters
 
-    :param cipher_text: the text to be decrypted
-    :param key: the key with which the decryption is done
-    :return: the decrypted text
+    :param cipher_text: (string) the cipher text to decrypt
+    :param key: (string) the string to decrypt with
+    :param char_set_size: (int) the size of the character set used
+    :return: (string) the deciphered text
     """
 
-    decrypted = ""
-    key_count = 0
-    MAX_CHAR_SET_VAL = 1114112
+
+    plain_text = ""
+    key_index = 0
+
+    # if using unicode, then adjust the size of the char_set_size to be printable characters only
+    if char_set_size > 256:
+        char_set_size = char_set_size - miscellaneous.SURROGATE_BOUND_LENGTH
 
 
-    SURROGATE_LOWER_BOUND = 55296
-    SURROGATE_UPPER_BOUND = 57343
-    SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
+
+    # Read and decrypt the cipher_text if it is numbers, not characters (char_set_size <= 256)
+    if char_set_size <= 256:
+
+        # Obtain a list of the numbers in the cipher_text
+        numbers = cipher_text.split(" ")
+        for x in range(0, len(numbers)):
+            numbers[x] = int(float(numbers[x]))
+
+        # Decrypt each character in the cipher text
+        for i in numbers:
+
+            # The unicode value of plain is the cipher number divided by the unival of the right index of the key
+            uni_val_plain = i // ord(key[key_index])
+            key_index = (key_index + 1 ) % len(key)
+
+            # Add the unicode character of this unicode value to the plain_text
+            plain_text = plain_text + chr(uni_val_plain)
 
 
-    ADJUSTED_MAX_CHAR_SET_VAL = MAX_CHAR_SET_VAL - SURROGATE_BOUND_LENGTH
+    # Else, read and decrypt eh cipher_text as characters (char_set_size > 256)
+    else:
+
+        for x in cipher_text:
+
+            # figure out the unicode value for each of the characters
+            uni_val_cipher = ord(x)
+
+            # Figure out the unicode value for the irght character in the key. Then update for next iteration
+            uni_val_key = ord(key[key_index])
+            key_index = (key_index + 1) % len(key)
+
+            # Adjust for surrogates if necessary by subtracting SURROGATE_BOUND_LENGTH
+            if miscellaneous.SURROGATE_LOWER_BOUND <= uni_val_cipher:
+                uni_val_cipher = uni_val_cipher - miscellaneous.SURROGATE_BOUND_LENGTH
+
+            # Figure out the decrypted character value(should be int by default)
+            uni_val_decrypted = int(uni_val_cipher / uni_val_key)
+            decrypted_char = chr(uni_val_decrypted)
+
+            # Add this character to the plain_text
+            plain_text = plain_text + decrypted_char
 
 
-    for x in cipher_text:
-        #  figure out the unicode value for each of the characters
-        uni_val_cipher = ord(x)
+    # Finished, so return the decrypted text
+    return plain_text
 
 
-        #  adjust uni_val_cipher to fit into the adjusted max character set (without the surrogates)
-        if uni_val_cipher >= SURROGATE_UPPER_BOUND + 1:
-            uni_val_cipher = uni_val_cipher - SURROGATE_BOUND_LENGTH
 
 
-        #  figure out the unicode value for the right character in the key, then update for next iteration
-        key_char = key[key_count]
-        uni_val_key = ord(key_char)
-        key_count = (key_count + 1) % len(key)
 
 
-        #  uni_val_cycle is all numbers that when modded by ADJUSTED_MAX_CHAR_SET_VAL results in uni_val_cipher
-        uni_val_cycle = uni_val_cipher
-
-        #  as long as uni_val_cycle does not evenly divide uni_val_key, we know it's not the right mod iteration
-        while(not uni_val_cycle % uni_val_key == 0):
-            uni_val_cycle = uni_val_cycle + ADJUSTED_MAX_CHAR_SET_VAL
-
-        #  at this point, uni_val_cycle is the original product of uni_val_plaint and uni_val_key during the decryption
-        uni_val_plain = uni_val_cycle // uni_val_key
-
-        decrypted_char = chr(uni_val_plain)
-        decrypted = decrypted + decrypted_char
 
 
-    return decrypted
+
+
+

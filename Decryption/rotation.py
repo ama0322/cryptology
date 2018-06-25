@@ -75,6 +75,14 @@ def testing_execute(cipher_text, output_location, plain_text, key, char_set_size
                          "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
                                       + " microseconds per character."                                         ])
 
+
+    # Print out the cipher_text
+    new_file.writelines(["\n\n\nCipher text: \n" + cipher_text])
+
+    # Print out the plain_text
+    new_file.writelines(["\n\n\nPlain text: \n" + plain_text])
+
+
     new_file.close()
 
 

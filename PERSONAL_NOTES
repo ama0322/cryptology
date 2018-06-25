@@ -1,18 +1,25 @@
-REFER to rotation.py for file layouts
 
 
 
 
 
-Finish up the decyprtion for vigener_multiplicative and vigenere_exponential
+
+
+
+
+SLIGHT problems with vigenere_multiplicative on leonora.txt
+
+
+
+
+
+
+MIGHT need to fix - vigenere_exponential interactions with 0.
+
+
 
 
 NEED to fix overlap in for vigenere_exponential decryption.
-    TRY - in the relevant information file, create a list of numbers. These numbers represent the integer division of
-          power result with the length of the character set. Along with the modulo result of the power result with the
-          length of the character set, which is given, the original character could be figured out.
 
 
 
-NEED TO FINISH vigenere_multiplicative decryption,
-               rotation_unknown decryption for ascii and extended ascii

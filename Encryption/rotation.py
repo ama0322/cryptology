@@ -11,8 +11,9 @@ import miscellaneous # To handle user input and miscellaneous
 # Encrypt using user-entered info. Write relevant information and return encrypted text for cryptography_runner
 def execute(data, output_location):
     """
-    This function asks the user for more information to conduct the cipher. Then it encrypt the information using the
-    encrypt function located below. Finally, it returns the encrypted data back to cryptography_runner
+    This function calls the appropriate functions in miscellaneous.py. Those functions will use the encrypt() function
+    located below as the algorithm to actually encrypt the text. Then, the cipher text will be returned back to
+    cryptography_runner.py
 
     :param data: (string) the data to be encrypted
     :param output_location: (string) the location to print out the information

@@ -1,25 +1,51 @@
 import time # for timing the encryption/decryption processes
 import csv # to convert ngram csv to a dictionary
-import string # to remove punctuation from a string
+import difflib # To obtain similarity between two lists
 
-char_sets = ["unicode", "ascii", "extended_ascii"] #  unicode has max val of 1114111,
-                                                   #  ascii has max val of 127
-                                                   #  extended_ascii has max val of 255
+
+
+################################################################################################### RESOURCES ##########
+
+# Sets containing available options for encryption/decryption. Add to this.
+encryption_set = {"vigenere", "vigenere_multiplicative",
+                  "vigenere_exponential", "rotation", }
+
+decryption_set = {"vigenere", "vigenere_multiplicative",
+                  "vigenere_exponential", "rotation", "rotation_nokey", "vigenere_nokey,"}
+
+
+# the set containing options in both encryption_list and decryption_list
+both_set = encryption_set & decryption_set
+
+# the set containing options only in decryption_list
+decryption_only_set = decryption_set - encryption_set
+
+
+
+char_sets = ["unicode", "unicode_plane0", "ascii", "extended_ascii"]
 
 # Dictionery with character sets to the number of characters in them
 char_set_to_char_set_size = {
     "ascii": 128,
     "extended_ascii": 256,
-    "unicode": 1114112
+    "unicode": 1114112,
+    "unicode_plane0": 65536
 }
 
+# Unprintable characters in unicode
+SURROGATE_LOWER_BOUND = 55296 # inclusive
+SURROGATE_UPPER_BOUND = 57343 # inclusive
+SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
+
+
 # Dictionary with decryption methods to their corresponding encryption method
-decryption_corresponding_encryption = {
+decryption_to_corresponding_encryption = {
     "rotation": "rotation",
-    "rotation_unknown": "rotation",
+    "rotation_nokey": "rotation",
     "vigenere": "vigenere",
-    "vigenere_multiplicative": "vigenere_exponential",
-    "vigenere_exponential": "vigenere_exponential"
+    "vigenere_multiplicative": "vigenere_multiplicative",
+    "vigenere_exponential": "vigenere_exponential",
+    "vigenere_nokey": "vigenere"
 }
 
 
@@ -35,7 +61,7 @@ encryption_key_type = {
 # Dictionary with decryption methods to whether or not they need keys
 does_decryption_need_key = {
     "rotation": True,
-    "rotation_unknown": False,
+    "rotation_nokey": False,
     "vigenere": True,
     "vigenere_exponential": True,
     "vigenere_multiplicative": True
@@ -45,8 +71,15 @@ does_decryption_need_key = {
 #  The set contaning english word. Load into this if necessary
 english_words = None
 
-# The dictionary containing mappings from ngram to its count. Load into this if necessary
-ngram_dict = None
+# The dictionary containing mappings from ngram to its frequency. Load into this if necessary
+ngram_to_frequency = None
+
+# The dictionary containing mapping from ngram to its order (So TH is 1)
+ngram_to_positional_index = None
+
+
+
+
 
 ######################################################################### USER INTERFACING AND FUNCTION CALLS ##########
 
@@ -122,6 +155,13 @@ def encrypt_or_decrypt_without_key(data, output_location, package, module, encry
 
 
 
+
+
+
+
+
+
+
 ########################################################################################### USEFUL ALGORITHMS ##########
 
 # This function figures out what character set the encrypted data is in. NOT 100% accurate
@@ -162,14 +202,33 @@ def is_english_bag_of_words(data):
     """
 
     # Remove punctuation from the data
-    data = data.replace(", " , " ")
-    data = data.replace(". ", " ")
-    data = data.replace("; ", " ")
-    data = data.replace("? ", " ")
-    data = data.replace("! ", " ")
+    data = data.replace("," , "")
+    data = data.replace(".", "")
+    data = data.replace(";", "")
+    data = data.replace("?", "")
+    data = data.replace("!", "")
     data = data.replace("-", " ")
     data = data.replace("\"", "")
+    data = data.replace("/", "")
     data = data.replace("'s ", " ")
+    data = data.replace("'", "")
+    data = data.replace(")", "")
+    data = data.replace("(", "")
+
+    # Remove digits from the data
+    data = data.replace("0", "")
+    data = data.replace("1", "")
+    data = data.replace("2", "")
+    data = data.replace("3", "")
+    data = data.replace("4", "")
+    data = data.replace("5", "")
+    data = data.replace("6", "")
+    data = data.replace("7", "")
+    data = data.replace("8", "")
+    data = data.replace("9", "")
+
+
+
 
     # Load the dictionary of english words into english_words (if necessary)
     global english_words
@@ -178,16 +237,23 @@ def is_english_bag_of_words(data):
 
 
     # Percent of text that is english needed to pass as plaintext
-    percent_english_threshold = 0.15
+    percent_english_threshold = 0.45
+    average_english_word_len_loose = 10
+    num_letters = len(data)
+    data_expected_words = int(len(data) / average_english_word_len_loose)
 
     words = data.split()
-    total_words = len(words)
+
+    # if total_words is overly small(because wrong decryption), take expected words instead
+    num_words = len(words)
+    total_words = max( num_words, data_expected_words)
+
     english_word_counter = 0
 
 
 
     for word in words:
-        if word.lower() in (english_words):
+        if word.lower() in english_words:
             english_word_counter = english_word_counter + 1
 
     #  If it passes the percent english threshold, return true and the percent english
@@ -201,22 +267,158 @@ def is_english_bag_of_words(data):
 
 
 # This function figures out whether data is in English. TODO
-def is_english_n_grams(data, ngram_length):
+def is_english_n_grams(data):
     """
     This checks a string of data for ngrams, where the grams are letters. If these ngrams match the ngrams expected
     in English, it is probably in english. Possible ngram values are 1-9 (recommended: 2)
 
+    The frequencies of the ngrams are converted into their logarithms (log(frequency)). This is done so that that
+    frequency values of the ngrams are not multiplied together to find the final fitness, have their logarithms added
+    together.
+
+    The fitness of this data is then compared against the fitness_threshold to determine if it is english.
+
     :param data: (string) Check this for english
     :return: (boolean) whether or not the data is in english
+    :return: (double) the percent English's most common ngrams found in data's most common ngrams
     """
 
+    # The type of ngram that we are using
+    ngram_type = 2
 
-    # Load into ngram_dict if it is None or has different ngram length
-    global ngram_dict
-    if ngram_dict is None or len(next(iter(ngram_dict))) != ngram_length:
-        with open(eval("Library/ngrams" + ngram_length + ".txt"), newline='') as my_file:
-            reader = csv.reader(my_file)
-            ngram_dict = dict(reader)  # Read each row as key-value pair
+
+    # The percent of most common ngrams in the data compared with the most common ngrams in English to qualify as it
+    similarity_english_threshold = 0.1
+
+
+    # Remove all non-letters from the data (replace with space)
+    data = data.replace("'s ", " ")
+    data = list(data)
+    for x in range(0, len(data)):
+        if not str.isalpha(data[x]):
+            data[x] = " "
+    data = "".join(data)
+
+
+
+    # Load into ngram_to_frequency if it is None. Also fill out ngram_to_positional_index
+    global ngram_to_frequency
+    global ngram_to_positional_index
+    if ngram_to_frequency is None:
+        ngram_to_frequency = {}
+        ngram_to_positional_index = {}
+        with open("Library/ngrams" + str(ngram_type) + ".txt", newline='') as my_file:
+            reader = csv.DictReader(my_file, fieldnames=("ngram", "count"))
+            # Read each row as key-value pair
+            for row in reader:
+                ngram_to_frequency[row["ngram"]] = row["count"]
+
+        # Fill out ngram_to_positional_index
+        count = 1
+        for x in ngram_to_frequency:
+            ngram_to_positional_index[x] = count
+            count += 1
+
+
+    # Dictionary to store ngrams with their frequencies
+    data_ngrams_frequencies = {}
+
+    # Store the ngrams from data into data_ngrams(Skip spaces)
+    for x in range(0, len(data) - ngram_type + 1):
+
+        # If on space, then skip it
+        if data[x] == " ":
+            continue
+
+        ngram = data[x: x + ngram_type]
+
+        # if ngram already exists, then increment value
+        if ngram in data_ngrams_frequencies:
+            data_ngrams_frequencies[ngram] += 1
+        # Else does not exist, so append
+        else:
+            data_ngrams_frequencies[ngram] = 1
+
+
+    # Get lists of the ngrams sorted by their frequencies
+    most_frequent_ngrams_data = sorted(data_ngrams_frequencies, key=data_ngrams_frequencies.get)
+    most_frequent_ngrams_english = sorted(ngram_to_frequency, key=ngram_to_frequency.get)
+
+    # convert the ngrams into lists of positional index frequencies
+    i = 0
+    for x in most_frequent_ngrams_data:
+        most_frequent_ngrams_data[i] = ngram_to_positional_index.get(x)
+        i += 1
+
+    i = 0
+    for x in most_frequent_ngrams_english:
+        most_frequent_ngrams_english[i] = ngram_to_positional_index.get(x)
+        i+= 1
+
+
+
+    # This inner function returns a value between 0 and 1 indicating how close these two lists are. Take into account
+    # ordering of the lists. Lists must be the same size
+    def similarity_of_two_integer_lists(x, y):
+        """
+        Figure out how close these values are
+
+        :param x: (list) one of the lists to compare to
+        :param y: (list) another of the list to compare to
+        :return: (float) value between 0 and 1 indicating the similarity
+        """
+
+        # Size of the arrays
+        size = len(y)
+
+        # Add points to this
+        total_points = 0
+
+        for i in range(size):
+            points_this_index = 1 / size
+
+            # Figure out the distance between x[i] and that value in y. If does not exist, 0 points
+            if x[i] not in y:
+                continue
+
+            # At this point, x[i] is in y at some index j. Find abs(i - j)
+            j = y.index(x[i])
+            difference = abs(i - j)
+
+            # Find out difference as a proportion of the overall length of the list
+            difference = difference / size
+
+            # Calculate the amount of points for x[i]
+            points_this_index = points_this_index * (1 - difference)
+
+            # Add to total points
+            total_points = total_points + points_this_index
+
+        return total_points
+
+
+    """
+    # Obtain the similarity between most frequent ngrams of data and of english
+    similarity = difflib.SequenceMatcher(None, most_frequent_ngrams_data, most_frequent_ngrams_english)
+    similarity_english = similarity.ratio()
+    """
+
+    similarity_english = similarity_of_two_integer_lists(most_frequent_ngrams_data, most_frequent_ngrams_english)
+    # If text is in english
+    if similarity_english >= similarity_english_threshold:
+        return True, similarity_english
+
+    else:
+        return False, similarity_english
+
+
+
+
+
+
+
+
+
 
 
 ############################################################################################ HELPER FUNCTIONS ##########

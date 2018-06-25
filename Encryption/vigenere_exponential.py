@@ -8,146 +8,74 @@ import time
 
 
 
-def encrypt(data, output_location):
+def execute(data, output_location):
     """
-    This function asks the user for more information to conduct the vigenere cipher. Then, it passes this information to
-    the specific functions located below(in the format "vig_characterset"). Finally, it returns the encrypted data
+    This function calls the appropriate functions in miscellaneous.py. Those functions will use the encrypt() function
+    located below as the algorithm to actually encrypt the text. Then, the cipher text will be returned back to
+    cryptography_runner.py
 
     :param data: the data to be encrypted
     :return: the encrypted data
     """
 
-    #  figure out the character set that the user wants to use
-    vig_type = miscellaneous.take_char_set(miscellaneous.char_sets)
+    # Obtain the encrypted text. Also write statistics and relevant info a file
+    encrypted = miscellaneous.encrypt_or_decrypt_with_general_key(data, output_location,
+                                                                      "Encryption", "vigenere_exponential", "encrypt")
 
-
-
-    # TAKE A KEY
-    key = input("Enter a key: ")
-
-
-    # IF THE USER DIDN"T ENTER ANYTHING, SEND AN ERROR MESSAGE AND ASK AGAIN
-    while key == "":
-        key = input("No key entered! Enter a key: ")
-
-
-
-    # START THE TIMER
-    start_time = time.time()
-
-    # EXECUTE THE SPECIFIC ENCRYPTION METHOD
-    encrypted = eval("vig_" + vig_type + "(data, key)")
-
-    #  END THE TIMER
-    elapsed_time = time.time() - start_time
-
-    #  WRITE TO A NEW FILE CONTAINING THE VIGENERE TYPE, KEY, AND SECONDARY KEY, AND TIME ELAPSED, AND TIME PER
-    #     CHARACTER
-    new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The character set is : " + vig_type,
-                         "\nThe key is: " + key,
-                         "\n Encoded/decoded in: " + str(elapsed_time) + " seconds.",
-                         "\n That is " + str((elapsed_time/len(encrypted) * 1000000)) + " microseconds per character."])
-
-
+    # Return encrypted text to be written in cryptography_runner
     return encrypted
-#  END OF DEF ENCRYPT()
 
 
 
 
 
 
-
-def vig_unicode(plain_text, key):
+# The actual algorithm to encrypt using a vigenere cipher(exponents instead of addition)
+def encrypt(plain_text, key, char_set_size):
     """
-    This function encrypts the plain text using the unicode character sets, which has a max value of 1114111. Should
-    any of the singular values exceed 1114111, it starts from 0 again. For example, 1114112 would become 0.
+    This works the same as regular vigenere, but uses exponents instead of addition. When using unicode_plane0 or
+    unicode, adjust to ignore the Surrogates.
 
-    :param plain_text: the text to be encrypted
-    :param key: the key with which the encryption is done
-    :return: the encrypted text
+    :param data: (string) the data to be encrypted
+    :param output_location: (string) the file to write relevant information into
+    :return: (string) the encrypted data
     """
 
-    encrypted = ""
-    key_count = 0
-    MAX_CHAR_SET_VAL = 1114112
+
+    cipher_text = "" # The string used to build up the encrypted text, one character at a time
+    key_index = 0 # This indicates the index of the key that the vigenere cipher is currently on
 
 
-    SURROGATE_LOWER_BOUND = 55296
-    SURROGATE_UPPER_BOUND = 57343
-    SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
+    # Adjust the char set size to exclude surrogates
+    if char_set_size > 256:
+        char_set_size -= miscellaneous.SURROGATE_BOUND_LENGTH
 
 
-    ADJUSTED_MAX_CHAR_SET_VAL = MAX_CHAR_SET_VAL - SURROGATE_BOUND_LENGTH
 
-
+    # For each character in plain text
     for x in plain_text:
+
         #  figure out the unicode value for each of the characters
         uni_val_plain = ord(x)
 
         #  figure out the unicode value for the right character in the key, then update for next iteration
-        key_char = key[key_count]
+        key_char = key[key_index]
         uni_val_key = ord(key_char)
 
-        key_count = (key_count + 1) % len(key)
+        key_index = (key_index + 1) % len(key)
 
 
-        # figure out the encrypted character val
-        uni_val_encrypted = (uni_val_plain ** uni_val_key) % ADJUSTED_MAX_CHAR_SET_VAL
+        # Figure out the uni_val_cipher. Adjust it to be out of surrogate range
+        uni_val_encrypted = (uni_val_plain ** uni_val_key) % char_set_size
+        if miscellaneous.SURROGATE_LOWER_BOUND <= uni_val_encrypted:
+            uni_val_encrypted = uni_val_encrypted + miscellaneous.SURROGATE_BOUND_LENGTH
 
-        #  figure out the character by combining the two unicodes
+
+        #  figure out the character corresponding to the unicode value, and add to the cipher_text
         encrypted_char = chr(uni_val_encrypted)
+        cipher_text = cipher_text + encrypted_char
 
-        #  if the encrypted_char would be a surrogate(unprintable), adjust by adding SURROGATE_BOUND_LENGTH
-        if SURROGATE_LOWER_BOUND <= uni_val_encrypted:
-            encrypted_char = chr(uni_val_encrypted + SURROGATE_BOUND_LENGTH)
-
-
-        #  Add the encrypted character to the overall encrypted message
-        encrypted = encrypted + encrypted_char
-
-    return encrypted
-
-
-
-
-
-
-def vig_ascii(plain_text, key):
-    """
-    This function encrypts the plain text using the ascii character sets, which has a max value of 127. Should
-    any of the singular values exceed 127, it starts from 0 again. For example, 128 would become 0.
-
-    :param plain_text: the text to be encrypted
-    :param key: the key with which the encryption is done
-    :return: the encrypted text
-    """
-
-    encrypted = ""
-    key_count = 0
-    secondary_key_count = 0
-    MAX_CHAR_SET_VAL = 128
-
-
-
-    for x in plain_text:
-        #  figure out the ascii value for each of the characters
-        uni_val_plain = ord(x)
-
-        #  figure out the ascii value for the right character in the key, then update for next iteration
-        key_char = key[key_count]
-        uni_val_key = ord(key_char)
-
-        key_count = (key_count + 1) % len(key)
-
-
-
-        #  figure out the character by combining the two ascii's, the add it to the encrypted string
-        encrypted_char = chr((uni_val_plain ** uni_val_key) % MAX_CHAR_SET_VAL)
-        encrypted = encrypted + encrypted_char
-
-    return encrypted
+    return cipher_text
 
 
 
@@ -157,40 +85,3 @@ def vig_ascii(plain_text, key):
 
 
 
-
-def vig_extended_ascii(plain_text, key):
-    """
-    This function encrypts the plain text using the extended_ascii character sets, which has a max value of 255. Should
-    any of the singular values exceed 255, it starts from 0 again. For example, 256 would become 0.
-
-    :param plain_text: the text to be encrypted
-    :param key: the key with which the encryption is done
-    :return: the encrypted text
-    """
-
-    encrypted = ""
-    key_count = 0
-    secondary_key_count = 0
-    MAX_CHAR_SET_VAL = 256
-
-
-
-    for x in plain_text:
-        #  figure out the ascii value for each of the characters
-        uni_val_plain = ord(x)
-
-        #  figure out the ascii value for the right character in the key, then update for next iteration
-        key_char = key[key_count]
-        uni_val_key = ord(key_char)
-
-        key_count = (key_count + 1) % len(key)
-
-
-
-        #  figure out the character by combining the two ascii's
-        encrypted_char = chr((uni_val_plain ** uni_val_key) % MAX_CHAR_SET_VAL)
-        encrypted = encrypted + encrypted_char
-
-
-
-    return encrypted
