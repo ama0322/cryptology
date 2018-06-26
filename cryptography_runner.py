@@ -50,9 +50,12 @@ def main():
 
 # Print out available Encryption/Decryption types
 def usage():
-    print("Encryption/Decryption types available: ")
-    print(*miscellaneous.both_set, sep=', ')
-    print(*miscellaneous.decryption_only_set, sep='(Decryption only), ')
+    print("ENCRYPTION/DECRYPTION TYPES AVAILABLE: ")
+    print("Available for both encryption and decryption: ", end = "")
+    print(*miscellaneous.both_set, sep=", ")
+    print("Available for decryption only: ", end = "")
+    print(*miscellaneous.decryption_only_set, sep=", ")
+    print()
 
 
 # Parse user input and return relevant information

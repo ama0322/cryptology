@@ -44,7 +44,7 @@ def testing_execute(cipher_text, output_location, plain_text, encryption_time):
 
     # Run the decryption algorithm on the cipher_text
     start_time = time.time()
-    decrypted = decrypt(cipher_text, key, char_set_size)
+    decrypted, char_set, key, percent_english = decrypt(cipher_text)
     decryption_time = time.time() - start_time
 
     # Open file for writing
@@ -52,9 +52,13 @@ def testing_execute(cipher_text, output_location, plain_text, encryption_time):
 
     # Set up a space for notes
     if decrypted == plain_text:
-        new_file.writelines(["Vigenere\nCORRECT \nNotes: "])
+        new_file.writelines(["Vigenere without key\nCORRECT \n\n\nNotes: "])
     else:
-        new_file.writelines(["Vigenere\nINCORRECT \nNotes: "])
+        # Calculate the number of characters that differ
+        count = sum(1 for a, b in zip(decrypted, plain_text) if a != b)
+        new_file.writelines(["Vigenere without key" + "\nINCORRECT"
+                             + "\tDiffering characters: " + str(count)
+                             + "\tPercentage difference: " + str((count / len(plain_text)) * 100) + "\n\n\nNotes: "])
 
     # Encryption information
     new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
@@ -67,19 +71,19 @@ def testing_execute(cipher_text, output_location, plain_text, encryption_time):
 
     # Decryption information
     new_file.writelines(["\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption",
-                         "\nThe character set is : " + [char_set for char_set,
-                                                        value in miscellaneous.char_set_to_char_set_size.items()
-                                                        if value == char_set_size][0],
+                         "\nThe character set is : " + char_set,
                          "\nThe key is: " + key,
+                         "\nThe percent of words that are English are : " + str(percent_english),
                          "\nDecrypted in: " + str(decryption_time) + " seconds.",
                          "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
                          "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
-                                      + " microseconds per character."                                         ])
-
-
+                                      + " microseconds per character."])
 
     # Print out the cipher_text
     new_file.writelines(["\n\n\nCipher text: \n" + cipher_text])
+
+    # Print out the decrypted
+    new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
 
     # Print out the plain_text
     new_file.writelines(["\n\n\nPlain text: \n" + plain_text])
@@ -91,7 +95,7 @@ def testing_execute(cipher_text, output_location, plain_text, encryption_time):
 
 
 
-# Contains the actual algorithm to decrypt with vigenere cipher without TODO
+# Contains the actual algorithm to decrypt with vigenere cipher without a key TODO
 def decrypt(cipher_text):
     """
     This function decrypts a vigenere cipher without a key
@@ -100,11 +104,8 @@ def decrypt(cipher_text):
     :return: (string) the deciphered text
     """
 
-    # Build up the decrypted text here
-    plain_text = ""
-
-    # The index of the current char in the key. Iterates from 0 to len() - 1 and repeats.
-    key_index = 0
+    plain_text = "" # Build up the decrypted text here
+    key_index = 0 # The index of the current char in the key. Iterates from 0 to len() - 1 and repeats.
 
 
     for x in cipher_text:

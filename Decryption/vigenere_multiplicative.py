@@ -155,7 +155,7 @@ def decrypt(cipher_text, key, char_set_size):
                 uni_val_cipher = uni_val_cipher - miscellaneous.SURROGATE_BOUND_LENGTH
 
             # Figure out the decrypted character value(should be int by default)
-            uni_val_decrypted = int(uni_val_cipher / uni_val_key)
+            uni_val_decrypted = int(uni_val_cipher // uni_val_key)
             decrypted_char = chr(uni_val_decrypted)
 
             # Add this character to the plain_text

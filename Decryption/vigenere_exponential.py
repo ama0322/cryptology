@@ -112,23 +112,33 @@ def decrypt(cipher_text, key, char_set_size):
 
     plain_text = ""
     key_index = 0
+    char_counter = 0
+    num_chars = cipher_text.count(" ")
 
     # Adjust the char set size to exclude surrogates
     if char_set_size > 256:
         char_set_size -= miscellaneous.SURROGATE_BOUND_LENGTH
 
 
-    counter = 0
-    for x in cipher_text:
+
+
+    # While not finished processing cipher_text
+    while cipher_text != "":
 
 
         # Print updates (every 1000 characters)
-        if counter % 1000 == 0:
-            print("DECRYPTION\tPercent of text done: " + str(counter / len(cipher_text) * 100) )
+        if char_counter % 100 == 0:
+            print("DECRYPTION\tPercent of text done: " + str((char_counter / num_chars) * 100))
+        char_counter += 1
 
+
+        # Read in one block/unit (one char, followed by a number, followed by a space). Then, update cipher_text
+        char = cipher_text[0]
+        number = int(float(cipher_text[1:cipher_text.find(" ")]))
+        cipher_text = cipher_text[cipher_text.find(" ") + 1: ]
 
         #  figure out the unicode value for each of the characters(reverse surrogate adjustment in encryption if needed)
-        uni_val_cipher = ord(x)
+        uni_val_cipher = ord(char)
         if uni_val_cipher >= miscellaneous.SURROGATE_LOWER_BOUND:
             uni_val_cipher = uni_val_cipher - miscellaneous.SURROGATE_BOUND_LENGTH
 
@@ -139,48 +149,28 @@ def decrypt(cipher_text, key, char_set_size):
         key_index = (key_index + 1) % len(key)
 
 
-        #  find original plain char by taking all possibilities (y) and raising that to uni_val_keyth power for match
-        def _find_plain_char(uni_val_key, char_set_size, uni_val_cipher, counter):
-
-            # TRY THE SPACE FIRST
-            if (32 ** uni_val_key) % char_set_size == uni_val_cipher:
-                return chr(32), counter + 1
-
-            # TRY LOWERCASE LETTERS
-            for y in range(97, 123):
-                # If mod_result equal to unicode value of cipher, correct plain unicode value haas been found.
-                if (y ** uni_val_key) % char_set_size == uni_val_cipher:
-                    return chr(y), counter + 1
-
-            # TRY UPPERCASE LETTERS
-            for y in range(65, 91):
-                # If mod_result equal to unicode value of cipher, correct plain unicode value haas been found.
-                if (y ** uni_val_key) % char_set_size == uni_val_cipher:
-                    return chr(y), counter + 1
-
-            # TRY THE OTHER PRINTABLES
-            for y in range(32, 128):
-                # If mod_result equal to unicode value of cipher, correct plain unicode value haas been found.
-                if (y ** uni_val_key) % char_set_size == uni_val_cipher:
-                    return chr(y), counter + 1
-
-            # TRY EVERYTHING ELSE (except null)
-            for y in range(1, 32):
-                # If mod_result equal to unicode value of cipher, correct plain unicode value haas been found.
-                if (y ** uni_val_key) % char_set_size == uni_val_cipher:
-                    return chr(y), counter + 1
-
-            # Nothing else, so return null
-            return chr(0), counter + 1
-        plain_char, counter = _find_plain_char(uni_val_key, char_set_size, uni_val_cipher, counter)
+        # Find the original plain char by taking all possibilities and raising that to uni_val_key'th power for match
+        count = 1
+        plain_char = "\0"
+        for i in range(0, 256):
+            # If overlap(count has not yet reached number)
+            if pow(i, uni_val_key, char_set_size) == uni_val_cipher and count != number:
+                count += 1
+                continue
+            # ELIF no more overlaps(overlap matches number)
+            elif pow(i, uni_val_key, char_set_size) == uni_val_cipher and count == number:
+                plain_char = chr(i)
+                break
 
 
-        # Add plain char to the plain text
+
+
+        # Add plain char to plain_text
         plain_text += plain_char
-    # END OF LOOP TO BUILD UP THE CIPHER_TEXT
 
 
     return plain_text
+
 
 
 

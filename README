@@ -115,6 +115,8 @@ ENCRYPTION
                                  list together into a single string later on. Because of the large amount of text
                                  involved, handling the numbers in a list is much faster.
 
+                                 Note: Only use characters in the extended_ascii set for the plain text.
+
           * Unicode has certain characters called surrogates. These are unprintable. As a result, I had to adjust my
           numbers so that any values that would match surrogates are pushed into the corresponding character. This
           corresponding character is as far away from the end of the surrogates as the "before" value is from the
@@ -124,6 +126,8 @@ ENCRYPTION
                               results in a ciphertext whose characters are even more evenly distributed in unicode.
 
                               Note: Decryption assumes that the plain text uses only ascii characters(for performance)
+
+                              Note: Only use characters in the extended_ascii set for the plain text
 
 
 

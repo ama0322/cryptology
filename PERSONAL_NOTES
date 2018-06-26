@@ -7,19 +7,3 @@
 
 
 
-SLIGHT problems with vigenere_multiplicative on leonora.txt
-
-
-
-
-
-
-MIGHT need to fix - vigenere_exponential interactions with 0.
-
-
-
-
-NEED to fix overlap in for vigenere_exponential decryption.
-
-
-

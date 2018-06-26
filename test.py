@@ -6,8 +6,8 @@ import os # for deleting files
 
 
 plain_text_source = "Library/Eleonora.txt"
-char_set_size = miscellaneous.char_set_to_char_set_size.get("unicode")
-
+char_set_size = miscellaneous.char_set_to_char_set_size.get("unicode_plane0")
+key = "This is a key for testing."
 
 # This function enters the testing mode where the user can enter commands to see check ciphers and see stats
 def testing_mode():
@@ -28,12 +28,10 @@ def testing_mode():
                 now = datetime.datetime.now()
                 output_location = "Files_Logs/" + decryption + "_" + now.strftime("%Y-%m-%d_h%Hm%Ms%S")
 
-                # Random key
-                key = "Key for testing."
 
                 # Adjust the key for the encryption used (1st char for single character encryption like rotation)
                 if miscellaneous.encryption_key_type.get(encryption) == 1:
-                        key = key[0]
+                        global key; key = key[0]
 
 
                 # Encrypt the plaintext.
@@ -76,6 +74,11 @@ def _parse_user_input():
 
                 # split the statement into an array of words
                 command = statement.split()
+
+                # If empty, continue
+                if statement == "":
+                        statement = input("No command entered! Enter a testing mode command: ")
+                        continue
 
                 # Check if the user decides to clear logs
                 if command[0] == "clear":

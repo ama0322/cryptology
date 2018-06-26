@@ -8,10 +8,10 @@ import difflib # To obtain similarity between two lists
 
 # Sets containing available options for encryption/decryption. Add to this.
 encryption_set = {"vigenere", "vigenere_multiplicative",
-                  "vigenere_exponential", "rotation", }
+                  "vigenere_exponential", "rotation", "rsa"}
 
 decryption_set = {"vigenere", "vigenere_multiplicative",
-                  "vigenere_exponential", "rotation", "rotation_nokey", "vigenere_nokey,"}
+                  "vigenere_exponential", "rotation", "rotation_nokey", "vigenere_nokey", "rsa"}
 
 
 # the set containing options in both encryption_list and decryption_list
@@ -45,7 +45,8 @@ decryption_to_corresponding_encryption = {
     "vigenere": "vigenere",
     "vigenere_multiplicative": "vigenere_multiplicative",
     "vigenere_exponential": "vigenere_exponential",
-    "vigenere_nokey": "vigenere"
+    "vigenere_nokey": "vigenere",
+    "rsa": "rsa"
 }
 
 
@@ -54,7 +55,8 @@ encryption_key_type = {
     "rotation": 1,
     "vigenere": 2,
     "vigenere_exponential": 2,
-    "vigenere_exponential": 2
+    "vigenere_exponential": 2,
+    "rsa": 0
 }
 
 
@@ -64,7 +66,8 @@ does_decryption_need_key = {
     "rotation_nokey": False,
     "vigenere": True,
     "vigenere_exponential": True,
-    "vigenere_multiplicative": True
+    "vigenere_multiplicative": True,
+    "rsa": False
 }
 
 
@@ -130,7 +133,7 @@ def encrypt_or_decrypt_with_general_key(data, output_location, package, module, 
     :return: (string) the encrypted text
     """
 
-    # Obtain the char_set and the end_char
+    # Obtain the char_set and the num_chars
     char_set, num_chars = _take_char_set(char_sets)
 
     # Take a single character key from the user
@@ -140,19 +143,29 @@ def encrypt_or_decrypt_with_general_key(data, output_location, package, module, 
     text = _execute_and_write_info(data, key, char_set, output_location,
                                                      package, module, encrypt_or_decrypt)
 
-    # Return encrypted text to be written in cryptography_runner
+    # Return text to be written in cryptography_runner
     return text
 
 
-# This function runs decryption without a key.
+# This function runs encryption/decryption without a key.
 def encrypt_or_decrypt_without_key(data, output_location, package, module, encrypt_or_decrypt):
 
-    # Execute the decryption and write into
-    decrypted = _execute_and_write_info_no_key(data, output_location, package, module, encrypt_or_decrypt)
+    # Execute the encryption/decryption
+    text = _execute_and_write_info_no_key(data, output_location, package, module, encrypt_or_decrypt)
 
-    # Return decrypted text to be written in cryptography_runner
-    return decrypted
+    # Return text to be written in cryptography_runner
+    return text
 
+
+# This function runs encryption without a key (generates asymmetric pair of keys)
+def encrypt_and_generate_asymmetric_keys(data, output_location, package, module, encrypt_or_decrypt):
+
+    # Execute the encryption/decryption.
+    cipher_text = _execute_encrypt_and_write_info_asymmetric_keys(data, output_location, package,
+                                                                  module, encrypt_or_decrypt)
+
+    # Return encrypted text to be written in cryptography_runner
+    return cipher_text
 
 
 
@@ -517,6 +530,10 @@ def _get_general_key():
 
 
 
+
+
+
+
 # This helper function executes the specified encryption/decryption type and writes to a file encryption/decryption stat
 def _execute_and_write_info(data, key, char_set, output_location, package, module, encrypt_decrypt):
     """
@@ -552,15 +569,15 @@ def _execute_and_write_info(data, key, char_set, output_location, package, modul
                          "\nThe character set is : " + char_set,
                          "\nThe key is: " + key,
                          "\n" + encrypt_decrypt + "ed in: " + str(elapsed_time) + " seconds.",
-                         "\n    That is " + str((elapsed_time / len(encrypted) )) + " seconds per character."
-                         "\n    That is " + str((elapsed_time/len(encrypted) * 1000000))
+                         "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
+                         "\n    That is " + str((elapsed_time/len(data) * 1000000))
                                           + " microseconds per character."])
     new_file.close()
 
     return encrypted
 
 
-# This helper function executes the decryption types without a key and writes stats and info to a file
+# This helper function executes the decryption/encryption types without a key and writes stats and info to a file
 def _execute_and_write_info_no_key(data, output_location, package, module, encrypt_decrypt):
     """
     This function executes the correct decryption method. This also figures out the key and char set and writes info to
@@ -577,22 +594,59 @@ def _execute_and_write_info_no_key(data, output_location, package, module, encry
     # START THE TIMER and decrypt
     start_time = time.time()
     exec("from " + package + " import " + module)
-    deciphered, char_set, key = eval(module + ".decrypt(data)")
+    deciphered, char_set, key = eval(module + "." + encrypt_decrypt + "(data)")
     elapsed_time = time.time() - start_time
 
 
     #  WRITE TO A NEW FILE CONTAINING RELEVANT INFO
     new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The decryption type is: " + module,
+    new_file.writelines(["The " + encrypt_decrypt + "tion type is: " + module,
                          "\nThe character set is : " + char_set,
                          "\nThe key is: " + key,
                          "\n" + encrypt_decrypt + "ed in: " + str(elapsed_time) + " seconds.",
-                         "\n    That is " + str((elapsed_time / len(deciphered) )) + " seconds per character."
-                         "\n    That is " + str((elapsed_time/len(deciphered) * 1000000))
+                         "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
+                         "\n    That is " + str((elapsed_time/len(data) * 1000000))
                                       + " microseconds per character."])
     new_file.close()
 
     return deciphered
+
+
+
+
+# This helper function executes the encryption types that generate asymmetric keys. Also, write down info
+def _execute_encrypt_and_write_info_asymmetric_keys(data, output_location, package, module, encrypt_decrypt):
+    """
+    This function executes the correct decryption method. This also figures out the key and char set and writes info to
+    a file
+
+    :param data: (string) the cipher text to decrypt
+    :param output_location: (string) the file to write info into
+    :param package: (string) the package that the decryption function is located in
+    :param module: (string) the module that the decryption function is in
+    :return: (string) the decrypted text
+    """
+
+
+    # START THE TIMER and encrypt
+    start_time = time.time()
+    exec("from " + package + " import " + module)
+    encrypted, public_key, private_key = eval(module + ".encrypt(data)")
+    elapsed_time = time.time() - start_time
+
+
+    #  WRITE TO A NEW FILE CONTAINING RELEVANT INFO
+    new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
+    new_file.writelines(["The encryption type is: " + module,
+                         "\nThe public key is: " + public_key,
+                         "\nThe private key is: " + private_key,
+                         "\nEncrypted in: " + str(elapsed_time) + " seconds.",
+                         "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
+                         "\n    That is " + str((elapsed_time/len(data) * 1000000))
+                                      + " microseconds per character."])
+    new_file.close()
+
+    return encrypted
 
 
 

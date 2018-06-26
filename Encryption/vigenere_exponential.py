@@ -44,7 +44,7 @@ def encrypt(plain_text, key, char_set_size):
 
     cipher_text = "" # The string used to build up the encrypted text, one character at a time
     key_index = 0 # This indicates the index of the key that the vigenere cipher is currently on
-
+    counter = 0 # To print regular updates
 
     # Adjust the char set size to exclude surrogates
     if char_set_size > 256:
@@ -54,6 +54,11 @@ def encrypt(plain_text, key, char_set_size):
 
     # For each character in plain text
     for x in plain_text:
+
+        # Print updates (every 1000 characters)
+        if counter % 1000 == 0:
+            print("ENCRYPTION\tPercent of text done: " + str((counter / len(plain_text)) * 100) )
+        counter += 1
 
         #  figure out the unicode value for each of the characters
         uni_val_plain = ord(x)
@@ -66,14 +71,33 @@ def encrypt(plain_text, key, char_set_size):
 
 
         # Figure out the uni_val_cipher. Adjust it to be out of surrogate range
-        uni_val_encrypted = (uni_val_plain ** uni_val_key) % char_set_size
+        uni_val_encrypted = pow(uni_val_plain, uni_val_key, char_set_size)
+
+        # Obtain the number of overlaps that come before this one(this uni_val_plain) and including this one
+        overlap_counter = 0;
+        for i in range(0, 256):
+            # If it is an overlap character
+            if pow(i, uni_val_key, char_set_size) == uni_val_encrypted and i != uni_val_plain:
+                overlap_counter += 1
+                continue
+            # If it is the actual character
+            if i == uni_val_plain:
+                overlap_counter += 1
+                break
+
+
+
+        # Adjust the unival_encrypted to fit outside the surrogates
         if miscellaneous.SURROGATE_LOWER_BOUND <= uni_val_encrypted:
             uni_val_encrypted = uni_val_encrypted + miscellaneous.SURROGATE_BOUND_LENGTH
 
 
         #  figure out the character corresponding to the unicode value, and add to the cipher_text
         encrypted_char = chr(uni_val_encrypted)
-        cipher_text = cipher_text + encrypted_char
+        cipher_text = cipher_text + encrypted_char + str(overlap_counter) + " "
+
+
+
 
     return cipher_text
 
