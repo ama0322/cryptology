@@ -21,7 +21,7 @@ def execute(data, output_location):
 
 
     # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.encrypt_or_decrypt_with_general_key(data, output_location,
+    decrypted = miscellaneous.symmetric_encrypt_or_decrypt_with_general_key(data, output_location,
                                                              "Decryption", "vigenere_multiplicative", "decrypt")
 
 
@@ -32,36 +32,38 @@ def execute(data, output_location):
 
 
 # The testing form of execute
-def testing_execute(cipher_text, output_location, plain_text, key, char_set_size, encryption_time):
+def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, encryption_time):
     """
     Decrypt and save statistics.
 
-    :param cipher_text: (string) the encrypted text to decipher
+    :param ciphertext: (string) the encrypted text to decipher
     :param output_location: (string) the file to save statistics into
-    :param plain_text: (string) the original plain text
+    :param plaintext: (string) the original plaintext
     :param key: (string) the key used to decrypt
     :param char_set_size: (integer) the character set used
     :param encryption_time: (double) the time it took to encrypt using vigenere
     :return: None
     """
 
-    # Run the decryption algorithm on the cipher_text
+    # Run the decryption algorithm on the ciphertext
     start_time = time.time()
-    decrypted = decrypt(cipher_text, key, char_set_size)
+    decrypted = decrypt(ciphertext, key, char_set_size)
     decryption_time = time.time() - start_time
 
     # Open file for writing
     new_file = open(output_location, "w", encoding="utf-8")
 
     # Set up a space for notes
-    if decrypted == plain_text:
+    if decrypted == plaintext:
         new_file.writelines(["Vigenere_Multiplicative\nCORRECT \n\n\nNotes: "])
+        print("Vignere Multiplicative: CORRECT\n")
     else:
         # Calculate the number of characters that differ
-        count = sum(1 for a, b in zip(decrypted, plain_text) if a != b)
+        count = sum(1 for a, b in zip(decrypted, plaintext) if a != b)
         new_file.writelines(["Vigenere_Multiplicative" + "\nINCORRECT"
                              + "\tDiffering characters: " + str(count)
-                             + "\tPercentage difference: " + str((count / len(plain_text)) * 100) + "\n\n\nNotes: "])
+                             + "\tPercentage difference: " + str((count / len(plaintext)) * 100) + "\n\n\nNotes: "])
+        print("Vigenere Multiplicative: INCORRECT\n")
 
     # Encryption information
     new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
@@ -83,14 +85,14 @@ def testing_execute(cipher_text, output_location, plain_text, key, char_set_size
                          "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
                          + " microseconds per character."])
 
-    # Print out the cipher_text
-    new_file.writelines(["\n\n\nCipher text: \n" + cipher_text])
+    # Print out the ciphertext
+    new_file.writelines(["\n\n\nciphertext: \n" + ciphertext])
 
     # Print out the decrypted
     new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
 
-    # Print out the plain_text
-    new_file.writelines(["\n\n\nPlain text: \n" + plain_text])
+    # Print out the plaintext
+    new_file.writelines(["\n\n\nplaintext: \n" + plaintext])
 
     new_file.close()
 
@@ -98,19 +100,19 @@ def testing_execute(cipher_text, output_location, plain_text, key, char_set_size
 
 
 # Contains the actual algorithm to decrypt with vigenere_multiplicative cipher
-def decrypt(cipher_text, key, char_set_size):
+def decrypt(ciphertext, key, char_set_size):
     """
     This function decrypts with vigenere. Instead of multiplying, divide. Read as numbers if char_set_size <=256.
     Otherwise, read as characters
 
-    :param cipher_text: (string) the cipher text to decrypt
+    :param ciphertext: (string) the ciphertext to decrypt
     :param key: (string) the string to decrypt with
     :param char_set_size: (int) the size of the character set used
     :return: (string) the deciphered text
     """
 
 
-    plain_text = ""
+    plaintext = ""
     key_index = 0
 
     # if using unicode, then adjust the size of the char_set_size to be printable characters only
@@ -119,29 +121,29 @@ def decrypt(cipher_text, key, char_set_size):
 
 
 
-    # Read and decrypt the cipher_text if it is numbers, not characters (char_set_size <= 256)
+    # Read and decrypt the ciphertext if it is numbers, not characters (char_set_size <= 256)
     if char_set_size <= 256:
 
-        # Obtain a list of the numbers in the cipher_text
-        numbers = cipher_text.split(" ")
+        # Obtain a list of the numbers in the ciphertext
+        numbers = ciphertext.split(" ")
         for x in range(0, len(numbers)):
             numbers[x] = int(float(numbers[x]))
 
-        # Decrypt each character in the cipher text
+        # Decrypt each character in the ciphertext
         for i in numbers:
 
             # The unicode value of plain is the cipher number divided by the unival of the right index of the key
             uni_val_plain = i // ord(key[key_index])
             key_index = (key_index + 1 ) % len(key)
 
-            # Add the unicode character of this unicode value to the plain_text
-            plain_text = plain_text + chr(uni_val_plain)
+            # Add the unicode character of this unicode value to the plaintext
+            plaintext = plaintext + chr(uni_val_plain)
 
 
-    # Else, read and decrypt eh cipher_text as characters (char_set_size > 256)
+    # Else, read and decrypt eh ciphertext as characters (char_set_size > 256)
     else:
 
-        for x in cipher_text:
+        for x in ciphertext:
 
             # figure out the unicode value for each of the characters
             uni_val_cipher = ord(x)
@@ -158,12 +160,12 @@ def decrypt(cipher_text, key, char_set_size):
             uni_val_decrypted = int(uni_val_cipher // uni_val_key)
             decrypted_char = chr(uni_val_decrypted)
 
-            # Add this character to the plain_text
-            plain_text = plain_text + decrypted_char
+            # Add this character to the plaintext
+            plaintext = plaintext + decrypted_char
 
 
     # Finished, so return the decrypted text
-    return plain_text
+    return plaintext
 
 
 

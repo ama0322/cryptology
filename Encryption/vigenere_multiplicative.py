@@ -12,7 +12,7 @@ import time
 def execute(data, output_location):
     """
     This function calls the appropriate functions in miscellaneous.py. Those functions will use the encrypt() function
-    located below as the algorithm to actually encrypt the text. Then, the cipher text will be returned back to
+    located below as the algorithm to actually encrypt the text. Then, the ciphertext will be returned back to
     cryptography_runner.py
 
     :param data: (string) the data to be encrypted
@@ -22,7 +22,7 @@ def execute(data, output_location):
 
 
     # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.encrypt_or_decrypt_with_general_key(data, output_location,
+    encrypted = miscellaneous.symmetric_encrypt_or_decrypt_with_general_key(data, output_location,
                                                                   "Encryption", "vigenere_multiplicative", "encrypt")
 
     # Return encrypted text to be written in cryptography_runner
@@ -33,19 +33,19 @@ def execute(data, output_location):
 
 
 # The actual algorithm to encrypt using a vigenere cipher(multiplication instead of addition)
-def encrypt(plain_text, key, char_set_size):
+def encrypt(plaintext, key, char_set_size):
     """
     This function encrypts with a vigenere cipher that multiplies instead of adds. Done to access more characters in
     unicode. If ascii or extended_ascii, store as numbers. Otherwise, store as characters
 
-    :param plain_text: (string) the plain text to encrypt with
+    :param plaintext: (string) the plaintext to encrypt with
     :param key: (string) the string to encrypt with
     :param char_set_size: (integer) the number of characters in the character set used
     :return: (string) the encrypted text
     """
 
-    cipher_text = ""
-    cipher_text_list = [] # for storing unicode values of the numbers (when char_set_size <= 256). Done for speed
+    ciphertext = ""
+    ciphertext_list = [] # for storing unicode values of the numbers (when char_set_size <= 256). Done for speed
     key_index = 0
 
     # if using unicode, then adjust the size of the char_set_size to be printable characters only (no surrogates)
@@ -55,7 +55,7 @@ def encrypt(plain_text, key, char_set_size):
     # Counter for printing purposes
     characters_done = 0
 
-    for x in plain_text:
+    for x in plaintext:
 
         characters_done += 1
 
@@ -80,7 +80,7 @@ def encrypt(plain_text, key, char_set_size):
 
         # Print updates
         if characters_done % 100 == 0:
-            print ("Percentage of text done: " + str(characters_done / len(plain_text) * 100))
+            print ("Percentage of text done: " + str(characters_done / len(plaintext) * 100))
 
 
         #  Add the encrypted character to the overall encrypted message (if using unicode)
@@ -90,19 +90,19 @@ def encrypt(plain_text, key, char_set_size):
             uni_val_encrypted = (uni_val_plain * uni_val_key) % char_set_size
             encrypted_char = chr(uni_val_encrypted)
 
-            # Add to cipher_text
-            cipher_text = cipher_text + encrypted_char
+            # Add to ciphertext
+            ciphertext = ciphertext + encrypted_char
 
         # Otherwise, add the number to the overall encrypted message (list)
         else:
-            cipher_text_list.append(str(uni_val_encrypted))
+            ciphertext_list.append(str(uni_val_encrypted))
 
 
-    # Build up cipher_text if necessary(when we were using list (when char_set_size <= 256))
-    if cipher_text == "":
-        cipher_text = " ".join(cipher_text_list)
+    # Build up ciphertext if necessary(when we were using list (when char_set_size <= 256))
+    if ciphertext == "":
+        ciphertext = " ".join(ciphertext_list)
 
-    return cipher_text
+    return ciphertext
 
 
 

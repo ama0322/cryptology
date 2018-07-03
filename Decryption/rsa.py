@@ -1,25 +1,24 @@
 import miscellaneous
-import time # for timing
+import time # For timing to write relevant information into files
 
 
 
 
 
 
-# Decrypt using user-entered info. Write relevant information and return decrypted text for cryptography_runner
+
+# Call the proper functions to decrypt. Return decrypted text bac to cryptography_runner.py
 def execute(data, output_location):
     """
-    This function decrypts data using a user-provided key.
+    This function decrypts data using a key.
 
     :param data: (string) the data to be decrypted
-    :param output_location: (string) the location to write out relevant info and statistics
+    :param output_location: (string) the location to save relevant info into
     :return: (string) the decrypted data
     """
 
     # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.symmetric_encrypt_or_decrypt_with_single_char_key(data, output_location,
-                                                                      "Decryption", "rotation", "decrypt")
-
+    decrypted = miscellaneous.asymmetric_decrypt_with_key(data, output_location, "Decryption", "rsa", "decrypt")
 
     # Return encrypted text to be written in cryptography_runner
     return decrypted
@@ -27,17 +26,18 @@ def execute(data, output_location):
 
 
 
+
 # Decrypt in testing mode. So add more statistics about performance. Check for correctness
 def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, encryption_time):
     """
-    Conducts a rotation decryption in testing mode
+    Decrypt and save statistics.
 
-    :param ciphertext: (string) the ciphertext to decrypt
-    :param output_location: (string) the file to store statistics about decryption
-    :param plaintext: (string) the plaintext to check for correctness
-    :param key: (string) the key to decrypt with
-    :param char_set_size: (integer) the size of the character set used
-    :param encryption_time: (double) the time that encryption took
+    :param ciphertext: (string) the encrypted text to decipher
+    :param output_location: (string) the file to save statistics into
+    :param plaintext: (string) the original plaintext
+    :param key: (string) the key used to decrypt
+    :param char_set_size: (integer) the character set used
+    :param encryption_time: (double) the time it took to encrypt using vigenere
     :return: None
     """
 
@@ -51,11 +51,11 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
 
     # Set up a space for notes
     if decrypted == plaintext:
-        new_file.writelines(["Rotation\nCORRECT \nNotes: "])
-        print("Rotation: CORRECT\n")
+        new_file.writelines(["RSA\nCORRECT \nNotes: "])
+        print("RSA: CORRECT\n")
     else:
-        new_file.writelines(["Rotation\nINCORRECT \nNotes: "])
-        print("Rotation: INCORRECT\n")
+        new_file.writelines(["RSA\nINCORRECT \nNotes: "])
+        print("RSA: INCORRECT\n")
 
     # Encryption information
     new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
@@ -78,12 +78,15 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
                                       + " microseconds per character."                                         ])
 
 
+
     # Print out the ciphertext
     new_file.writelines(["\n\n\nciphertext: \n" + ciphertext])
 
+    # Print out the decrypted
+    new_file.writelines(["\n\n\nDecrypted: \n" + decrypted])
+
     # Print out the plaintext
     new_file.writelines(["\n\n\nplaintext: \n" + plaintext])
-
 
     new_file.close()
 
@@ -92,36 +95,31 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
 
 
 
-# This function contains the actual algorithm to decrypt a rotation cipher with a key
+# Contains the actual algorithm to decrypt with rsa cipher with private key.
 def decrypt(ciphertext, key, char_set_size):
     """
-    This function decrypts the ciphertext using the set of unicode characters from 0 to end_char.
+    This function decrypts with rsa cipher
 
-    :param ciphertext: (string )the text to be encrypted
-    :param key: (string) the key with which the encryption is done
-    :param char_set_size: (int) The number of characters in the character set
-    :return: (string) the encrypted text
+    :param ciphertext: (string) the ciphertext to decrypt
+    :param key: (string) the key to decrypt with. In format "(encoding scheme) d = ..., n = ..."
+    :param char_set_size: (integer) the size of the character set that is used
+    :return: (string) the deciphered text
     """
 
-    encrypted = "" # the string to build up the encrypted text
-    key_index = 0 # the index in the key we are using for the vigenere encrypt
+    # Build up the decrypted text here
+    plaintext = ""
 
-
-    for x in ciphertext:
-        #  figure out the unicode value for the current character
-        uni_val_cipher = ord(x)
-
-        #  figure out the unicode value for the right character in the key. THen, update key_index for next iteratio
-        uni_val_key = ord(key[key_index])
-        key_index = (key_index + 1) % len(key)
-
-
-        #  figure out the character by subtracting the two ascii's, the add it to the encrypted string
-        encrypted_char = chr((uni_val_cipher - uni_val_key) % (char_set_size))
-        encrypted = encrypted + encrypted_char
+    # Figure out which char encoding scheme to use(reverse dictionary lookup)
+    char_encoding_scheme = [key for key,
+                            value in miscellaneous.char_set_to_char_set_size.items() if value == char_set_size][0]
 
 
 
-    return encrypted
+
+
+
+
+    return plaintext
+
 
 

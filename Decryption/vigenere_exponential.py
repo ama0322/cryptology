@@ -18,7 +18,7 @@ def execute(data, output_location):
     """
 
     # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.encrypt_or_decrypt_with_general_key(data, output_location,
+    decrypted = miscellaneous.symmetric_encrypt_or_decrypt_with_general_key(data, output_location,
                                                              "Decryption", "vigenere_exponential", "decrypt")
 
 
@@ -30,36 +30,38 @@ def execute(data, output_location):
 
 
 # The testing form of execute
-def testing_execute(cipher_text, output_location, plain_text, key, char_set_size, encryption_time):
+def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, encryption_time):
     """
     Decrypt and save statistics.
 
-    :param cipher_text: (string) the encrypted text to decipher
+    :param ciphertext: (string) the encrypted text to decipher
     :param output_location: (string) the file to save statistics into
-    :param plain_text: (string) the original plain text
+    :param plaintext: (string) the original plaintext
     :param key: (string) the key used to decrypt
     :param char_set_size: (integer) the character set used
     :param encryption_time: (double) the time it took to encrypt using vigenere
     :return: None
     """
 
-    # Run the decryption algorithm on the cipher_text
+    # Run the decryption algorithm on the ciphertext
     start_time = time.time()
-    decrypted = decrypt(cipher_text, key, char_set_size)
+    decrypted = decrypt(ciphertext, key, char_set_size)
     decryption_time = time.time() - start_time
 
     # Open file for writing
     new_file = open(output_location, "w", encoding="utf-8")
 
     # Set up a space for notes
-    if decrypted == plain_text:
+    if decrypted == plaintext:
         new_file.writelines(["Vigenere_Exponential\nCORRECT \n\n\nNotes: "])
+        print("Vigenere Exponential: CORRECT\n")
     else:
         # Calculate the number of characters that differ
-        count = sum(1 for a, b in zip(decrypted, plain_text) if a != b)
+        count = sum(1 for a, b in zip(decrypted, plaintext) if a != b)
         new_file.writelines(["Vigenere_Exponential" + "\nINCORRECT"
                              + "\tDiffering characters: " + str(count)
-                             + "\tPercentage difference: " + str((count / len(plain_text)) * 100) + "\n\n\nNotes: "])
+                             + "\tPercentage difference: " + str((count / len(plaintext)) * 100) + "\n\n\nNotes: "])
+        print("Vignere Exponential: INCORRECT\n")
 
 
     # Encryption information
@@ -82,14 +84,14 @@ def testing_execute(cipher_text, output_location, plain_text, key, char_set_size
                          "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
                          + " microseconds per character."])
 
-    # Print out the cipher_text
-    new_file.writelines(["\n\n\nCipher text: \n" + cipher_text])
+    # Print out the ciphertext
+    new_file.writelines(["\n\n\nciphertext: \n" + ciphertext])
 
     # Print out the decrypted
     new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
 
-    # Print out the plain_text
-    new_file.writelines(["\n\n\nPlain text: \n" + plain_text])
+    # Print out the plaintext
+    new_file.writelines(["\n\n\nplaintext: \n" + plaintext])
 
     new_file.close()
 
@@ -100,30 +102,30 @@ def testing_execute(cipher_text, output_location, plain_text, key, char_set_size
 
 
 # Contains the actual algorithm to decrypt with vigenere_exponential cipher
-def decrypt(cipher_text, key, char_set_size):
+def decrypt(ciphertext, key, char_set_size):
     """
     This function decrypts with vigenere. Instead of exponents, take the nth root.
 
-    :param cipher_text: (string) the cipher text to decrypt
+    :param ciphertext: (string) the ciphertext to decrypt
     :param key: (string) the string to decrypt with
     :param char_set_size: (int) the size of the character set used
     :return: (string) the deciphered text
     """
 
-    plain_text = ""
+    plaintext = ""
     key_index = 0
     char_counter = 0
-    num_chars = cipher_text.count(" ")
+    num_chars = ciphertext.count(" ")
 
-    # Adjust the char set size to exclude surrogates
+    # Adjust the char set size to exclude surrogates (if necessary)
     if char_set_size > 256:
         char_set_size -= miscellaneous.SURROGATE_BOUND_LENGTH
 
 
 
 
-    # While not finished processing cipher_text
-    while cipher_text != "":
+    # While not finished processing ciphertext
+    while ciphertext != "":
 
 
         # Print updates (every 1000 characters)
@@ -132,10 +134,10 @@ def decrypt(cipher_text, key, char_set_size):
         char_counter += 1
 
 
-        # Read in one block/unit (one char, followed by a number, followed by a space). Then, update cipher_text
-        char = cipher_text[0]
-        number = int(float(cipher_text[1:cipher_text.find(" ")]))
-        cipher_text = cipher_text[cipher_text.find(" ") + 1: ]
+        # Read in one block/unit (one char, followed by a number, followed by a space). Then, update ciphertext
+        char = ciphertext[0]
+        number = int(float(ciphertext[1:ciphertext.find(" ")]))
+        ciphertext = ciphertext[ciphertext.find(" ") + 1: ]
 
         #  figure out the unicode value for each of the characters(reverse surrogate adjustment in encryption if needed)
         uni_val_cipher = ord(char)
@@ -144,8 +146,7 @@ def decrypt(cipher_text, key, char_set_size):
 
 
         #  figure out the unicode value for the right character in the key, then update for next iteration
-        key_char = key[key_index]
-        uni_val_key = ord(key_char)
+        uni_val_key = ord(key[key_index])
         key_index = (key_index + 1) % len(key)
 
 
@@ -163,13 +164,11 @@ def decrypt(cipher_text, key, char_set_size):
                 break
 
 
+        # Add plain char to plaintext
+        plaintext += plain_char
 
 
-        # Add plain char to plain_text
-        plain_text += plain_char
-
-
-    return plain_text
+    return plaintext
 
 
 

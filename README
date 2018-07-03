@@ -64,7 +64,7 @@ PROJECT STRUCTURE
             -Library - this folder stores all text files you want to use with this program
             -Files_Decrypted - this is where the generated decrypted files go
             -Files_Encrypted - this is where the generated encrypetd files go
-            -Files_Logs - where the logs from testig go
+            -Files_Logs - where the logs from testing go
 
 
 CRYPTOGRAPHY_RUNNER.PY
@@ -101,9 +101,12 @@ ENCRYPTION
         relevant information to a file. It also returns the encrypted text for this function(execute) to return
         back to cryptography_runner.py. This function is called from cryptography_runner.py
 
-        def encrypt() - this function contains the actual algorithm to encrypt the plain text. It is generally called
+        def encrypt() - this function contains the actual algorithm to encrypt the plaintext. It is generally called
         from miscellaneous' encrypt/decrypt function. When in testing mode, however, it is called from test.py
 
+    ROTATION.PY
+
+    RSA.PY
 
     VIGENERE.PY - This is the regular vigenere that does what is expected
 
@@ -115,7 +118,7 @@ ENCRYPTION
                                  list together into a single string later on. Because of the large amount of text
                                  involved, handling the numbers in a list is much faster.
 
-                                 Note: Only use characters in the extended_ascii set for the plain text.
+                                 Note: Only use characters in the extended_ascii set for the plaintext.
 
           * Unicode has certain characters called surrogates. These are unprintable. As a result, I had to adjust my
           numbers so that any values that would match surrogates are pushed into the corresponding character. This
@@ -125,9 +128,9 @@ ENCRYPTION
     VIGENERE_EXPONENTIAL.PY - This vigenere takes the plaintext value to the power of the keyword character value. This
                               results in a ciphertext whose characters are even more evenly distributed in unicode.
 
-                              Note: Decryption assumes that the plain text uses only ascii characters(for performance)
+                              Note: Decryption assumes that the plaintext uses only ascii characters(for performance)
 
-                              Note: Only use characters in the extended_ascii set for the plain text
+                              Note: Only use characters in the extended_ascii set for the plaintext
 
 
 
@@ -143,8 +146,8 @@ DECRYPTION
 
         def testing_execute() - this function is called from test.py. It is the testing form of execute, which means
         that file are not generated in Files_Encrypted or Files_Decrypted. Instead, it writes statistics and
-        plain and cipher text to a file in Files_Logs. This function calles decrypt() directly. This function is called
+        plain and ciphertext to a file in Files_Logs. This function calles decrypt() directly. This function is called
         fro test.py
 
-        def decrypt() - this function contains the actual algorithm to decrypt the cipher text. It is generally called
+        def decrypt() - this function contains the actual algorithm to decrypt the ciphertext. It is generally called
         from miscellaneous' encrypt/decrypt function. When in testing mode, however, it is called from testing_execute()

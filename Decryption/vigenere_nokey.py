@@ -19,7 +19,7 @@ def execute(data, output_location):
 
 
     # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.encrypt_or_decrypt_without_key(data, output_location,
+    decrypted = miscellaneous.symmetric_encrypt_or_decrypt_without_key(data, output_location,
                                                                       "Decryption", "vigenere_nokey", "decrypt")
 
 
@@ -29,36 +29,38 @@ def execute(data, output_location):
 
 
 # Decrypt in testing mode. So add more statistics about performance. Check for correctness
-def testing_execute(cipher_text, output_location, plain_text, encryption_time):
+def testing_execute(ciphertext, output_location, plaintext, encryption_time):
     """
     Decrypt and save statistics.
 
-    :param cipher_text: (string) the encrypted text to decipher
+    :param ciphertext: (string) the encrypted text to decipher
     :param output_location: (string) the file to save statistics into
-    :param plain_text: (string) the original plain text
+    :param plaintext: (string) the original plaintext
     :param key: (string) the key used to decrypt
     :param char_set_size: (integer) the character set used
     :param encryption_time: (double) the time it took to encrypt using vigenere
     :return: None
     """
 
-    # Run the decryption algorithm on the cipher_text
+    # Run the decryption algorithm on the ciphertext
     start_time = time.time()
-    decrypted, char_set, key, percent_english = decrypt(cipher_text)
+    decrypted, char_set, key, percent_english = decrypt(ciphertext)
     decryption_time = time.time() - start_time
 
     # Open file for writing
     new_file = open(output_location, "w", encoding="utf-8")
 
     # Set up a space for notes
-    if decrypted == plain_text:
+    if decrypted == plaintext:
         new_file.writelines(["Vigenere without key\nCORRECT \n\n\nNotes: "])
+        print("Vignere No Key: CORRECT\n")
     else:
         # Calculate the number of characters that differ
-        count = sum(1 for a, b in zip(decrypted, plain_text) if a != b)
+        count = sum(1 for a, b in zip(decrypted, plaintext) if a != b)
         new_file.writelines(["Vigenere without key" + "\nINCORRECT"
                              + "\tDiffering characters: " + str(count)
-                             + "\tPercentage difference: " + str((count / len(plain_text)) * 100) + "\n\n\nNotes: "])
+                             + "\tPercentage difference: " + str((count / len(plaintext)) * 100) + "\n\n\nNotes: "])
+        print("Vigenere No Key: INCORRECT\n")
 
     # Encryption information
     new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
@@ -79,14 +81,14 @@ def testing_execute(cipher_text, output_location, plain_text, encryption_time):
                          "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
                                       + " microseconds per character."])
 
-    # Print out the cipher_text
-    new_file.writelines(["\n\n\nCipher text: \n" + cipher_text])
+    # Print out the ciphertext
+    new_file.writelines(["\n\n\nciphertext: \n" + ciphertext])
 
     # Print out the decrypted
     new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
 
-    # Print out the plain_text
-    new_file.writelines(["\n\n\nPlain text: \n" + plain_text])
+    # Print out the plaintext
+    new_file.writelines(["\n\n\nplaintext: \n" + plaintext])
 
     new_file.close()
 
@@ -96,35 +98,21 @@ def testing_execute(cipher_text, output_location, plain_text, encryption_time):
 
 
 # Contains the actual algorithm to decrypt with vigenere cipher without a key TODO
-def decrypt(cipher_text):
+def decrypt(ciphertext):
     """
     This function decrypts a vigenere cipher without a key
 
-    :param cipher_text: (string) the cipher text to decrypt
+    :param ciphertext: (string) the ciphertext to decrypt
     :return: (string) the deciphered text
     """
 
-    plain_text = "" # Build up the decrypted text here
+    plaintext = "" # Build up the decrypted text here
     key_index = 0 # The index of the current char in the key. Iterates from 0 to len() - 1 and repeats.
 
 
-    for x in cipher_text:
-
-        #  figure out the unicode value for each of the characters
-        uni_val_cipher = ord(x)
-
-        #  figure out the unicode value for the right character in the key, then update for next iteration
-        key_char = key[key_index]
-        uni_val_key = ord(key_char)
-        key_index = (key_index + 1) % len(key)
 
 
-        #  figure out the character by subtracting the two unicodes, the add it to the decrypted string
-        decrypted_char = chr((uni_val_cipher - uni_val_key) % char_set_size)
-        plain_text = plain_text + decrypted_char
-
-
-    return plain_text
+    return 0
 
 
 

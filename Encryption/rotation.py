@@ -12,7 +12,7 @@ import miscellaneous # To handle user input and miscellaneous
 def execute(data, output_location):
     """
     This function calls the appropriate functions in miscellaneous.py. Those functions will use the encrypt() function
-    located below as the algorithm to actually encrypt the text. Then, the cipher text will be returned back to
+    located below as the algorithm to actually encrypt the text. Then, the ciphertext will be returned back to
     cryptography_runner.py
 
     :param data: (string) the data to be encrypted
@@ -21,7 +21,7 @@ def execute(data, output_location):
     """
 
     # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.encrypt_or_decrypt_with_single_char_key(data, output_location,
+    encrypted = miscellaneous.symmetric_encrypt_or_decrypt_with_single_char_key(data, output_location,
                                                                       "Encryption", "rotation", "encrypt")
 
 
@@ -30,12 +30,14 @@ def execute(data, output_location):
 
 
 
-# This function contains the actual algorithm to encrypt in a rotation cipher using a key
-def encrypt(plain_text, key, char_set_size):
-    """
-    This function encrypts the plain text using the set of unicode characters from 0 to char_set_size - 1.
 
-    :param plain_text: (string )the text to be encrypted
+
+# This function contains the actual algorithm to encrypt in a rotation cipher using a key
+def encrypt(plaintext, key, char_set_size):
+    """
+    This function encrypts the plaintext using the set of unicode characters from 0 to char_set_size - 1.
+
+    :param plaintext: (string )the text to be encrypted
     :param key: (string) the key with which the encryption is done
     :param char_set_size: (int) The number of characters in the character set
     :return: (string) the encrypted text
@@ -45,7 +47,7 @@ def encrypt(plain_text, key, char_set_size):
     key_index = 0 # the index in the key we are using for the vigenere encrypt
 
 
-    for x in plain_text:
+    for x in plaintext:
         #  figure out the unicode value for the current character
         uni_val_plain = ord(x)
 

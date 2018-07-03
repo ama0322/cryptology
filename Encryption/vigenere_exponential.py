@@ -11,7 +11,7 @@ import time
 def execute(data, output_location):
     """
     This function calls the appropriate functions in miscellaneous.py. Those functions will use the encrypt() function
-    located below as the algorithm to actually encrypt the text. Then, the cipher text will be returned back to
+    located below as the algorithm to actually encrypt the text. Then, the ciphertext will be returned back to
     cryptography_runner.py
 
     :param data: the data to be encrypted
@@ -19,7 +19,7 @@ def execute(data, output_location):
     """
 
     # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.encrypt_or_decrypt_with_general_key(data, output_location,
+    encrypted = miscellaneous.symmetric_encrypt_or_decrypt_with_general_key(data, output_location,
                                                                       "Encryption", "vigenere_exponential", "encrypt")
 
     # Return encrypted text to be written in cryptography_runner
@@ -31,7 +31,7 @@ def execute(data, output_location):
 
 
 # The actual algorithm to encrypt using a vigenere cipher(exponents instead of addition)
-def encrypt(plain_text, key, char_set_size):
+def encrypt(plaintext, key, char_set_size):
     """
     This works the same as regular vigenere, but uses exponents instead of addition. When using unicode_plane0 or
     unicode, adjust to ignore the Surrogates.
@@ -42,7 +42,7 @@ def encrypt(plain_text, key, char_set_size):
     """
 
 
-    cipher_text = "" # The string used to build up the encrypted text, one character at a time
+    ciphertext = "" # The string used to build up the encrypted text, one character at a time
     key_index = 0 # This indicates the index of the key that the vigenere cipher is currently on
     counter = 0 # To print regular updates
 
@@ -52,12 +52,12 @@ def encrypt(plain_text, key, char_set_size):
 
 
 
-    # For each character in plain text
-    for x in plain_text:
+    # For each character in plaintext
+    for x in plaintext:
 
         # Print updates (every 1000 characters)
         if counter % 1000 == 0:
-            print("ENCRYPTION\tPercent of text done: " + str((counter / len(plain_text)) * 100) )
+            print("ENCRYPTION\tPercent of text done: " + str((counter / len(plaintext)) * 100) )
         counter += 1
 
         #  figure out the unicode value for each of the characters
@@ -92,14 +92,14 @@ def encrypt(plain_text, key, char_set_size):
             uni_val_encrypted = uni_val_encrypted + miscellaneous.SURROGATE_BOUND_LENGTH
 
 
-        #  figure out the character corresponding to the unicode value, and add to the cipher_text
+        #  figure out the character corresponding to the unicode value, and add to the ciphertext
         encrypted_char = chr(uni_val_encrypted)
-        cipher_text = cipher_text + encrypted_char + str(overlap_counter) + " "
+        ciphertext = ciphertext + encrypted_char + str(overlap_counter) + " "
 
 
 
 
-    return cipher_text
+    return ciphertext
 
 
 

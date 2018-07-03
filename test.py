@@ -5,9 +5,16 @@ import miscellaneous
 import os # for deleting files
 
 
-plain_text_source = "Library/Eleonora.txt"
+
+
+############################################################################################## MANUAL TESTING ##########
+
+# MODIFY THESE VALUES
+plaintext_source = "Library/Eleonora.txt"
 char_set_size = miscellaneous.char_set_to_char_set_size.get("unicode_plane0")
 key = "This is a key for testing."
+
+
 
 # This function enters the testing mode where the user can enter commands to see check ciphers and see stats
 def testing_mode():
@@ -20,8 +27,8 @@ def testing_mode():
                 encryption = miscellaneous.decryption_to_corresponding_encryption.get(decryption)
 
                 # Obtain the plaintext
-                my_file = open(plain_text_source, "r", encoding="utf-8")
-                plain_text = my_file.read()
+                my_file = open(plaintext_source, "r", encoding="utf-8")
+                plaintext = my_file.read()
                 my_file.close()
 
                 # Create the output location for this run
@@ -37,7 +44,7 @@ def testing_mode():
                 # Encrypt the plaintext.
                 start_time = time.time()
                 exec("from Encryption import " + encryption)
-                cipher_text = eval(encryption + ".encrypt(plain_text, key, char_set_size)")
+                ciphertext = eval(encryption + ".encrypt(plaintext, key, char_set_size)")
                 encryption_time = time.time() - start_time
 
 
@@ -47,10 +54,10 @@ def testing_mode():
                 # Decrypt the plaintext. Call the right form of testing execute
                 exec("from Decryption import " + decryption)
                 if needs_key:
-                        exec(decryption + ".testing_execute(cipher_text, output_location, plain_text, key, "
+                        exec(decryption + ".testing_execute(ciphertext, output_location, plaintext, key, "
                                           "                 char_set_size, encryption_time)")
                 else:
-                        exec(decryption + ".testing_execute(cipher_text, output_location, plain_text, encryption_time)")
+                        exec(decryption + ".testing_execute(ciphertext, output_location, plaintext, encryption_time)")
 
 
 
@@ -100,3 +107,16 @@ def _parse_user_input():
 
         return statement
 
+
+
+
+
+
+
+
+
+
+
+
+
+########################################################################################### AUTOMATED TESTING ##########

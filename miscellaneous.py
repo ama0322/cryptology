@@ -1,7 +1,8 @@
 import time # for timing the encryption/decryption processes
 import csv # to convert ngram csv to a dictionary
-import difflib # To obtain similarity between two lists
-
+import base64 # for several character encoding schemes
+import itertools # For forever for loop
+import random # to generate random numbers(random primes)
 
 
 ################################################################################################### RESOURCES ##########
@@ -21,11 +22,18 @@ both_set = encryption_set & decryption_set
 decryption_only_set = decryption_set - encryption_set
 
 
-
+# The characters used for more classical ciphers
 char_sets = ["unicode", "unicode_plane0", "ascii", "extended_ascii"]
+
+# Most often used with asymmetrical ciphers. The character sets used to render random series of bits into "readable" text
+char_encoding_schemes = ["base16", "base32", "base64", "base85", "ascii", "extended_ascii"]
 
 # Dictionery with character sets to the number of characters in them
 char_set_to_char_set_size = {
+    "base16": 16,
+    "base32": 32,
+    "base64": 64,
+    "base85": 85,
     "ascii": 128,
     "extended_ascii": 256,
     "unicode": 1114112,
@@ -89,7 +97,7 @@ ngram_to_positional_index = None
 
 
 # This function runs encryption/decryption on a single char key. It asks for user info and runs everything
-def encrypt_or_decrypt_with_single_char_key(data, output_location, package, module, encrypt_or_decrypt):
+def symmetric_encrypt_or_decrypt_with_single_char_key(data, output_location, package, module, encrypt_or_decrypt):
     """
     This function runs encryption/decryption on a single character key. It obtains information from the user necessary
     to run the encryption/decryption in a particular configuration(such as with character set) and writes statistics
@@ -119,7 +127,7 @@ def encrypt_or_decrypt_with_single_char_key(data, output_location, package, modu
 
 
 # This function runs encryption/decryption on a key of any size. It asks for user info and runs everything
-def encrypt_or_decrypt_with_general_key(data, output_location, package, module, encrypt_or_decrypt):
+def symmetric_encrypt_or_decrypt_with_general_key(data, output_location, package, module, encrypt_or_decrypt):
     """
     This function runs encryption/decryption on a general key. It obtains information from the user necessary
     to run the encryption/decryption in a particular configuration (such as with character set) and writes statistics
@@ -148,25 +156,57 @@ def encrypt_or_decrypt_with_general_key(data, output_location, package, module, 
 
 
 # This function runs encryption/decryption without a key.
-def encrypt_or_decrypt_without_key(data, output_location, package, module, encrypt_or_decrypt):
+def symmetric_encrypt_or_decrypt_without_key(data, output_location, package, module, encrypt_or_decrypt):
+
+    # Obtain the char_set and the num_chars
+    char_set, num_chars = _take_char_set(char_sets)
 
     # Execute the encryption/decryption
-    text = _execute_and_write_info_no_key(data, output_location, package, module, encrypt_or_decrypt)
+    text = _execute_and_write_info_no_key(data, "randomKey", char_set, output_location, package, module, encrypt_or_decrypt)
 
     # Return text to be written in cryptography_runner
     return text
 
 
+
+
+
+
 # This function runs encryption without a key (generates asymmetric pair of keys)
-def encrypt_and_generate_asymmetric_keys(data, output_location, package, module, encrypt_or_decrypt):
+def asymmetric_encrypt_and_generate_keys(data, output_location, package, module, encrypt_or_decrypt):
+
+
+    # Obtain a character encoding scheme
+    char_scheme, num_chars = _take_char_encoding_scheme(char_encoding_schemes)
+
+
+    # Obtain a public key
+    public_key = _get_public_key()
+
 
     # Execute the encryption/decryption.
-    cipher_text = _execute_encrypt_and_write_info_asymmetric_keys(data, output_location, package,
-                                                                  module, encrypt_or_decrypt)
+    ciphertext = _execute_encrypt_and_write_info_asymmetric_keys(data, public_key, char_scheme, output_location,
+                                                                  package, module, encrypt_or_decrypt)
 
     # Return encrypted text to be written in cryptography_runner
-    return cipher_text
+    return ciphertext
 
+
+# This function runs decryption with a private key (asymmetric ciphers)
+def asymmetric_decrypt_with_key(data, output_location, package, module, encrypt_or_decrypt):
+
+    # Obtain the character encoding scheme and the num_chars
+    encoding_scheme, num_chars = _take_char_set(char_encoding_schemes)
+
+    # Take a single character key from the user
+    key = _get_general_key()
+
+    # Execute encryption and write into
+    text = _execute_and_write_info(data, key, encoding_scheme, output_location,
+                                                     package, module, encrypt_or_decrypt)
+
+    # Return text to be written in cryptography_runner
+    return text
 
 
 
@@ -178,28 +218,338 @@ def encrypt_and_generate_asymmetric_keys(data, output_location, package, module,
 ########################################################################################### USEFUL ALGORITHMS ##########
 
 # This function figures out what character set the encrypted data is in. NOT 100% accurate
-def char_set_of_cipher_text(cipher_text):
+def char_set_of_ciphertext(ciphertext):
     """
-    This fucntion iterates through all the characters in the cipher text and checks what sort of character set they are
-    in. Note that this does not 100% guarantee that the plain_text was encrypted using this particular character
-    set. More accurate for longer cipher_texts.
+    This fucntion iterates through all the characters in the ciphertext and checks what sort of character set they are
+    in. Note that this does not 100% guarantee that the plaintext was encrypted using this particular character
+    set. More accurate for longer ciphertexts.
 
-    :param cipher_text: (string) the cipher text
-    :return: (string) the character set the cipher_text was most likely encrypted in
+    :param ciphertext: (string) the ciphertext
+    :return: (string) the character set the ciphertext was most likely encrypted in
     """
 
-    # first pass through cipher_text, check if there are unicode characters (256 and above)
-    for x in cipher_text:
+    # first pass through ciphertext, check if there are unicode characters (256 and above)
+    for x in ciphertext:
         if ord(x) >= 256:
             return "unicode"
 
-    # second pass through cipher_text, check if there are extended_ascii characters(128 and above)
-    for x in cipher_text:
+    # second pass through ciphertext, check if there are extended_ascii characters(128 and above)
+    for x in ciphertext:
         if ord(x) >= 128:
             return "extended_ascii"
 
     # Otherwise, only ascii characters
         return "ascii"
+
+
+# This function converts the ciphertext in integer form into the proper character encoding scheme . Pads up to keysize
+def int_to_chars_encoding_scheme_pad(number, encoding, key_size):
+    """
+    This function turns an integer into a character using whichever chosen encoding scheme. This uses a bunch of if
+    statements to build up the encoded string declared in the beginning. It is returned all the way in the end.
+
+    :param number: (int) the number to encode
+    :param encoding: (string) the type of character encoding to use (see dict char_encoding_schemes)
+    :param key_size: (string) The size of the key (and thus, the ciphertext). Pad 0's in front if necessary. This should
+                              be divisible by 8.
+    :return: (string) the encoded form.
+    """
+
+    # Build up encoded string here. Return at end of function.
+    encoded = ""
+
+
+    # If base16,
+    if encoding == "base16":
+        # Turn the number into a bytearray(Calculate bytes needed with key_size / 8)
+        number = number.to_bytes( key_size // 8 ,byteorder="big")
+
+        # Encode the bytearray using base64. Turn the resulting encoded bytearray into a string. Remove "b'" and "'"
+        encoded = str(base64.b16encode(number))[2: -1]
+
+    # If base32
+    elif encoding == "base32":
+        # Turn the number into a bytearray(Calculate bytes needed with key_size / 8)
+        number = number.to_bytes( key_size // 8 ,byteorder="big")
+
+        # Encode the bytearray using base64. Turn the resulting encoded bytearray into a string. Remove "b'" and "'"
+        encoded = str(base64.b32encode(number))[2: -1]
+
+    # If base 64
+    elif encoding == "base64":
+
+        # Turn the number into a bytearray(Calculate bytes needed with key_size / 8)
+        number = number.to_bytes( key_size // 8 ,byteorder="big")
+
+        # Encode the bytearray using base64. Turn the resulting encoded bytearray into a string. Remove "b'" and "'"
+        encoded = str(base64.b64encode(number))[2: -1]
+
+
+    # If base 85
+    elif encoding == "base85":
+
+        # Turn the number into a bytearray(Calculate bytes needed with key_size / 8)
+        number = number.to_bytes( key_size // 8 ,byteorder="big")
+
+        # Encode the bytearray using base64. Turn the resulting encoded bytearray into a string. Remove "b'" and "'"
+        encoded = str(base64.b85encode(number))[2: -1]
+
+
+
+    # If extended_ascii, turn int to bits. Read bits 8 at a time. Pad "0" in front if necessary
+    elif encoding == "extended_ascii":
+
+        # Turn the integer into a string with binary representation. Get rid of leading "0b"
+        number = bin(number)[2:]
+
+        # Pad the front if necessary (all the way up to key_size)
+        if len(number) < key_size:
+            number = (key_size - len(number)) * "0" + number
+
+        # Read bits 8 at a time. Interpret those 8 bits as extended_ascii(unicode) and add to encoded
+        while number != "":
+            encoded += chr( int(number[0:8], 2) )
+            number = number[8:]
+
+
+
+
+
+    return encoded
+
+
+# This function converts an integer into chars with encoding scheme. DOES NOT pad for keysize
+def int_to_chars_encoding_scheme(number, encoding):
+    """
+    This function turns an integer into a character using whichever chosen encoding scheme. This uses a bunch of if
+    statements to build up the encoded string declared in the beginning. It is returned all the way in the end.
+
+    :param number: (int) the number to encode
+    :param encoding: (string) the type of character encoding to use (see dict char_encoding_schemes)
+    :return: (string) the encoded form.
+    """
+
+    # Build up encoded string here. Return at end of function.
+    encoded = ""
+
+    # If base16,
+    if encoding == "base16":
+        # Turn the number into a bytearray(Pad up to the nearest byte)
+        number = number.to_bytes( (number.bit_length() + 7) // 8 ,byteorder="big")
+
+        # Encode the bytearray using base64. Turn the resulting encoded bytearray into a string. Remove "b'" and "'"
+        encoded = str(base64.b16encode(number))[2: -1]
+
+    # If base32
+    elif encoding == "base32":
+        # Turn the number into a bytearray(Pad up to nearest byte)
+        number = number.to_bytes( (number.bit_length() + 7) // 8 ,byteorder="big")
+
+        # Encode the bytearray using base64. Turn the resulting encoded bytearray into a string. Remove "b'" and "'"
+        encoded = str(base64.b32encode(number))[2: -1]
+
+    # If base 64
+    elif encoding == "base64":
+
+        # Turn the number into a bytearray(Pad up to nearest byte)
+        number = number.to_bytes( (number.bit_length() + 7) // 8 ,byteorder="big")
+
+        # Encode the bytearray using base64. Turn the resulting encoded bytearray into a string. Remove "b'" and "'"
+        encoded = str(base64.b64encode(number))[2: -1]
+
+
+    # If base 85
+    elif encoding == "base85":
+
+        # Turn the number into a bytearray(Pad up to nearest byte)
+        number = number.to_bytes( (number.bit_length() + 7) // 8 ,byteorder="big")
+
+        # Encode the bytearray using base64. Turn the resulting encoded bytearray into a string. Remove "b'" and "'"
+        encoded = str(base64.b85encode(number))[2: -1]
+
+
+
+    # If extended_ascii, turn int to bits. Read bits 8 at a time. Pad "0" in front if necessary
+    elif encoding == "extended_ascii":
+
+        # Turn the integer into a string with binary representation. Get rid of leading "0b"
+        number = bin(number)[2:]
+
+        # Pad the front if necessary (all the way up to nearest byte, so divisible by 8)
+        if len(number) % 8 != 0:
+            number = (8 - (len(number) % 8) ) * "0" + number
+
+        # Read bits 8 at a time. Interpret those 8 bits as extended_ascii(unicode) and add to encoded
+        while number != "":
+            encoded += chr( int(number[0:8], 2) )
+            number = number[8:]
+
+
+
+    return encoded
+
+
+# This function converts encoded characters into a number using the proper characte endocing scheme
+def chars_to_int_encoding_scheme(string, encoding):
+    """
+    Does the opposite of int_to_chars_encoding_scheme
+
+    :param string: (string) the string to be decoded
+    :param encoding: (string) the name of the encoding scheme used
+    :return: (int) the decoded integer
+    """
+
+    decoded = 0
+
+
+    # If scheme was hex, then use int()
+    if encoding == "base16":
+        decoded = base64.b16decode(string)
+        decoded = int.from_bytes(decoded, byteorder="big")
+
+    # elif base32, use base64 module function. Then, turn the bytes into an integer
+    elif encoding == "base32":
+        decoded = base64.b32decode(string)
+        decoded = int.from_bytes(decoded, byteorder="big")
+
+    # elif base64, use base64 module fuction. THen, turn bytes into an integer
+    elif encoding == "base64":
+        decoded = base64.b64decode(string)
+        decoded = int.from_bytes(decoded, byteorder="big")
+
+    # elif base85, use base64 module's function. Then, turn bytes into an integer
+    elif encoding == "base85":
+        decoded = base64.b85decode(string)
+        decoded = int.from_bytes(decoded, byteorder="big")
+
+
+    # elif extended_ascii, turn extended_ascii into a long string of bits. Then, read bits as an integer
+    elif encoding == "ascii":
+
+        # Build up binary string here
+        bin_string = ""
+
+        # Loop through string. Add the ascii characters one at a time to bin_string (in binary form).
+        for x in string:
+
+            # Obtain binary form of the ascii character. Remove leading "0b"
+            seven_bits = bin(ord(x))[2:]
+
+            # Pad to eight digits if necessary
+            if eight_bits % 8 != 0:
+                eight_bits = (8 - eight_bits % 8) * "0" + eight_bits
+
+            #Add to bin string
+            bin_string += seven_bits
+
+
+        # Read the binary string as an integer
+        decoded = int(bin_string, 2)
+
+
+
+    return decoded
+
+
+
+
+
+
+# the function to generate large primes. Pass in bit_length for the desired size of the generated prime
+def generate_prime(bit_length):
+    """
+    This function returns a large prime number of bit_length size. This works by producing a random number
+    that is of size bit_length(in base 10). Then, the number is tested for primality. This is done by testing
+    its compositeness with several small prime numbers to immediately rule out many composite numbers. If the
+    number then passes that test, then the rabin-miller test is run up to 64 times to rule out composite. The
+    returned number then has a very high probability that it is a prime number.
+
+    :param bit_length: (int) the bit length of the generated prime
+    :return: (int) the generated prime number
+    """
+
+    # Loop until a prime number has been generated
+    for x in itertools.count():
+        num_to_test = random.randrange(2 ** (bit_length - 1), 2 ** bit_length)
+
+        # the function to test whether a number is prime.
+        def is_prime(num):
+
+            # Check that that number is not evenly divisible by small primes. Immediately eliminates many non-primes
+            small_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29
+                , 31, 37, 41, 43, 47, 53, 59, 61, 67, 71
+                , 73, 79, 83, 89, 97, 101, 103, 107, 109, 113
+                , 127, 131, 137, 139, 149, 151, 157, 163, 167, 173
+                , 179, 181, 191, 193, 197, 199, 211, 223, 227, 229
+                , 233, 239, 241, 251, 257, 263, 269, 271, 277, 281
+                , 283, 293, 307, 311, 313, 317, 331, 337, 347, 349
+                , 353, 359, 367, 373, 379, 383, 389, 397, 401, 409
+                , 419, 421, 431, 433, 439, 443, 449, 457, 461, 463
+                , 467, 479, 487, 491, 499, 503, 509, 521, 523, 541
+                , 547, 557, 563, 569, 571, 577, 587, 593, 599, 601
+                , 607, 613, 617, 619, 631, 641, 643, 647, 653, 659
+                , 661, 673, 677, 683, 691, 701, 709, 719, 727, 733
+                , 739, 743, 751, 757, 761, 769, 773, 787, 797, 809
+                , 811, 821, 823, 827, 829, 839, 853, 857, 859, 863
+                , 877, 881, 883, 887, 907, 911, 919, 929, 937, 941
+                , 947, 953, 967, 971, 977, 983, 991, 997]
+
+            # If 1 or less, not prime
+            if num <= 1:
+                return False
+
+            # Check that number not evenly divisible by small primes
+            for prime in small_primes:
+                if num % prime == 0:
+                    return False
+
+            # Setup for rabin miller test (write n - 1 as 2**power * d) by repeatedly dividing n - 1 by 2
+            s = num - 1
+            power = 0
+            while s % 2 == 0:
+                s = s // 2
+                power += 1
+
+            # Run the rabin miller test up to 64 times
+            trials = 0;
+            while trials < 64:
+
+                rand_base = random.randrange(2, num - 1)
+                result = pow(rand_base, s, num)
+
+                # Test does not apply for result = 1. Try again with a different base
+                if result == 1:
+                    continue
+
+                # Check if the number is composite
+                i = 0
+                while result != (num - 1):
+
+                    # At this point, the number is composite
+                    if i == power - 1:
+                        return False
+
+                    # Not proven to be composite, so move to next iteration
+                    else:
+                        i = i + 1
+                        result = (result ** 2) % num
+
+                # Passed one rabin-miller test. Move onto the next one
+                trials += 1
+
+            # passed all tests, so probably prime
+            return True
+
+        # If the generated number was prime, then return
+        if is_prime(num_to_test):
+            return num_to_test
+
+        print(str(x) + " primes tested")
+
+
+
+
+
 
 
 # This function figures out whether the data is in English. Adjust threshold as necessary. Also return percent english
@@ -487,6 +837,58 @@ def _take_char_set(char_sets):
     return selection, end_char
 
 
+#  This helper function asks the user for a character encoding scheme. It will only accept character sets that are available.
+def _take_char_encoding_scheme(char_encoding_schemes):
+    """
+    This functions asks the user to input a selection(a char encoding scheme. The selection is compared against hte
+    given list to ensure that it is a legitimate selection
+
+    :param char_encoding_schemes: (list) the list of all character encoding schemes
+    :return: (string) the user-entered character set
+    :return: (integer) the number of characters in the selected character set
+    """
+
+
+    previous_entry_invalid = False
+    #  TAKE AN INPUT FOR THE CHARACTER SET
+    while True:
+
+        #  Print out the prompt for the user. If the previous entry was invalid, say so
+        if not previous_entry_invalid:
+            selection = input("Enter the character encoding scheme to be used: ")
+        else:
+            selection = input("Character encoding scheme invalid! Enter a new scheme: ")
+            previous_entry_invalid = False
+
+        # Print out the available character sets, then continue
+        if selection[0:4] == "info":
+            print("The available character encoding schemes are: ")
+            for x in range(0, len(char_encoding_schemes)):
+                print("                                  " + char_encoding_schemes[x])
+            continue
+
+        # Test that the user entry is a valid character set. If so, exit out of the forever loop
+        for x in range(0, len(char_encoding_schemes)):
+            broken = False
+            if selection.rstrip() == char_encoding_schemes[x]:
+                broken = True
+                break
+        if broken:
+            break
+
+        # If here, that means the entry was invalid. Loop again
+        previous_entry_invalid = True
+    # END OF FOREVER LOOP TO TAKE A CHARACTER SET
+
+
+
+    # figure out the end_char of the character encoding scheme
+    end_char = char_set_to_char_set_size.get(selection)
+
+    return selection, end_char
+
+
+
 
 # This helper function obtain a single char key from the user and returns that
 def _get_single_char_key():
@@ -529,6 +931,19 @@ def _get_general_key():
     return key
 
 
+
+# This helper function gets a public key from the user. If the user wants to generate keys, then input() is blank
+def _get_public_key():
+    """
+    This function obtains a public key from the user. If nothing entered, then the user wants to generate a key.
+
+    :return: (string) the user-entered key
+    """
+
+    # Take a key
+    key = input("Enter a public key (Leave empty to generate public/private keys): ")
+
+    return key
 
 
 
@@ -578,12 +993,12 @@ def _execute_and_write_info(data, key, char_set, output_location, package, modul
 
 
 # This helper function executes the decryption/encryption types without a key and writes stats and info to a file
-def _execute_and_write_info_no_key(data, output_location, package, module, encrypt_decrypt):
+def _execute_and_write_info_no_key(data, key, char_set, output_location, package, module, encrypt_decrypt):
     """
     This function executes the correct decryption method. This also figures out the key and char set and writes info to
     a file
 
-    :param data: (string) the cipher text to decrypt
+    :param data: (string) the ciphertext to decrypt
     :param output_location: (string) the file to write info into
     :param package: (string) the package that the decryption function is located in
     :param module: (string) the module that the decryption function is in
@@ -594,7 +1009,7 @@ def _execute_and_write_info_no_key(data, output_location, package, module, encry
     # START THE TIMER and decrypt
     start_time = time.time()
     exec("from " + package + " import " + module)
-    deciphered, char_set, key = eval(module + "." + encrypt_decrypt + "(data)")
+    deciphered, char_set, key = eval(module + "." + encrypt_decrypt + "(data, key, char_set)")
     elapsed_time = time.time() - start_time
 
 
@@ -613,14 +1028,15 @@ def _execute_and_write_info_no_key(data, output_location, package, module, encry
 
 
 
-
 # This helper function executes the encryption types that generate asymmetric keys. Also, write down info
-def _execute_encrypt_and_write_info_asymmetric_keys(data, output_location, package, module, encrypt_decrypt):
+def _execute_encrypt_and_write_info_asymmetric_keys(data, key, char_encoding_scheme, output_location, package, module, encrypt_decrypt):
     """
     This function executes the correct decryption method. This also figures out the key and char set and writes info to
     a file
 
-    :param data: (string) the cipher text to decrypt
+    :param data: (string) the ciphertext to decrypt
+    :param key: (string) NOT USED
+    :paraim char_encoding_scheme: (string) the type of encoding scheme to use
     :param output_location: (string) the file to write info into
     :param package: (string) the package that the decryption function is located in
     :param module: (string) the module that the decryption function is in
@@ -628,19 +1044,22 @@ def _execute_encrypt_and_write_info_asymmetric_keys(data, output_location, packa
     """
 
 
-    # START THE TIMER and encrypt
+    # Obtain num_chars to use in the encryption method
+    num_chars = char_set_to_char_set_size.get(char_encoding_scheme)
+
+    # START THE TIMER and encrypt with the correct char_encoding_scheme
     start_time = time.time()
     exec("from " + package + " import " + module)
-    encrypted, public_key, private_key = eval(module + ".encrypt(data)")
+    encrypted, public_key, private_key = eval(module + ".encrypt(data, key ,num_chars)")
     elapsed_time = time.time() - start_time
 
 
     #  WRITE TO A NEW FILE CONTAINING RELEVANT INFO
     new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
     new_file.writelines(["The encryption type is: " + module,
-                         "\nThe public key is: " + public_key,
-                         "\nThe private key is: " + private_key,
-                         "\nEncrypted in: " + str(elapsed_time) + " seconds.",
+                         "\n\nThe public key is: " + public_key,
+                         "\n\nThe private key is: " + private_key,
+                         "\n\nEncrypted in: " + str(elapsed_time) + " seconds.",
                          "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
                          "\n    That is " + str((elapsed_time/len(data) * 1000000))
                                       + " microseconds per character."])
