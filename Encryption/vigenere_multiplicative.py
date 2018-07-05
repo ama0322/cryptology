@@ -44,20 +44,23 @@ def encrypt(plaintext, key, char_set_size):
     :return: (string) the encrypted text
     """
 
-    ciphertext = ""
-    ciphertext_list = [] # for storing unicode values of the numbers (when char_set_size <= 256). Done for speed
-    key_index = 0
+    ciphertext = "" # The string used to build up the encrypted text, one character at a time
+    key_index = 0 # This indicates the index of the key that the vigenere cipher is currently on
+    counter = 0 # To print regular updates
 
-    # if using unicode, then adjust the size of the char_set_size to be printable characters only (no surrogates)
+    # Adjust the char set size to exclude surrogates
     if char_set_size > 256:
-        char_set_size = char_set_size - miscellaneous.SURROGATE_BOUND_LENGTH
+        char_set_size -= miscellaneous.SURROGATE_BOUND_LENGTH
 
-    # Counter for printing purposes
-    characters_done = 0
 
+
+    # For each character in plaintext
     for x in plaintext:
 
-        characters_done += 1
+        # Print updates (every 1000 characters)
+        if counter % 1000 == 0:
+            print("ENCRYPTION\tPercent of text done: " + str((counter / len(plaintext)) * 100) )
+        counter += 1
 
         #  figure out the unicode value for each of the characters
         uni_val_plain = ord(x)
@@ -69,38 +72,36 @@ def encrypt(plaintext, key, char_set_size):
         key_index = (key_index + 1) % len(key)
 
 
-        # figure out the encrypted character val (un-modded)
-        uni_val_encrypted = (uni_val_plain * uni_val_key)
+        # Figure out the uni_val_cipher. Adjust it to be out of surrogate range
+        uni_val_encrypted = (uni_val_plain * uni_val_key) % char_set_size
+
+        # Obtain the number of overlaps that come before this one(this uni_val_plain) and NOT including this one
+        overlap_counter = 0;
+        for i in range(0, 1114112):
+
+            # If it is an overlap character
+            if (i * uni_val_key) % char_set_size  == uni_val_encrypted and i != uni_val_plain:
+                overlap_counter += 1
+                continue
+
+            # If it is the actual character
+            elif i == uni_val_plain:
+                break
 
 
-        #  if the encrypted_char would be a surrogate(unprintable), adjust by adding SURROGATE_BOUND_LENGTH
+
+
+        # Adjust the unival_encrypted to fit outside the surrogates
         if miscellaneous.SURROGATE_LOWER_BOUND <= uni_val_encrypted:
-            encrypted_char = chr(uni_val_encrypted + miscellaneous.SURROGATE_BOUND_LENGTH)
+            uni_val_encrypted = uni_val_encrypted + miscellaneous.SURROGATE_BOUND_LENGTH
 
 
-        # Print updates
-        if characters_done % 100 == 0:
-            print ("Percentage of text done: " + str(characters_done / len(plaintext) * 100))
+        #  figure out the character corresponding to the unicode value, and add to the ciphertext
+        encrypted_char = chr(uni_val_encrypted)
+        ciphertext = ciphertext + encrypted_char + str(overlap_counter) + " "
 
 
-        #  Add the encrypted character to the overall encrypted message (if using unicode)
-        if char_set_size > 256:
 
-            # Find the encrypted char value(modded)
-            uni_val_encrypted = (uni_val_plain * uni_val_key) % char_set_size
-            encrypted_char = chr(uni_val_encrypted)
-
-            # Add to ciphertext
-            ciphertext = ciphertext + encrypted_char
-
-        # Otherwise, add the number to the overall encrypted message (list)
-        else:
-            ciphertext_list.append(str(uni_val_encrypted))
-
-
-    # Build up ciphertext if necessary(when we were using list (when char_set_size <= 256))
-    if ciphertext == "":
-        ciphertext = " ".join(ciphertext_list)
 
     return ciphertext
 

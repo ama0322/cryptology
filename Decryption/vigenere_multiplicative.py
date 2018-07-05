@@ -45,56 +45,16 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
     :return: None
     """
 
-    # Run the decryption algorithm on the ciphertext
-    start_time = time.time()
-    decrypted = decrypt(ciphertext, key, char_set_size)
-    decryption_time = time.time() - start_time
+    # Encryption code
+    encryption_code = miscellaneous.general_encryption_code
 
-    # Open file for writing
-    new_file = open(output_location, "w", encoding="utf-8")
+    # Decryption code
+    decryption_code = miscellaneous.general_decryption_code
 
-    # Set up a space for notes
-    if decrypted == plaintext:
-        new_file.writelines(["Vigenere_Multiplicative\nCORRECT \n\n\nNotes: "])
-        print("Vignere Multiplicative: CORRECT\n")
-    else:
-        # Calculate the number of characters that differ
-        count = sum(1 for a, b in zip(decrypted, plaintext) if a != b)
-        new_file.writelines(["Vigenere_Multiplicative" + "\nINCORRECT"
-                             + "\tDiffering characters: " + str(count)
-                             + "\tPercentage difference: " + str((count / len(plaintext)) * 100) + "\n\n\nNotes: "])
-        print("Vigenere Multiplicative: INCORRECT\n")
-
-    # Encryption information
-    new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
-                         "\nThe key is: " + key,
-                         "\nEncrypted in: " + str(encryption_time) + " seconds.",
-                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
-                         "\nThat is " + str((encryption_time / len(decrypted) * 1000000))
-                         + " microseconds per character."])
-
-    # Decryption information
-    new_file.writelines(["\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption",
-                         "\nThe character set is : " + [char_set for char_set,
-                                                                     value in
-                                                        miscellaneous.char_set_to_char_set_size.items()
-                                                        if value == char_set_size][0],
-                         "\nThe key is: " + key,
-                         "\nDecrypted in: " + str(decryption_time) + " seconds.",
-                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
-                         "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
-                         + " microseconds per character."])
-
-    # Print out the ciphertext
-    new_file.writelines(["\n\n\nciphertext: \n" + ciphertext])
-
-    # Print out the decrypted
-    new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
-
-    # Print out the plaintext
-    new_file.writelines(["\n\n\nplaintext: \n" + plaintext])
-
-    new_file.close()
+    miscellaneous.testing_general_decrypt_with_key(ciphertext, output_location, plaintext, key, key, char_set_size,
+                                                   encryption_time, "Decryption", "vigenere_multiplicative",
+                                                   "Vigenère Multiplicative", "decrypt", encryption_code,
+                                                   decryption_code)
 
 
 
@@ -114,57 +74,61 @@ def decrypt(ciphertext, key, char_set_size):
 
     plaintext = ""
     key_index = 0
+    char_counter = 0
+    num_chars = ciphertext.count(" ")
 
-    # if using unicode, then adjust the size of the char_set_size to be printable characters only
+    # Adjust the char set size to exclude surrogates (if necessary)
     if char_set_size > 256:
-        char_set_size = char_set_size - miscellaneous.SURROGATE_BOUND_LENGTH
+        char_set_size -= miscellaneous.SURROGATE_BOUND_LENGTH
 
 
 
-    # Read and decrypt the ciphertext if it is numbers, not characters (char_set_size <= 256)
-    if char_set_size <= 256:
 
-        # Obtain a list of the numbers in the ciphertext
-        numbers = ciphertext.split(" ")
-        for x in range(0, len(numbers)):
-            numbers[x] = int(float(numbers[x]))
-
-        # Decrypt each character in the ciphertext
-        for i in numbers:
-
-            # The unicode value of plain is the cipher number divided by the unival of the right index of the key
-            uni_val_plain = i // ord(key[key_index])
-            key_index = (key_index + 1 ) % len(key)
-
-            # Add the unicode character of this unicode value to the plaintext
-            plaintext = plaintext + chr(uni_val_plain)
+    # While not finished processing ciphertext
+    while ciphertext != "":
 
 
-    # Else, read and decrypt eh ciphertext as characters (char_set_size > 256)
-    else:
-
-        for x in ciphertext:
-
-            # figure out the unicode value for each of the characters
-            uni_val_cipher = ord(x)
-
-            # Figure out the unicode value for the irght character in the key. Then update for next iteration
-            uni_val_key = ord(key[key_index])
-            key_index = (key_index + 1) % len(key)
-
-            # Adjust for surrogates if necessary by subtracting SURROGATE_BOUND_LENGTH
-            if miscellaneous.SURROGATE_LOWER_BOUND <= uni_val_cipher:
-                uni_val_cipher = uni_val_cipher - miscellaneous.SURROGATE_BOUND_LENGTH
-
-            # Figure out the decrypted character value(should be int by default)
-            uni_val_decrypted = int(uni_val_cipher // uni_val_key)
-            decrypted_char = chr(uni_val_decrypted)
-
-            # Add this character to the plaintext
-            plaintext = plaintext + decrypted_char
+        # Print updates (every 1000 characters)
+        if char_counter % 100 == 0:
+            print("DECRYPTION\tPercent of text done: " + str((char_counter / num_chars) * 100))
+        char_counter += 1
 
 
-    # Finished, so return the decrypted text
+        # Read in one block/unit (one char, followed by a number, followed by a space). Then, update ciphertext
+        char = ciphertext[0]
+        number = int(ciphertext[1:ciphertext.find(" ")], 10)
+        ciphertext = ciphertext[ciphertext.find(" ") + 1: ]
+
+        #  figure out the unicode value for each of the characters(reverse surrogate adjustment in encryption if needed)
+        uni_val_cipher = ord(char)
+        if uni_val_cipher >= miscellaneous.SURROGATE_LOWER_BOUND:
+            uni_val_cipher = uni_val_cipher - miscellaneous.SURROGATE_BOUND_LENGTH
+
+
+        #  figure out the unicode value for the right character in the key, then update for next iteration
+        uni_val_key = ord(key[key_index])
+        key_index = (key_index + 1) % len(key)
+
+
+        # Find the original plain char by taking all possibilities and raising that to uni_val_key'th power for match
+        count = 0
+        plain_char = "\0"
+        for i in range(0, 1114112):
+
+            # If overlap(count has not yet reached number)
+            if (i * uni_val_key) % char_set_size == uni_val_cipher and count != number:
+                count += 1
+                continue
+            # ELIF no more overlaps(overlap matches number)
+            elif (i * uni_val_key) % char_set_size == uni_val_cipher and count == number:
+                plain_char = chr(i)
+                break
+
+
+        # Add plain char to plaintext
+        plaintext += plain_char
+
+
     return plaintext
 
 
