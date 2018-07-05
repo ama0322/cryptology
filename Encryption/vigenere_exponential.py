@@ -36,8 +36,9 @@ def encrypt(plaintext, key, char_set_size):
     This works the same as regular vigenere, but uses exponents instead of addition. When using unicode_plane0 or
     unicode, adjust to ignore the Surrogates.
 
-    :param data: (string) the data to be encrypted
-    :param output_location: (string) the file to write relevant information into
+    :param plaintext: (string) the data to be encrypted
+    :param key: (string) the key to encrypt with
+    :param char_set_size: (int) the size of the character set to use
     :return: (string) the encrypted data
     """
 
@@ -73,17 +74,18 @@ def encrypt(plaintext, key, char_set_size):
         # Figure out the uni_val_cipher. Adjust it to be out of surrogate range
         uni_val_encrypted = pow(uni_val_plain, uni_val_key, char_set_size)
 
-        # Obtain the number of overlaps that come before this one(this uni_val_plain) and including this one
+        # Obtain the number of overlaps that come before this one(this uni_val_plain) and NOT including this one
         overlap_counter = 0;
-        for i in range(0, 256):
+        for i in range(0, 1114112):
             # If it is an overlap character
             if pow(i, uni_val_key, char_set_size) == uni_val_encrypted and i != uni_val_plain:
                 overlap_counter += 1
                 continue
+
             # If it is the actual character
-            if i == uni_val_plain:
-                overlap_counter += 1
+            elif i == uni_val_plain:
                 break
+
 
 
 

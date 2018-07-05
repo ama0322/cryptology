@@ -43,60 +43,15 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
     :return: None
     """
 
-    # Run the decryption algorithm on the ciphertext
-    start_time = time.time()
-    decrypted = decrypt(ciphertext, key, char_set_size)
-    decryption_time = time.time() - start_time
+    # Encryption code
+    encryption_code = miscellaneous.general_encryption_code
 
-    # Open file for writing
-    new_file = open(output_location, "w", encoding="utf-8")
+    # Decryption code
+    decryption_code = miscellaneous.general_decryption_code
 
-    # Set up a space for notes
-    if decrypted == plaintext:
-        new_file.writelines(["Vigenere_Exponential\nCORRECT \n\n\nNotes: "])
-        print("Vigenere Exponential: CORRECT\n")
-    else:
-        # Calculate the number of characters that differ
-        count = sum(1 for a, b in zip(decrypted, plaintext) if a != b)
-        new_file.writelines(["Vigenere_Exponential" + "\nINCORRECT"
-                             + "\tDiffering characters: " + str(count)
-                             + "\tPercentage difference: " + str((count / len(plaintext)) * 100) + "\n\n\nNotes: "])
-        print("Vignere Exponential: INCORRECT\n")
-
-
-    # Encryption information
-    new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
-                         "\nThe key is: " + key,
-                         "\nEncrypted in: " + str(encryption_time) + " seconds.",
-                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
-                         "\nThat is " + str((encryption_time / len(decrypted) * 1000000))
-                         + " microseconds per character."])
-
-    # Decryption information
-    new_file.writelines(["\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption",
-                         "\nThe character set is : " + [char_set for char_set,
-                                                                     value in
-                                                        miscellaneous.char_set_to_char_set_size.items()
-                                                        if value == char_set_size][0],
-                         "\nThe key is: " + key,
-                         "\nDecrypted in: " + str(decryption_time) + " seconds.",
-                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
-                         "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
-                         + " microseconds per character."])
-
-    # Print out the ciphertext
-    new_file.writelines(["\n\n\nciphertext: \n" + ciphertext])
-
-    # Print out the decrypted
-    new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
-
-    # Print out the plaintext
-    new_file.writelines(["\n\n\nplaintext: \n" + plaintext])
-
-    new_file.close()
-
-
-
+    miscellaneous.testing_general_decrypt_with_key(ciphertext, output_location, plaintext, key, key, char_set_size,
+                                                   encryption_time, "Decryption", "vigenere_exponential",
+                                                   "Vigenère Exponential", "decrypt", encryption_code, decryption_code)
 
 
 
@@ -136,7 +91,7 @@ def decrypt(ciphertext, key, char_set_size):
 
         # Read in one block/unit (one char, followed by a number, followed by a space). Then, update ciphertext
         char = ciphertext[0]
-        number = int(float(ciphertext[1:ciphertext.find(" ")]))
+        number = int(ciphertext[1:ciphertext.find(" ")], 10)
         ciphertext = ciphertext[ciphertext.find(" ") + 1: ]
 
         #  figure out the unicode value for each of the characters(reverse surrogate adjustment in encryption if needed)
@@ -151,9 +106,9 @@ def decrypt(ciphertext, key, char_set_size):
 
 
         # Find the original plain char by taking all possibilities and raising that to uni_val_key'th power for match
-        count = 1
+        count = 0
         plain_char = "\0"
-        for i in range(0, 256):
+        for i in range(0, 1114112):
             # If overlap(count has not yet reached number)
             if pow(i, uni_val_key, char_set_size) == uni_val_cipher and count != number:
                 count += 1
