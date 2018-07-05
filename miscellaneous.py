@@ -1,8 +1,10 @@
 import time # for timing the encryption/decryption processes
 import csv # to convert ngram csv to a dictionary
 import base64 # for several character encoding schemes
-import itertools # For forever for loop
-import random # to generate random numbers(random primes)
+import random # to generate random numbers
+import secrets # to generate cryptographically secure numbers
+import test # To get access to test's variables
+import codecs # For hex string to utf-8 encoding
 
 
 ################################################################################################### RESOURCES ##########
@@ -15,18 +17,15 @@ decryption_set = {"vigenere", "vigenere_multiplicative",
                   "vigenere_exponential", "rotation", "rotation_nokey", "vigenere_nokey", "rsa"}
 
 
-# the set containing options in both encryption_list and decryption_list
-both_set = encryption_set & decryption_set
-
-# the set containing options only in decryption_list
-decryption_only_set = decryption_set - encryption_set
+both_set = encryption_set & decryption_set # the set containing options in both encryption_list and decryption_list
+decryption_only_set = decryption_set - encryption_set # the set containing options only in decryption_list
 
 
-# The characters used for more classical ciphers
+# The characters used for more classical type ciphers
 char_sets = ["unicode", "unicode_plane0", "ascii", "extended_ascii"]
 
-# Most often used with asymmetrical ciphers. The character sets used to render random series of bits into "readable" text
-char_encoding_schemes = ["base16", "base32", "base64", "base85", "ascii", "extended_ascii"]
+# Encoding schemes (completely random bits to characters)
+char_encoding_schemes = ["base16", "base32", "base64", "base85", "ascii", "extended_ascii", "base4096"]
 
 # Dictionery with character sets to the number of characters in them
 char_set_to_char_set_size = {
@@ -36,6 +35,7 @@ char_set_to_char_set_size = {
     "base85": 85,
     "ascii": 128,
     "extended_ascii": 256,
+    "base4096": 4096,
     "unicode": 1114112,
     "unicode_plane0": 65536
 }
@@ -68,7 +68,7 @@ encryption_key_type = {
 }
 
 
-# Dictionary with decryption methods to whether or not they need keys
+# Dictionary with decryption methods to determine whether or not they need keys
 does_decryption_need_key = {
     "rotation": True,
     "rotation_nokey": False,
@@ -79,23 +79,51 @@ does_decryption_need_key = {
 }
 
 
-#  The set contaning english word. Load into this if necessary
-english_words = None
+# The set of asymmetric ciphers (decryption)
+asymmetric_ciphers = ["rsa"]
 
-# The dictionary containing mappings from ngram to its frequency. Load into this if necessary
-ngram_to_frequency = None
-
-# The dictionary containing mapping from ngram to its order (So TH is 1)
-ngram_to_positional_index = None
+# The set of symmetric ciphers (decryption)
+symmetric_ciphers = ["rotation", "rotation_nokey", "vigenere", "vigenere_multiplicative", "vigenere_exponential"]
 
 
 
+
+
+
+
+
+# The general code to run during testing for encryption statistics (simple symmetric)
+general_encryption_code = \
+    r"""new_file.writelines([
+                             "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                             "\n--------------- key ---------------\n" + public_key +
+                             "\n------------------------------------------------------------------------------------" ,
+                             "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                             "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time) 
+                             + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",                             
+                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000), 
+                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " +  str((encryption_time / len(plaintext)) * 1000) 
+                            ])
+    """
+
+# The general code to run during testing for decryption statistics (simple symmetric)
+general_decryption_code = \
+    r"""new_file.writelines([
+                             "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                             "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                             "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
+                             + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",
+                             "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + "x",                             
+                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000), 
+                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " +  str((decryption_time / len(plaintext)) * 1000) 
+                            ])
+    """
 
 
 ######################################################################### USER INTERFACING AND FUNCTION CALLS ##########
 
 
-
+##########  SYMMETRIC ##########
 # This function runs encryption/decryption on a single char key. It asks for user info and runs everything
 def symmetric_encrypt_or_decrypt_with_single_char_key(data, output_location, package, module, encrypt_or_decrypt):
     """
@@ -118,7 +146,7 @@ def symmetric_encrypt_or_decrypt_with_single_char_key(data, output_location, pac
     key = _get_single_char_key()
 
     # Execute encryption and write into
-    text = _execute_and_write_info(data, key, char_set, output_location,
+    text = _execute_encrypt_or_decrypt_and_write_info_with_key(data, key, char_set, output_location,
                                                      package, module, encrypt_or_decrypt)
 
     # Return encrypted text to be written in cryptography_runner
@@ -148,7 +176,7 @@ def symmetric_encrypt_or_decrypt_with_general_key(data, output_location, package
     key = _get_general_key()
 
     # Execute encryption and write into
-    text = _execute_and_write_info(data, key, char_set, output_location,
+    text = _execute_encrypt_or_decrypt_and_write_info_with_key(data, key, char_set, output_location,
                                                      package, module, encrypt_or_decrypt)
 
     # Return text to be written in cryptography_runner
@@ -162,16 +190,14 @@ def symmetric_encrypt_or_decrypt_without_key(data, output_location, package, mod
     char_set, num_chars = _take_char_set(char_sets)
 
     # Execute the encryption/decryption
-    text = _execute_and_write_info_no_key(data, "randomKey", char_set, output_location, package, module, encrypt_or_decrypt)
+    text = _execute_encrypt_or_decrypt_and_write_info_no_key(data, "randomKey", char_set, output_location,
+                                                             package, module, encrypt_or_decrypt)
 
     # Return text to be written in cryptography_runner
     return text
 
 
-
-
-
-
+##########  ASYMMETRIC ##########
 # This function runs encryption without a key (generates asymmetric pair of keys)
 def asymmetric_encrypt_and_generate_keys(data, output_location, package, module, encrypt_or_decrypt):
 
@@ -195,18 +221,76 @@ def asymmetric_encrypt_and_generate_keys(data, output_location, package, module,
 # This function runs decryption with a private key (asymmetric ciphers)
 def asymmetric_decrypt_with_key(data, output_location, package, module, encrypt_or_decrypt):
 
-    # Obtain the character encoding scheme and the num_chars
-    encoding_scheme, num_chars = _take_char_set(char_encoding_schemes)
-
-    # Take a single character key from the user
+    # Take the private key from the user
     key = _get_general_key()
 
+    # Figure out the encoding_scheme from the key. Read the first word
+    encoding_scheme = key[0: key.find(" d = ")]
+
     # Execute encryption and write into
-    text = _execute_and_write_info(data, key, encoding_scheme, output_location,
+    text = _execute_encrypt_or_decrypt_and_write_info_with_key(data, key, encoding_scheme, output_location,
                                                      package, module, encrypt_or_decrypt)
 
     # Return text to be written in cryptography_runner
     return text
+
+
+
+
+##########  TESTING ##########
+# This function runs decyryption with key in testing form. So write down relevant information in filee
+def testing_general_decrypt_with_key(ciphertext, output_location, plaintext, public_key, private_key, char_set_size,
+                                     encryption_time, package, module, cipher_name, encrypt_or_decrypt,
+                                     encryption_code, decryption_code):
+    """
+    This function runs decryption, and prints out all relevant information to a file in Files_logs
+
+    :param ciphertext: (string) the ciphertext to decrypt
+    :param output_location: (string) the location to put down decryption/encryption information
+    :param plaintext: (string) the original plaintext
+    :param public_key:(string) the key used for the encryption, if there is one
+    :param private_key: (string) the key used for decryption, if there is one
+    :param char_set_size: (int) the size of the character set used
+    :param encryption_time: (int) the time that encryption took
+    :param package: (string) the package in which the module is located in
+    :param module: (string) the module that the decrypt method is located in
+    :param encrypt_or_decrypt: (string) indicates whether the module is an encryption one or a decryption
+    :param encryption_code: (string) the code to run that writes statistics for encrypt. Pass into exec()
+    :param decryption_code: (string) the code to run that writes statistics for decrypt. Pass into exec()
+    :return: None
+    """
+
+    # Obtain the decrypted text from the ciphertext, and note the time that it takes.
+    start_time = time.time()
+    exec("from Decryption import "+ module)
+    decrypted = eval(module + ".decrypt(ciphertext, private_key, char_set_size)" )
+    if type(decrypted) is tuple: # If tuple, then only save the decrypted text
+        decrypted = decrypted[0]
+    decryption_time = time.time() - start_time
+
+    # Open file for writing, and set up a space for personal notes
+    new_file = open(output_location, "w", encoding="utf-8")
+    if decrypted == plaintext:
+        new_file.writelines([cipher_name + " on " + test.plaintext_source + "\nCORRECT \nNotes: "])
+        print(cipher_name + ": 	𝐂𝐎𝐑𝐑𝐄𝐂𝐓\n")
+    else:
+        new_file.writelines([cipher_name + " on " + test.plaintext_source + "\nINCORRECT \t\t\t\t\t"
+                             + "Characters different: " + str(sum(1 for a, b in zip(plaintext, decrypted) if a != b))
+                             + "\t Percent different: " + str((sum(1 for a, b in zip(plaintext, decrypted) if a != b) /
+                                                             len(plaintext) * 100))
+                             + "\nNotes: "])
+        print(cipher_name + ": 𝐈𝐍𝐂𝐎𝐑𝐑𝐄𝐂𝐓\n")
+
+
+    # Write out encryption information/statistics. Then, do the decryption information
+    exec(encryption_code)
+    exec(decryption_code)
+
+    # Print out the ciphertext, decrypted text, and then the plaintext. Then, close fil
+    new_file.writelines(["\n\n\nCiphertext: \n" + ciphertext])
+    new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
+    new_file.writelines(["\n\n\nPlaintext: \n" + plaintext])
+    new_file.close()
 
 
 
@@ -217,7 +301,8 @@ def asymmetric_decrypt_with_key(data, output_location, package, module, encrypt_
 
 ########################################################################################### USEFUL ALGORITHMS ##########
 
-# This function figures out what character set the encrypted data is in. NOT 100% accurate
+########## CHARACTER SET DETERMINATION ##########
+# This function figures out what character set the encrypted data is in. More reliable on longer texts
 def char_set_of_ciphertext(ciphertext):
     """
     This fucntion iterates through all the characters in the ciphertext and checks what sort of character set they are
@@ -228,12 +313,17 @@ def char_set_of_ciphertext(ciphertext):
     :return: (string) the character set the ciphertext was most likely encrypted in
     """
 
-    # first pass through ciphertext, check if there are unicode characters (256 and above)
+    # first pass through ciphertext, check if there are unicode characters (65536 and above)
     for x in ciphertext:
-        if ord(x) >= 256:
+        if ord(x) >= 65536:
             return "unicode"
 
-    # second pass through ciphertext, check if there are extended_ascii characters(128 and above)
+    # seocnd pass through ciphertext, check if there are unicode_plane0
+    for x in ciphertext:
+        if ord(x) >= 256:
+            return "unicode_plane0"
+
+    # third pass through ciphertext, check if there are extended_ascii characters(128 and above)
     for x in ciphertext:
         if ord(x) >= 128:
             return "extended_ascii"
@@ -241,7 +331,43 @@ def char_set_of_ciphertext(ciphertext):
     # Otherwise, only ascii characters
         return "ascii"
 
+# This function determine which character encoding scheme the encrypted data is in. More reliable on longer texts
+def char_encoding_scheme_of(text):
+    """
+    This figures out which character encoding scheme was used on this text
 
+    :param text: (string) the result of a character encoding scheme
+    :return: (string) the name of the character encoding scheme used
+    """
+
+    # If characters only in base16 alphabet, return "base16"
+    if all(character in "0123456789ABCDEF" for character in text):
+        return "base16"
+
+    # Test base32 alphabet
+    if all(character in "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567" for character in text):
+        return "base32"
+
+    # Test base64 alphabet
+    if all(character in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" for character in text):
+        return "base64"
+
+    # Test base85 alphabet
+    if all(character in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~"
+                        for character in text):
+        return "base85"
+
+    # Test extended_ascii alphabet
+    if all( 0 <= ord(character) <256 for character in text):
+        return "extended_ascii"
+
+    # Else, is in base4096
+    if all( 0 <= ord(character) <4096 for character in text):
+        return "base4096"
+
+
+
+########## TEXT/CHAR ENCODING SCHEMES ##########
 # This function converts the ciphertext in integer form into the proper character encoding scheme . Pads up to keysize
 def int_to_chars_encoding_scheme_pad(number, encoding, key_size):
     """
@@ -250,8 +376,8 @@ def int_to_chars_encoding_scheme_pad(number, encoding, key_size):
 
     :param number: (int) the number to encode
     :param encoding: (string) the type of character encoding to use (see dict char_encoding_schemes)
-    :param key_size: (string) The size of the key (and thus, the ciphertext). Pad 0's in front if necessary. This should
-                              be divisible by 8.
+    :param key_size: (string) The size of the key in bits (and thus, the ciphertext). Pad 0's in front if necessary.
+                              This should be divisible by 8.
     :return: (string) the encoded form.
     """
 
@@ -311,6 +437,22 @@ def int_to_chars_encoding_scheme_pad(number, encoding, key_size):
             encoded += chr( int(number[0:8], 2) )
             number = number[8:]
 
+    # If base4096, read 12 bits at a time. Interpret tham as unicode
+    elif encoding == "base4096":
+
+        # Turn the integer into a string with binary representation. Get rid of leading "0b"
+        number = bin(number)[2:]
+
+        # Pad the front if necessary (all the way up to key_size and divisible by 12)
+        if len(number) < key_size:
+            number = (key_size - len(number)) * "0" + number
+        if len(number) % 12 != 0:
+            number = (12 - (len(number) % 12)) * "0" + number
+
+        # Read bits 12 at a time. Interpret those 12 bits as unicode and add to encoded.
+        while number != "":
+            encoded += chr( int(number[0:12], 2) )
+            number = number[12:]
 
 
 
@@ -384,13 +526,28 @@ def int_to_chars_encoding_scheme(number, encoding):
             encoded += chr( int(number[0:8], 2) )
             number = number[8:]
 
+    # If base4096, then read 12 bits at a time. Pad "0" in front if necessary
+    elif encoding == "base4096":
+
+        # Turn the integer into a string with binary representation. Get rid of leading "0b"
+        number = bin(number)[2:]
+
+        # Pad the front if necessary(make divisble by 12)
+        if len(number) % 12 != 0:
+            number = (12 - (len(number) % 12)) * "0" + number
+
+        # Read bits 12 at a time. Interpret those 12 bits as unicode and add to encoded.
+        while number != "":
+            encoded += chr( int(number[0:12], 2) )
+            number = number[12:]
+
 
 
     return encoded
 
 
-# This function converts encoded characters into a number using the proper characte endocing scheme
-def chars_to_int_encoding_scheme(string, encoding):
+# This function decodes characters into a number using the proper characte endocing scheme
+def chars_to_int_decoding_scheme(string, encoding):
     """
     Does the opposite of int_to_chars_encoding_scheme
 
@@ -404,43 +561,72 @@ def chars_to_int_encoding_scheme(string, encoding):
 
     # If scheme was hex, then use int()
     if encoding == "base16":
+        string = string.encode()
         decoded = base64.b16decode(string)
         decoded = int.from_bytes(decoded, byteorder="big")
 
     # elif base32, use base64 module function. Then, turn the bytes into an integer
     elif encoding == "base32":
+        string = string.encode()
         decoded = base64.b32decode(string)
         decoded = int.from_bytes(decoded, byteorder="big")
 
     # elif base64, use base64 module fuction. THen, turn bytes into an integer
     elif encoding == "base64":
+        string = string.encode()
         decoded = base64.b64decode(string)
         decoded = int.from_bytes(decoded, byteorder="big")
 
     # elif base85, use base64 module's function. Then, turn bytes into an integer
     elif encoding == "base85":
+        string = string.encode()
         decoded = base64.b85decode(string)
         decoded = int.from_bytes(decoded, byteorder="big")
 
 
+
     # elif extended_ascii, turn extended_ascii into a long string of bits. Then, read bits as an integer
-    elif encoding == "ascii":
+    elif encoding == "extended_ascii":
 
         # Build up binary string here
         bin_string = ""
 
-        # Loop through string. Add the ascii characters one at a time to bin_string (in binary form).
+        # Loop through string. Add the extended_ascii characters one at a time to bin_string (in binary form).
         for x in string:
 
-            # Obtain binary form of the ascii character. Remove leading "0b"
-            seven_bits = bin(ord(x))[2:]
+            # Obtain binary form of the extended_ascii character. Remove leading "0b"
+            eight_bits = bin(ord(x))[2:]
 
             # Pad to eight digits if necessary
-            if eight_bits % 8 != 0:
-                eight_bits = (8 - eight_bits % 8) * "0" + eight_bits
+            if len(eight_bits) % 8 != 0:
+                eight_bits = (8 - len(eight_bits) % 8) * "0" + eight_bits
 
             #Add to bin string
-            bin_string += seven_bits
+            bin_string += eight_bits
+
+
+        # Read the binary string as an integer
+        decoded = int(bin_string, 2)
+
+
+    # elif base4096, turn base4096 into a long string of bits. Then, read bits as an integer
+    elif encoding == "base4096":
+
+        # Build up binary string here
+        bin_string = ""
+
+        # Loop through string. Add the extended_ascii characters one at a time to bin_string (in binary form).
+        for x in string:
+
+            # Obtain binary form of the base4096 character. Remove leading "0b"
+            twelve_bits = bin(ord(x))[2:]
+
+            # Pad to 8 digits if necessary
+            if len(twelve_bits) % 12 != 0:
+                twelve_bits = (12 - len(twelve_bits) % 12) * "0" + twelve_bits
+
+            #Add to bin string
+            bin_string += twelve_bits
 
 
         # Read the binary string as an integer
@@ -451,9 +637,138 @@ def chars_to_int_encoding_scheme(string, encoding):
     return decoded
 
 
+# This function encodes characters using whatever character encoding scheme
+def chars_to_chars_encoding_scheme(string, encoding):
+    """
+    This encodes a string using chosen encoding scheme
+
+    :param string: (string) the string to encode
+    :param encoding: (string) the name of the encoding scheme
+    :return: (string) the encoded result
+    """
+
+    encoded = ""
+
+    if encoding == "base16":
+        encoded = base64.b16encode(bytearray(string, "utf-8")).decode()
+
+    elif encoding == "base32":
+        encoded = base64.b32encode(bytearray(string, "utf-8")).decode()
+
+    elif encoding == "base64":
+        encoded = base64.b64encode(bytearray(string, "utf-8")).decode()
+
+    elif encoding == "base85":
+        encoded = base64.b85encode(bytearray(string, "utf-8")).decode()
+
+    elif encoding == "extended_ascii":
+
+        # Change string to hex format with utf-8
+        hex = string.encode("utf-8").hex()
+
+
+        # Read bytes (two hex digits) at a time. Interpret them as extended_ascii
+        while hex != "":
+            encoded += chr( int(hex[0: 2], 16) )
+            hex = hex[ 2: ]
+
+    elif encoding == "base4096":
+
+        # Change string to hex format with utf-8
+        hex = string.encode("utf-8").hex()
+
+        # Pad string to be divisible by three if necessary
+        if len(hex) % 3 != 0:
+            hex = (3 - (len(hex) % 3)) * "0" + hex
+
+        # Read bytes (three hex digits) at a time. Interpret them as base4096
+        while hex != "":
+            encoded += chr( int(hex[0: 3], 16) )
+            hex = hex[ 3: ]
+
+
+    return encoded
+
+
+# This function decodes characters into a string using whatever character encoding scheme
+def chars_to_chars_decoding_scheme(string, encoding):
+    """
+    This function decodes using the chosen encoding scheme.
+
+    :param string: (string) the decoded string
+    :param encoding: (string) the name of the encoding method
+    :return: (string) the decoded string
+    """
+
+    decoded = ""
+
+    if encoding == "base16":
+        decoded = base64.b16decode(bytearray(string, "utf-8")).decode()
+
+    elif encoding == "base32":
+        decoded = base64.b32decode(bytearray(string, "utf-8")).decode()
+
+    elif encoding == "base64":
+        decoded = base64.b64decode(bytearray(string, "utf-8")).decode()
+
+    elif encoding == "base85":
+        decoded = base64.b85decode(bytearray(string, "utf-8")).decode()
+
+    elif encoding == "extended_ascii":
+        for char in string:
+            # Convert each extended_ascii to bytes, then to a hex string. Concatenate
+            decoded += (ord(char)).to_bytes(1, byteorder="big").hex()
+
+        # Turn the bitstring into a regular string with utf-8 encoding
+        decoded = codecs.decode(decoded, "hex").decode("utf-8") # Decode bytes to string using utf-8
+
+    elif encoding == "base4096":
+        for char in string:
+            # Convert each base4096 to hex string of length 3. Concatenate
+            hex_str = hex(ord(char))[2:] # remove leading "0x"
+            if len(hex_str) % 3 != 0:
+                hex_str = (3 - (len(hex_str) % 3)) * "0" + hex_str
+
+            decoded += hex_str
+
+        # Turn the hexstring into a regular string with utf-8 encoding
+        decoded = codecs.decode(decoded, "hex").decode("utf-8") # Decode hex to string using utf-8
+    return decoded
+
+# Reads an rsa key and returns the public/private key and modulus
+def read_rsa_key(key):
+    """
+    This reads the rsa key which is in the format of "RSA (character length of e or d) (e or d) n"
+
+    :param key: (string) the rsa key
+    :return: (int) the public/private exponent key
+    :return: (int) the modulus for rsa
+    """
+
+    # Figure out the character scheme of the key
+    scheme = char_encoding_scheme_of(key)
+
+    # Decode the key to format: "RSA (character length of e or d) (e or d) n"
+    key = chars_to_chars_decoding_scheme(key, scheme)
+
+
+    # Figure out how many characters to read for the exponent d/e. From the first space to the second. Convert to int
+    first_space_index = key.find(" "); second_space_index = key.find(" ", key.find(" ") + 1)
+    length = key[ first_space_index + 1: second_space_index ]
+    length = int(length, 10)
+
+    # Read length characters to figure out e/d and also n. Decode them into ints
+    exponent = key[ second_space_index + 1: second_space_index + 1 + length ]
+    n = key[ second_space_index + 1 + length: ]
+    exponent = chars_to_int_decoding_scheme(exponent, scheme)
+    n = chars_to_int_decoding_scheme(n, scheme)
+
+    # Return the exponent and the modulus
+    return exponent, n
 
 
 
+########## PRIME NUMBERS ##########
 
 # the function to generate large primes. Pass in bit_length for the desired size of the generated prime
 def generate_prime(bit_length):
@@ -468,56 +783,143 @@ def generate_prime(bit_length):
     :return: (int) the generated prime number
     """
 
+    # Set up static inner variable that counts the numbers of primes generated
+    if not hasattr(generate_prime, "numbers_tested"):
+        generate_prime.numbers_tested = 0
+
+
     # Loop until a prime number has been generated
-    for x in itertools.count():
-        num_to_test = random.randrange(2 ** (bit_length - 1), 2 ** bit_length)
+    while True:
 
-        # the function to test whether a number is prime.
-        def is_prime(num):
+        # Generate a number that needs to be tested for primality
+        num_to_test = secrets.randbits(bit_length)
 
-            # Check that that number is not evenly divisible by small primes. Immediately eliminates many non-primes
-            small_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29
-                , 31, 37, 41, 43, 47, 53, 59, 61, 67, 71
-                , 73, 79, 83, 89, 97, 101, 103, 107, 109, 113
-                , 127, 131, 137, 139, 149, 151, 157, 163, 167, 173
-                , 179, 181, 191, 193, 197, 199, 211, 223, 227, 229
-                , 233, 239, 241, 251, 257, 263, 269, 271, 277, 281
-                , 283, 293, 307, 311, 313, 317, 331, 337, 347, 349
-                , 353, 359, 367, 373, 379, 383, 389, 397, 401, 409
-                , 419, 421, 431, 433, 439, 443, 449, 457, 461, 463
-                , 467, 479, 487, 491, 499, 503, 509, 521, 523, 541
-                , 547, 557, 563, 569, 571, 577, 587, 593, 599, 601
-                , 607, 613, 617, 619, 631, 641, 643, 647, 653, 659
-                , 661, 673, 677, 683, 691, 701, 709, 719, 727, 733
-                , 739, 743, 751, 757, 761, 769, 773, 787, 797, 809
-                , 811, 821, 823, 827, 829, 839, 853, 857, 859, 863
-                , 877, 881, 883, 887, 907, 911, 919, 929, 937, 941
-                , 947, 953, 967, 971, 977, 983, 991, 997]
+        # Print updates
+        print(str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
+              + str(get_prime_pair.primes_found))
+        generate_prime.numbers_tested += 1
 
-            # If 1 or less, not prime
-            if num <= 1:
-                return False
+        # Set the lowest bit to 1 to make the number odd.
+        num_to_test = num_to_test | 1
+
+
+        # This function checks if candidate is divisible by small primes. If failed, return False and the number that
+        #  failed it.
+        def small_primes_primality_test(candidate):
+            """
+            This function uses the small primes test to test for primality.
+
+            :param candidate: (the number to test for)
+            :return: (boolean) indicating passed or failed test
+            :return: (int) indicating the number that caused the failed test (0 if test passed)
+            """
+            small_primes = [
+                2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101,
+                103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211,
+                223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337,
+                347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461,
+                463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599, 601,
+                607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701, 709, 719, 727, 733, 739,
+                743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881,
+                883, 887, 907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997, 1009, 1013, 1019, 1021,
+                1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087, 1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129,
+                1151, 1153, 1163, 1171, 1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237, 1249, 1259, 1277,
+                1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307, 1319, 1321, 1327, 1361, 1367, 1373, 1381, 1399, 1409,
+                1423, 1427, 1429, 1433, 1439, 1447, 1451, 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511,
+                1523, 1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583, 1597, 1601, 1607, 1609, 1613, 1619, 1621,
+                1627, 1637, 1657, 1663, 1667, 1669, 1693, 1697, 1699, 1709, 1721, 1723, 1733, 1741, 1747, 1753, 1759,
+                1777, 1783, 1787, 1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879, 1889, 1901,
+                1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993, 1997, 1999, 2003, 2011, 2017, 2027, 2029,
+                2039, 2053, 2063, 2069, 2081, 2083, 2087, 2089, 2099, 2111, 2113, 2129, 2131, 2137, 2141, 2143, 2153,
+                2161, 2179, 2203, 2207, 2213, 2221, 2237, 2239, 2243, 2251, 2267, 2269, 2273, 2281, 2287, 2293, 2297,
+                2309, 2311, 2333, 2339, 2341, 2347, 2351, 2357, 2371, 2377, 2381, 2383, 2389, 2393, 2399, 2411, 2417,
+                2423, 2437, 2441, 2447, 2459, 2467, 2473, 2477, 2503, 2521, 2531, 2539, 2543, 2549, 2551, 2557, 2579,
+                2591, 2593, 2609, 2617, 2621, 2633, 2647, 2657, 2659, 2663, 2671, 2677, 2683, 2687, 2689, 2693, 2699,
+                2707, 2711, 2713, 2719, 2729, 2731, 2741, 2749, 2753, 2767, 2777, 2789, 2791, 2797, 2801, 2803, 2819,
+                2833, 2837, 2843, 2851, 2857, 2861, 2879, 2887, 2897, 2903, 2909, 2917, 2927, 2939, 2953, 2957, 2963,
+                2969, 2971, 2999, 3001, 3011, 3019, 3023, 3037, 3041, 3049, 3061, 3067, 3079, 3083, 3089, 3109, 3119,
+                3121, 3137, 3163, 3167, 3169, 3181, 3187, 3191, 3203, 3209, 3217, 3221, 3229, 3251, 3253, 3257, 3259,
+                3271, 3299, 3301, 3307, 3313, 3319, 3323, 3329, 3331, 3343, 3347, 3359, 3361, 3371, 3373, 3389, 3391,
+                3407, 3413, 3433, 3449, 3457, 3461, 3463, 3467, 3469, 3491, 3499, 3511, 3517, 3527, 3529, 3533, 3539,
+                3541, 3547, 3557, 3559, 3571, 3581, 3583, 3593, 3607, 3613, 3617, 3623, 3631, 3637, 3643, 3659, 3671,
+                3673, 3677, 3691, 3697, 3701, 3709, 3719, 3727, 3733, 3739, 3761, 3767, 3769, 3779, 3793, 3797, 3803,
+                3821, 3823, 3833, 3847, 3851, 3853, 3863, 3877, 3881, 3889, 3907, 3911, 3917, 3919, 3923, 3929, 3931,
+                3943, 3947, 3967, 3989, 4001, 4003, 4007, 4013, 4019, 4021, 4027, 4049, 4051, 4057, 4073, 4079, 4091,
+                4093, 4099, 4111, 4127, 4129, 4133, 4139, 4153, 4157, 4159, 4177, 4201, 4211, 4217, 4219, 4229, 4231,
+                4241, 4243, 4253, 4259, 4261, 4271, 4273, 4283, 4289, 4297, 4327, 4337, 4339, 4349, 4357, 4363, 4373,
+                4391, 4397, 4409, 4421, 4423, 4441, 4447, 4451, 4457, 4463, 4481, 4483, 4493, 4507, 4513, 4517, 4519,
+                4523, 4547, 4549, 4561, 4567, 4583, 4591, 4597, 4603, 4621, 4637, 4639, 4643, 4649, 4651, 4657, 4663,
+                4673, 4679, 4691, 4703, 4721, 4723, 4729, 4733, 4751, 4759, 4783, 4787, 4789, 4793, 4799, 4801, 4813,
+                4817, 4831, 4861, 4871, 4877, 4889, 4903, 4909, 4919, 4931, 4933, 4937, 4943, 4951, 4957, 4967, 4969,
+                4973, 4987, 4993, 4999
+            ]
+
+            # If 1 or less, not prime. Just return false
+            if candidate <= 1:
+                return False, 0
 
             # Check that number not evenly divisible by small primes
             for prime in small_primes:
-                if num % prime == 0:
-                    return False
+                if candidate % prime == 0:
+                    return False, prime
 
-            # Setup for rabin miller test (write n - 1 as 2**power * d) by repeatedly dividing n - 1 by 2
+            # All the small primes have been checked, so the number passes the small primes test
+            return True, 0
+
+        # While small primes test fails, update number with += 2. Do until number no longer fits
+        test_result, failed_prime = small_primes_primality_test(num_to_test)
+        while test_result == False and num_to_test.bit_length() == bit_length:
+
+            # Print updates
+            print(str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
+                  + str(get_prime_pair.primes_found))
+            generate_prime.numbers_tested += 1
+
+            # Update the number, and run small primes test again
+            num_to_test += 2
+            test_result, failed_prime = small_primes_primality_test(num_to_test)
+
+        # If the num_to_test is too big, then continue from the beginning
+        if num_to_test.bit_length() != bit_length:
+            continue
+
+        # If failed the small_primes_primality_test, then generate new number
+        if num_to_test == False:
+            continue
+
+
+        # FERMAT"S LITTLE THEOREM: First, find 1 > i > number where number not divisible by i
+        fermat_test_num = secrets.randbelow(num_to_test)
+        while num_to_test % fermat_test_num == 0:
+            fermat_test_num = secrets.randbelow(num_to_test)
+
+        # If failed fermat's little theorem, start from the beginning
+        if pow(fermat_test_num, num_to_test - 1, num_to_test) != 1:
+            continue
+
+
+
+        # RABIN MILLER: Setup for rabin miller test (write n - 1 as 2**power * d) by repeatedly dividing n - 1 by 2\
+        def rabin_miller_primality_test(num, times_to_test):
+            """
+            Run rabin_miller tests times_to_test times. Return whether or not the number is a prime
+
+            :param num: (int) number to test for primeness
+            :return: (boolean) indicates whether the number is prime
+            """
             s = num - 1
             power = 0
             while s % 2 == 0:
                 s = s // 2
                 power += 1
 
-            # Run the rabin miller test up to 64 times
-            trials = 0;
-            while trials < 64:
+            # Run the rabin miller test however many times
+            trials = 0
+            while trials < times_to_test:
 
-                rand_base = random.randrange(2, num - 1)
-                result = pow(rand_base, s, num)
+                result = pow(random.randrange(2, num - 1), s, num)
 
-                # Test does not apply for result = 1. Try again with a different base
+                # Test does not apply for result == 1. Try again with a different base
                 if result == 1:
                     continue
 
@@ -539,19 +941,59 @@ def generate_prime(bit_length):
 
             # passed all tests, so probably prime
             return True
+        is_prime = rabin_miller_primality_test(num_to_test, 64)
+
 
         # If the generated number was prime, then return
-        if is_prime(num_to_test):
+        if is_prime:
             return num_to_test
 
-        print(str(x) + " primes tested")
+
+# This function returns a pair of primes whose product is of size key_bits
+def get_prime_pair(key_bits):
+    """
+    Figures out a pair of primes whose product is of size key_bits. When a prime is found, it is multiplied against
+    all the primes in primes_list to try to find a pair that gives a correct size key. If one is not found,
+    this prime is added to the list, and a new prime number is searched for.
+
+    :param key_bits: (int) the bit length of the key (the product of the primes)
+    :return: (int) One prime number that is the factor of the key
+    :return: (int) Another prime number that is the factor of the key
+    """
+
+    # Create a static variable that counts the number of primes found
+    get_prime_pair.primes_found = 0
+
+    # Tell generate_primes() to reset its numbers tested counter
+    generate_prime.numbers_tested = 0
+
+    # Create the list with one prime number is in it(primes are about half the size of key_bits)
+    primes_list = [generate_prime(key_bits // 2)]; get_prime_pair.primes_found += 1
+
+    # Loop until two prime numbers are found whose product is the correct size (key_bits)
+    while True:
+
+        # Generate a prime for testing
+        prime_one = generate_prime(key_bits // 2); get_prime_pair.primes_found += 1
+
+
+        # Test all pairs of primes for a key that is of proper size
+        for prime_two in primes_list:
+            if (prime_one * prime_two).bit_length() == key_bits:
+
+                # Print updates
+                print(str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
+                      + str(get_prime_pair.primes_found))
+
+                return prime_one, prime_two
+
+        # add this current prime into the list for testing
+        primes_list.append(prime_one)
 
 
 
 
-
-
-
+########## DETERMINE LANGUAGE ##########
 # This function figures out whether the data is in English. Adjust threshold as necessary. Also return percent english
 def is_english_bag_of_words(data):
     """
@@ -563,6 +1005,13 @@ def is_english_bag_of_words(data):
     :return: (boolean) indicates whether or not the text is in english
     :return: (double) the percentage of words that are in english
     """
+
+    # Create inner static variable of set of english words. Load into this the first time this function is called
+    if not hasattr(is_english_bag_of_words, "english_words"):
+        is_english_bag_of_words.english_words = set(line.strip() for line in open("Library/English_Words.txt"))
+
+
+
 
     # Remove punctuation from the data
     data = data.replace("," , "")
@@ -593,12 +1042,6 @@ def is_english_bag_of_words(data):
 
 
 
-    # Load the dictionary of english words into english_words (if necessary)
-    global english_words
-    if english_words is None:
-        english_words = set(line.strip() for line in open("Library/English_Words.txt"))
-
-
     # Percent of text that is english needed to pass as plaintext
     percent_english_threshold = 0.45
     average_english_word_len_loose = 10
@@ -616,7 +1059,7 @@ def is_english_bag_of_words(data):
 
 
     for word in words:
-        if word.lower() in english_words:
+        if word.lower() in is_english_bag_of_words.english_words:
             english_word_counter = english_word_counter + 1
 
     #  If it passes the percent english threshold, return true and the percent english
@@ -626,6 +1069,8 @@ def is_english_bag_of_words(data):
 
     # Else, return False and also the percent english
     return False, (english_word_counter / total_words)
+
+
 
 
 
@@ -650,6 +1095,28 @@ def is_english_n_grams(data):
     ngram_type = 2
 
 
+    # Create inner static variable of dictionary that maps ngrams to its frequency.
+    if not hasattr(is_english_n_grams, "ngram_to_frequency"):
+        is_english_n_grams.ngram_to_frequency = {}
+
+        # Read data from csv-formatted text file
+        with open("Library/ngrams" + str(ngram_type) + ".txt", newline='') as my_file:
+            reader = csv.DictReader(my_file, fieldnames=("ngram", "count"))
+            # Read each row as key-value pair
+            for row in reader:
+                is_english_n_grams.ngram_to_frequency[row["ngram"]] = row["count"]
+
+    # Create inner static variable of dictionary that maps ngrams to posiitonal index(1 for most common 2 for second...)
+    if not hasattr(is_english_n_grams, "ngram_to_positional_index"):
+        is_english_n_grams.ngram_to_positional_index = {}
+
+        # Fill out ngram_to_positional_index
+        count = 1
+        for x in is_english_n_grams.ngram_to_frequency:
+            is_english_n_grams.ngram_to_positional_index[x] = count
+            count += 1
+
+
     # The percent of most common ngrams in the data compared with the most common ngrams in English to qualify as it
     similarity_english_threshold = 0.1
 
@@ -663,24 +1130,6 @@ def is_english_n_grams(data):
     data = "".join(data)
 
 
-
-    # Load into ngram_to_frequency if it is None. Also fill out ngram_to_positional_index
-    global ngram_to_frequency
-    global ngram_to_positional_index
-    if ngram_to_frequency is None:
-        ngram_to_frequency = {}
-        ngram_to_positional_index = {}
-        with open("Library/ngrams" + str(ngram_type) + ".txt", newline='') as my_file:
-            reader = csv.DictReader(my_file, fieldnames=("ngram", "count"))
-            # Read each row as key-value pair
-            for row in reader:
-                ngram_to_frequency[row["ngram"]] = row["count"]
-
-        # Fill out ngram_to_positional_index
-        count = 1
-        for x in ngram_to_frequency:
-            ngram_to_positional_index[x] = count
-            count += 1
 
 
     # Dictionary to store ngrams with their frequencies
@@ -705,17 +1154,18 @@ def is_english_n_grams(data):
 
     # Get lists of the ngrams sorted by their frequencies
     most_frequent_ngrams_data = sorted(data_ngrams_frequencies, key=data_ngrams_frequencies.get)
-    most_frequent_ngrams_english = sorted(ngram_to_frequency, key=ngram_to_frequency.get)
+    most_frequent_ngrams_english = sorted(is_english_n_grams.ngram_to_frequency,
+                                          key=is_english_n_grams.ngram_to_frequency.get)
 
     # convert the ngrams into lists of positional index frequencies
     i = 0
     for x in most_frequent_ngrams_data:
-        most_frequent_ngrams_data[i] = ngram_to_positional_index.get(x)
+        most_frequent_ngrams_data[i] = is_english_n_grams.ngram_to_positional_index.get(x)
         i += 1
 
     i = 0
     for x in most_frequent_ngrams_english:
-        most_frequent_ngrams_english[i] = ngram_to_positional_index.get(x)
+        most_frequent_ngrams_english[i] = is_english_n_grams.ngram_to_positional_index.get(x)
         i+= 1
 
 
@@ -773,6 +1223,10 @@ def is_english_n_grams(data):
 
     else:
         return False, similarity_english
+
+
+
+
 
 
 
@@ -901,13 +1355,20 @@ def _get_single_char_key():
     # TAKE A KEY
     key = input("Enter a key (single character only): ")
 
-    # IF THE USER DID NOT GIVE ANYTHING, SEND AN ERROR MESSAGE AND FORCE THE USER TO ENTER IT AGAN
-    while key == "":
-        key = input("No key given! Enter a key (single character only): ")
+    # While the key is not valid, ask user to enter a key again
+    while True:
+        # If the user did not enter a key, ask the user to enter one
+        if key == "":
+            key = input("No key given! Enter a key (single character only): ")
+            continue
 
-    # IF THE USER DID NOT GIVE A SINGLE CHARACTER, FORCE THE USER TO ENTER IT AGAN
-    while not len(key) == 1:
-        key = input("Not a single character! Enter a key (single character only): ")
+        # IF THE USER DID NOT GIVE A SINGLE CHARACTER, FORCE THE USER TO ENTER IT AGAN
+        if len(key) != 1:
+            key = input("Not a single character! Enter a key (single character only): ")
+            continue
+
+        # All checks passed, so break out of the for loop
+        break
 
     return key
 
@@ -926,7 +1387,38 @@ def _get_general_key():
 
     # IF THE USER DID NOT GIVE ANYTHING, SEND AN ERROR MESSAGE AND FORCE THE USER TO ENTER IT AGAN
     while key == "":
-        key = input("No key given! Enter a key (single character only): ")
+        key = input("No key given! Enter a key: ")
+
+    return key
+
+
+# This helper function obtains a private key from the user
+def _get_private_key():
+    """
+    This function obtains a key of any length fro the user
+
+    :return: (string) the user-entered key
+    """
+
+    # TAKE A KEY
+    key = input("Enter the private key: ")
+
+    # While the key is not valid
+    while True:
+
+        # If nothing entered
+        if key == "":
+            key = input("No key given! Enter the private key: ")
+            continue
+
+        # If the key is not in the proper format "(char_encoding_scheme) d = ..., n = ..."
+        if key[0: key.find(" ")] not in char_encoding_schemes and " d = " not in key and " n = " not in key:
+            key = input("Private key not in valid format (char_encoding_scheme + d = ... + n = ...)! Enter the private \
+                        key: ")
+            continue
+
+        # All checks passed, so break out of loop
+        break
 
     return key
 
@@ -941,7 +1433,7 @@ def _get_public_key():
     """
 
     # Take a key
-    key = input("Enter a public key (Leave empty to generate public/private keys): ")
+    key = input("Enter the public key (Leave empty to generate public/private keys): ")
 
     return key
 
@@ -949,8 +1441,11 @@ def _get_public_key():
 
 
 
+
+
 # This helper function executes the specified encryption/decryption type and writes to a file encryption/decryption stat
-def _execute_and_write_info(data, key, char_set, output_location, package, module, encrypt_decrypt):
+def _execute_encrypt_or_decrypt_and_write_info_with_key(data, key, char_set, output_location,
+                                                        package, module, encrypt_decrypt):
     """
     This function executes the specified encryption/decryption method
 
@@ -982,8 +1477,8 @@ def _execute_and_write_info(data, key, char_set, output_location, package, modul
     new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
     new_file.writelines(["The encryption/decryption type is: " + module,
                          "\nThe character set is : " + char_set,
-                         "\nThe key is: " + key,
-                         "\n" + encrypt_decrypt + "ed in: " + str(elapsed_time) + " seconds.",
+                         "\n\nThe key is: " + key,
+                         "\n\n" + encrypt_decrypt + "ed in: " + str(elapsed_time) + " seconds.",
                          "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
                          "\n    That is " + str((elapsed_time/len(data) * 1000000))
                                           + " microseconds per character."])
@@ -993,7 +1488,8 @@ def _execute_and_write_info(data, key, char_set, output_location, package, modul
 
 
 # This helper function executes the decryption/encryption types without a key and writes stats and info to a file
-def _execute_and_write_info_no_key(data, key, char_set, output_location, package, module, encrypt_decrypt):
+def _execute_encrypt_or_decrypt_and_write_info_no_key(data, key, char_set, output_location,
+                                                      package, module, encrypt_decrypt):
     """
     This function executes the correct decryption method. This also figures out the key and char set and writes info to
     a file
@@ -1017,8 +1513,8 @@ def _execute_and_write_info_no_key(data, key, char_set, output_location, package
     new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
     new_file.writelines(["The " + encrypt_decrypt + "tion type is: " + module,
                          "\nThe character set is : " + char_set,
-                         "\nThe key is: " + key,
-                         "\n" + encrypt_decrypt + "ed in: " + str(elapsed_time) + " seconds.",
+                         "\n\nThe key is: " + key,
+                         "\n\n" + encrypt_decrypt + "ed in: " + str(elapsed_time) + " seconds.",
                          "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
                          "\n    That is " + str((elapsed_time/len(data) * 1000000))
                                       + " microseconds per character."])
@@ -1029,7 +1525,8 @@ def _execute_and_write_info_no_key(data, key, char_set, output_location, package
 
 
 # This helper function executes the encryption types that generate asymmetric keys. Also, write down info
-def _execute_encrypt_and_write_info_asymmetric_keys(data, key, char_encoding_scheme, output_location, package, module, encrypt_decrypt):
+def _execute_encrypt_and_write_info_asymmetric_keys(data, key, char_encoding_scheme, output_location,
+                                                    package, module, encrypt_decrypt):
     """
     This function executes the correct decryption method. This also figures out the key and char set and writes info to
     a file
@@ -1043,7 +1540,6 @@ def _execute_encrypt_and_write_info_asymmetric_keys(data, key, char_encoding_sch
     :return: (string) the decrypted text
     """
 
-
     # Obtain num_chars to use in the encryption method
     num_chars = char_set_to_char_set_size.get(char_encoding_scheme)
 
@@ -1054,11 +1550,18 @@ def _execute_encrypt_and_write_info_asymmetric_keys(data, key, char_encoding_sch
     elapsed_time = time.time() - start_time
 
 
+    # If private key is empty, then write "None provided"
+    if private_key == "":
+        private_key = "NONE PROVIDED"
+
     #  WRITE TO A NEW FILE CONTAINING RELEVANT INFO
     new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
     new_file.writelines(["The encryption type is: " + module,
-                         "\n\nThe public key is: " + public_key,
-                         "\n\nThe private key is: " + private_key,
+                         "\nThe encoding scheme is: " + char_encoding_scheme,
+                         "\n\n---------- BEGIN RSA PUBLIC KEY ----------\n " + public_key +
+                         "\n----------- END RSA PUBLIC KEY -----------\n" ,
+                         "\n\n---------- BEGIN RSA PRIVATE KEY ----------\n " + private_key +
+                         "\n----------- END RSA PRIVATE KEY -----------\n" ,
                          "\n\nEncrypted in: " + str(elapsed_time) + " seconds.",
                          "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
                          "\n    That is " + str((elapsed_time/len(data) * 1000000))
@@ -1066,6 +1569,10 @@ def _execute_encrypt_and_write_info_asymmetric_keys(data, key, char_encoding_sch
     new_file.close()
 
     return encrypted
+
+
+
+
 
 
 
