@@ -7,7 +7,7 @@ import time # For timing to write relevant information into files
 
 
 
-# Call the proper functions to decrypt. Return decrypted text bac to cryptography_runner.py
+# Call the proper functions to decrypt. Return decrypted text back to cryptography_runner.py
 def execute(data, output_location):
     """
     This function decrypts data using a key.
@@ -28,7 +28,7 @@ def execute(data, output_location):
 
 
 
-# Decrypt in testing mode. So add more statistics about performance. Check for correctness
+# Decrypt in testing mode. So add more statistics about performance. Check for correctness.
 def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, encryption_time):
     """
     Decrypt and save statistics.
@@ -37,56 +37,20 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
     :param output_location: (string) the file to save statistics into
     :param plaintext: (string) the original plaintext
     :param key: (string) the key used to decrypt
-    :param char_set_size: (integer) the character set used
-    :param encryption_time: (double) the time it took to encrypt using vigenere
+    :param char_set_size: (int) the character set used
+    :param encryption_time: (float) the time it took to encrypt using vigenere
     :return: None
     """
 
-    # Run the decryption algorithm on the ciphertext
-    start_time = time.time()
-    decrypted = decrypt(ciphertext, key, char_set_size)
-    decryption_time = time.time() - start_time
+    # Encryption code
+    encryption_code = miscellaneous.general_encryption_code
 
-    # Open file for writing
-    new_file = open(output_location, "w", encoding="utf-8")
+    # Decryption code
+    decryption_code = miscellaneous.general_decryption_code
 
-    # Set up a space for notes
-    if decrypted == plaintext:
-        new_file.writelines(["Vigenere\nCORRECT \nNotes: "])
-        print("Vigenere: CORRECT\n")
-    else:
-        new_file.writelines(["Vigenere\nINCORRECT \nNotes: "])
-        print("Vigenere: INCORRECT\n")
-
-    # Encryption information
-    new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
-                         "\nThe key is: " + key,
-                         "\nEncrypted in: " + str(encryption_time) + " seconds.",
-                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
-                         "\nThat is " + str((encryption_time / len(decrypted) * 1000000))
-                                      + " microseconds per character."])
-
-
-    # Decryption information
-    new_file.writelines(["\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption",
-                         "\nThe character set is : " + [char_set for char_set,
-                                                        value in miscellaneous.char_set_to_char_set_size.items()
-                                                        if value == char_set_size][0],
-                         "\nThe key is: " + key,
-                         "\nDecrypted in: " + str(decryption_time) + " seconds.",
-                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
-                         "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
-                                      + " microseconds per character."                                         ])
-
-
-
-    # Print out the ciphertext
-    new_file.writelines(["\n\n\nciphertext: \n" + ciphertext])
-
-    # Print out the plaintext
-    new_file.writelines(["\n\n\nplaintext: \n" + plaintext])
-
-    new_file.close()
+    miscellaneous.testing_general_decrypt_with_key(ciphertext, output_location, plaintext, key, key, char_set_size,
+                                                   encryption_time, "Decryption", "vigenere", "Vigenère", "decrypt",
+                                                   encryption_code, decryption_code)
 
 
 
