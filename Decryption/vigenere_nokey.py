@@ -29,7 +29,7 @@ def execute(data, output_location):
 
 
 # Decrypt in testing mode. So add more statistics about performance. Check for correctness
-def testing_execute(ciphertext, output_location, plaintext, encryption_time):
+def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, encryption_time):
     """
     Decrypt and save statistics.
 
@@ -42,55 +42,38 @@ def testing_execute(ciphertext, output_location, plaintext, encryption_time):
     :return: None
     """
 
-    # Run the decryption algorithm on the ciphertext
-    start_time = time.time()
-    decrypted, char_set, key, percent_english = decrypt(ciphertext)
-    decryption_time = time.time() - start_time
+    # Encryption code
+    encryption_code = \
+    r"""new_file.writelines([
+                             "\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption" 
+                             + "EncryptionEncryptionEncryptionEncryption",
+                             "\nThe ciphertext's character set is: " + char_set_of_ciphertext(ciphertext),
+                             "\n\n---------- BEGIN KEY ----------\n" + "(No key given)" +
+                             "\n----------- END KEY -----------" ,
+                             "\n\nEncrypted " + "{:,}".format(len(plaintext)) + " chars in: " + str(encryption_time) 
+                             + " seconds.",                             
+                             "\nThat is " + str((encryption_time / len(plaintext) * 1000000)) + " microseconds or " +  
+                             str((encryption_time / len(plaintext)) * 1000) + " milliseconds per character."])
+    """
 
-    # Open file for writing
-    new_file = open(output_location, "w", encoding="utf-8")
+    # Decryption code
+    decryption_code = \
+    r"""new_file.writelines([
+                             "\n\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption"
+                             + "DecryptionDecryptionDecryptionDecryption",
+                             "\nThe plaintext's character set is: " + char_set_of_ciphertext(plaintext),
+                             "\n\n---------- BEGIN KEY ----------\n" + private_key +
+                             "\n----------- END KEY -----------" ,
+                             "\n\nDecrypted " + "{:,}".format(len(plaintext)) + " chars in: " + str(decryption_time) 
+                             + " seconds, or " + str(decryption_time/encryption_time) + "x longer then encryption.",                           
+                             "\nThat is " + str((decryption_time / len(plaintext) * 1000000)) + " microseconds or " +  
+                             str((decryption_time / len(plaintext)) * 1000) + " milliseconds per character."])
+    """
 
-    # Set up a space for notes
-    if decrypted == plaintext:
-        new_file.writelines(["Vigenere without key\nCORRECT \n\n\nNotes: "])
-        print("Vignere No Key: CORRECT\n")
-    else:
-        # Calculate the number of characters that differ
-        count = sum(1 for a, b in zip(decrypted, plaintext) if a != b)
-        new_file.writelines(["Vigenere without key" + "\nINCORRECT"
-                             + "\tDiffering characters: " + str(count)
-                             + "\tPercentage difference: " + str((count / len(plaintext)) * 100) + "\n\n\nNotes: "])
-        print("Vigenere No Key: INCORRECT\n")
-
-    # Encryption information
-    new_file.writelines(["\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption",
-                         "\nThe key is: " + key,
-                         "\nEncrypted in: " + str(encryption_time) + " seconds.",
-                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
-                         "\nThat is " + str((encryption_time / len(decrypted) * 1000000))
-                                      + " microseconds per character."])
-
-
-    # Decryption information
-    new_file.writelines(["\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption",
-                         "\nThe character set is : " + char_set,
-                         "\nThe key is: " + key,
-                         "\nThe percent of words that are English are : " + str(percent_english),
-                         "\nDecrypted in: " + str(decryption_time) + " seconds.",
-                         "\nThat is " + str(encryption_time / len(decrypted)) + " seconds per character.",
-                         "\nThat is " + str((decryption_time / len(decrypted) * 1000000))
-                                      + " microseconds per character."])
-
-    # Print out the ciphertext
-    new_file.writelines(["\n\n\nciphertext: \n" + ciphertext])
-
-    # Print out the decrypted
-    new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
-
-    # Print out the plaintext
-    new_file.writelines(["\n\n\nplaintext: \n" + plaintext])
-
-    new_file.close()
+    miscellaneous.testing_general_decrypt_with_key(ciphertext, output_location, plaintext, key, key, char_set_size,
+                                                   encryption_time, "Decryption", "vigenere_nokey",
+                                                   "Vigenère without key", "decrypt", encryption_code,
+                                                   decryption_code)
 
 
 
