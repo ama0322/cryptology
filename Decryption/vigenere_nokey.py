@@ -44,30 +44,30 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
 
     # Encryption code
     encryption_code = \
-    r"""new_file.writelines([
-                             "\n\n\nEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryptionEncryption" 
-                             + "EncryptionEncryptionEncryptionEncryption",
-                             "\nThe ciphertext's character set is: " + char_set_of_ciphertext(ciphertext),
-                             "\n\n---------- BEGIN KEY ----------\n" + "(No key given)" +
-                             "\n----------- END KEY -----------" ,
-                             "\n\nEncrypted " + "{:,}".format(len(plaintext)) + " chars in: " + str(encryption_time) 
-                             + " seconds.",                             
-                             "\nThat is " + str((encryption_time / len(plaintext) * 1000000)) + " microseconds or " +  
-                             str((encryption_time / len(plaintext)) * 1000) + " milliseconds per character."])
-    """
+        r"""new_file.writelines([
+                                 "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                                 "\n--------------- key ---------------\n" + public_key +
+                                 "\n------------------------------------------------------------------------------------" ,
+                                 "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + 
+                                 char_set_of_ciphertext(ciphertext),
+                                 "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time) 
+                                 + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",                 
+                                 "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000), 
+                                 "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " +  str((encryption_time / len(plaintext)) * 1000) 
+                                ])
+        """
 
     # Decryption code
     decryption_code = \
     r"""new_file.writelines([
-                             "\n\n\n\nDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryptionDecryption"
-                             + "DecryptionDecryptionDecryptionDecryption",
-                             "\nThe plaintext's character set is: " + char_set_of_ciphertext(plaintext),
-                             "\n\n---------- BEGIN KEY ----------\n" + private_key +
-                             "\n----------- END KEY -----------" ,
-                             "\n\nDecrypted " + "{:,}".format(len(plaintext)) + " chars in: " + str(decryption_time) 
-                             + " seconds, or " + str(decryption_time/encryption_time) + "x longer then encryption.",                           
-                             "\nThat is " + str((decryption_time / len(plaintext) * 1000000)) + " microseconds or " +  
-                             str((decryption_time / len(plaintext)) * 1000) + " milliseconds per character."])
+                             "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                             "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                             "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
+                             + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",
+                             "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + "x",                             
+                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000), 
+                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " +  str((decryption_time / len(plaintext)) * 1000) 
+                            ])
     """
 
     miscellaneous.testing_general_decrypt_with_key(ciphertext, output_location, plaintext, key, key, char_set_size,
