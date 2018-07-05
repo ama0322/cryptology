@@ -11,8 +11,12 @@ import os # for deleting files
 
 # MODIFY THESE VALUES
 plaintext_source = "Library/Eleonora.txt"
+
 char_set_size = miscellaneous.char_set_to_char_set_size.get("unicode_plane0")
-key = "This is a key for testing."
+key = "This is a key for testing"
+
+char_scheme_size = miscellaneous.char_set_to_char_set_size.get("base4096")
+
 
 
 
@@ -36,30 +40,45 @@ def testing_mode():
                 output_location = "Files_Logs/" + decryption + "_" + now.strftime("%Y-%m-%d_h%Hm%Ms%S")
 
 
-                # Adjust the key for the encryption used (1st char for single character encryption like rotation)
-                if miscellaneous.encryption_key_type.get(encryption) == 1:
-                        global key; key = key[0]
+                # Conduct test for symmetric ciphers
+                if decryption in miscellaneous.symmetric_ciphers:
+
+                    # Adjust the key for the encryption used (1st char for single character encryption like rotation)
+                    if miscellaneous.encryption_key_type.get(encryption) == 1:
+                        global key;
+                        key = key[0]
+
+                    # Encrypt the plaintext.
+                    start_time = time.time()
+                    exec("from Encryption import " + encryption)
+                    ciphertext = eval(encryption + ".encrypt(plaintext, key, char_set_size)")
+                    encryption_time = time.time() - start_time
+
+                    # Figure out if the decryption method needs a key
+                    needs_key = miscellaneous.does_decryption_need_key.get(decryption)
+
+                    # Decrypt the plaintext. Call testing execute
+                    exec("from Decryption import " + decryption)
+                    exec(decryption + ".testing_execute(ciphertext, output_location, plaintext, key, "
+                                      "                 char_set_size, encryption_time)")
 
 
-                # Encrypt the plaintext.
-                start_time = time.time()
-                exec("from Encryption import " + encryption)
-                ciphertext = eval(encryption + ".encrypt(plaintext, key, char_set_size)")
-                encryption_time = time.time() - start_time
 
 
-                # Figure out if the decryption method needs a key
-                needs_key = miscellaneous.does_decryption_need_key.get(decryption)
+                # Conduct test for asymmetric ciphers
+                elif decryption in miscellaneous.asymmetric_ciphers:
 
-                # Decrypt the plaintext. Call the right form of testing execute
-                exec("from Decryption import " + decryption)
-                if needs_key:
-                        exec(decryption + ".testing_execute(ciphertext, output_location, plaintext, key, "
-                                          "                 char_set_size, encryption_time)")
-                else:
-                        exec(decryption + ".testing_execute(ciphertext, output_location, plaintext, encryption_time)")
+                    # Encrypt the plaintext, and get the generated ciphers
+                    start_time = time.time()
+                    exec("from Encryption import " + encryption)
+                    ciphertext, public_key, private_key = eval(encryption + ".encrypt(plaintext, \"\", "
+                                                                          + "char_scheme_size)")
+                    encryption_time = time.time() - start_time
 
-
+                    # Decrypt the plaintext using the private key. Call testing execute
+                    exec("from Decryption import " + decryption)
+                    exec(decryption + ".testing_execute(ciphertext, output_location, plaintext, public_key, "
+                                      + "private_key, char_scheme_size, encryption_time)")
 
 
 
