@@ -125,22 +125,19 @@ def decrypt(ciphertext, private_key, char_set_size):
     d, n = miscellaneous.read_rsa_key(private_key)
 
 
-    # Determine the block size in bytes of the ciphertext (should be evenly divisible by 8)
-    block_size_bytes = n.bit_length() // 8
 
-
-    # Figure out the number of characters to read based on the block_size_bytes
-    randint = secrets.randbits(block_size_bytes * 8)
+    # Figure out the number of characters to read (same as modulus' bit length). Generate a random integer that has
+    # n.bit_length(), encode that, and count the length of the result
+    randint = secrets.randbits(n.bit_length())
     block_size_len = len(miscellaneous.int_to_chars_encoding_scheme_pad(randint, char_encoding_scheme,
-                                                                        block_size_bytes * 8))
+                                                                        n.bit_length()))
 
 
 
     # Read in the ciphertext in block_size_bytes. Turn each block into an integer using the correct encoding scheme.
     # Then, use the rsa cipher (on each block) of pow(c, d, n) in order to get the message m (in integer form). Turn
     # the integers into plaintext blocks(through utf-8 interpretation of the bytesarray). Then, concatenate all the
-    # blocks
-    # together in order to get the full plaintext
+    # blocks together in order to get the full plaintext
     ciphertext_blocks  = []
     while ciphertext != "":
         ciphertext_blocks.append(ciphertext[0: block_size_len])

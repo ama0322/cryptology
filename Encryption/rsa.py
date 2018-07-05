@@ -62,12 +62,11 @@ def encrypt(plaintext, given_key, char_set_size):
     n = 0 # the modulus for the encryption  (the number)
 
     # Figure out which char encoding scheme to use(reverse dictionary lookup)
-    char_encoding_scheme = [key for key,
-                            value in miscellaneous.char_set_to_char_set_size.items() if value == char_set_size][0]
+    char_encoding_scheme = [key for key, value in miscellaneous.char_set_to_char_set_size.items()
+                                         if value == char_set_size][0]
 
 
-    # If the public key (given_key) not given, then generate public and private keys (while also generating the two
-    # primes necessary for the keys)
+    # If the public key (given_key) not given, then generate public and private keys
     if given_key == "":
 
         # Generate two prime numbers that when multiplied together results in n with bit_length() of key_size. Two
@@ -91,8 +90,8 @@ def encrypt(plaintext, given_key, char_set_size):
     # into blocks of key_size // 8 bytes (the maximum that rsa can encrypt). Turn each of those hex blocks into
     # integers, and encrypt them each. Lastly, transform each of those ints into characters thorugh a character
     # encoding scheme, and concatenate the results together to get the ciphertext
-    plaintext = plaintext.encode("utf-8") # After utf-8 encoding, is a bytearray
-    plaintext = plaintext.hex() # Change into hex for easier conversion into ints
+    plaintext = plaintext.encode("utf-8").hex()
+
 
     # Divide the hexadecimal digits of plaintext into key_size//8 blocks. Store blocks in a list. Store num of blocks
     plaintext_blocks = []
@@ -116,7 +115,7 @@ def encrypt(plaintext, given_key, char_set_size):
         ciphertext += block
 
 
-    # return ciphertext
+
     return ciphertext, public_key, private_key
 
 

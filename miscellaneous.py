@@ -903,8 +903,7 @@ def generate_prime(bit_length):
         return True
 
     # Set up static inner variable that counts the numbers of primes generated
-    if not hasattr(generate_prime, "numbers_tested"):
-        generate_prime.numbers_tested = 0
+    if not hasattr(generate_prime, "numbers_tested"): generate_prime.numbers_tested = 0
 
 
     # Loop until a prime number has been generated
@@ -913,16 +912,15 @@ def generate_prime(bit_length):
         # Generate a number that needs to be tested for primality
         num_to_test = secrets.randbits(bit_length)
 
-        # Print updates
+        # Print updates and update
         print(str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
-              + str(get_prime_pair.primes_found))
-        generate_prime.numbers_tested += 1
+              + str(get_prime_pair.primes_found)); generate_prime.numbers_tested += 1
 
         # Set the lowest bit to 1 to make the number odd.
         num_to_test = num_to_test | 1
 
 
-        # While small primes test fails, update number with += 2. Do until number no longer fits
+        # While small primes test fails, update number with += 2. Do until number no longer fits.
         test_result, failed_prime = small_primes_primality_test(num_to_test)
         while test_result == False and num_to_test.bit_length() == bit_length:
 
@@ -936,28 +934,17 @@ def generate_prime(bit_length):
             test_result, failed_prime = small_primes_primality_test(num_to_test)
 
         # If the num_to_test is too big, then continue from the beginning
-        if num_to_test.bit_length() != bit_length:
-            continue
+        if num_to_test.bit_length() != bit_length: continue
 
         # If failed the small_primes_primality_test, then generate new number
-        if test_result == False:
-            continue
-
+        if test_result == False: continue
 
         # If failed fermat's little theorem, then generate new number
-        if fermat_primality_test(num_to_test) == False:
-            continue
-
-
-
-
-
-        is_prime = rabin_miller_primality_test(num_to_test, 64)
+        if fermat_primality_test(num_to_test) == False: continue
 
 
         # If the generated number was prime, then return
-        if is_prime:
-            return num_to_test
+        if rabin_miller_primality_test(num_to_test, 64): return num_to_test
 
 
 # This function returns a pair of primes whose product is of size key_bits
@@ -990,6 +977,8 @@ def get_prime_pair(key_bits):
 
         # Test all pairs of primes for a key that is of proper size
         for prime_two in primes_list:
+
+            # If the primes work out to make a key of correct size
             if (prime_one * prime_two).bit_length() == key_bits:
 
                 # Print updates
