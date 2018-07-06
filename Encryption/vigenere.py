@@ -1,5 +1,5 @@
 import miscellaneous
-import time
+
 
 
 
@@ -23,7 +23,7 @@ def execute(data, output_location):
 
 
     # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.symmetric_encrypt_or_decrypt_with_general_key(data, output_location,
+    encrypted = miscellaneous.symmetric_ed_with_general_key(data, output_location,
                                                                       "Encryption", "vigenere", "encrypt")
 
     # Return encrypted text to be written in cryptography_runner

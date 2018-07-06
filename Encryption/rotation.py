@@ -21,7 +21,7 @@ def execute(data, output_location):
     """
 
     # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.symmetric_encrypt_or_decrypt_with_single_char_key(data, output_location,
+    encrypted = miscellaneous.symmetric_ed_with_single_char_key(data, output_location,
                                                                       "Encryption", "rotation", "encrypt")
 
 

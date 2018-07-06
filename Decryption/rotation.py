@@ -1,5 +1,11 @@
 import miscellaneous
-import time # for timing
+
+
+
+
+# Cipher info:
+alphabet = miscellaneous.char_sets
+key_type = "symmetric"
 
 
 
@@ -17,7 +23,7 @@ def execute(data, output_location):
     """
 
     # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.symmetric_encrypt_or_decrypt_with_single_char_key(data, output_location,
+    decrypted = miscellaneous.symmetric_ed_with_single_char_key(data, output_location,
                                                                       "Decryption", "rotation", "decrypt")
 
 

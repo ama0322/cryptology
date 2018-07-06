@@ -7,9 +7,6 @@ from Decryption import rsa # To save variables there
 
 
 
-# Bit-size of the key (should be divisible by 12 for character schemes)
-key_size = 2048
-
 
 
 # Encrypt using user-entered info. Write relevant information and return encrypted text for cryptography_runner
@@ -25,7 +22,7 @@ def execute(data, output_location):
     """
 
     # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.asymmetric_encrypt_and_generate_keys(data, output_location, "Encryption", "rsa",
+    encrypted = miscellaneous.asymmetric_e_with_or_without_key(data, output_location, "Encryption", "rsa",
                                                                    "encrypt")
 
     # Return encrypted text to be written in cryptography_runner
@@ -51,7 +48,7 @@ def encrypt(plaintext, given_key, char_set_size):
     :return: (string) the generated private key for this in string form
     """
 
-    global key_size; rsa.key_bits = key_size # the bit size of the key (needs to be divisible by 8)
+    key_size = rsa.key_bits # the bit size of the key (needs to be divisible by 8)
     ciphertext = ""  # the string to build up the encrypted text
     prime_num_one = 0  # one of the randoly generated prime numbers
     prime_num_two = 0  # the other randomly generated prime numbers
@@ -72,8 +69,8 @@ def encrypt(plaintext, given_key, char_set_size):
         # Generate two prime numbers that when multiplied together results in n with bit_length() of key_size. Two
         # prime numbers of size prime_bit_length may not necessarily result in a key_size of the 2 * prime_bit_length
         start_time = time.time()
-        prime_one, prime_two = miscellaneous.get_prime_pair(key_size); rsa.time_to_generate_keys = time.time() - \
-                                                                                                  start_time
+        prime_one, prime_two = miscellaneous.get_prime_pair(key_size); rsa.testing_execute.time_to_generate_keys = \
+                                                                                               time.time() - start_time
 
 
         # Calculate the public key and the private key
@@ -98,7 +95,7 @@ def encrypt(plaintext, given_key, char_set_size):
     while plaintext != "":
         plaintext_blocks.append( plaintext[0: key_size // 8] )
         plaintext = plaintext[key_size // 8:]
-    rsa.num_blocks = len(plaintext_blocks)
+    rsa.testing_execute.num_blocks = len(plaintext_blocks)
 
     # Turn each plaintext block from a string of hex digits into an integer
     plaintext_blocks = [int(block, 16) for block in plaintext_blocks]
@@ -107,7 +104,7 @@ def encrypt(plaintext, given_key, char_set_size):
     # chosen character scheme
     ciphertext_blocks = [ pow(block, e, n) for block in plaintext_blocks ]
     ciphertext_blocks = [ miscellaneous.int_to_chars_encoding_scheme_pad(block, char_encoding_scheme, key_size)
-                                        for block in ciphertext_blocks] ;rsa.block_size = (len(ciphertext_blocks[0]))
+                          for block in ciphertext_blocks] ;rsa.testing_execute.block_size = (len(ciphertext_blocks[0]))
 
 
     # Concatenate all of the blocks to form the ciphertext

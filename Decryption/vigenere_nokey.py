@@ -1,8 +1,13 @@
 import miscellaneous
-import time
 
 
 
+
+
+
+# Cipher info:
+alphabet = miscellaneous.char_sets
+key_type = "symmetric"
 
 
 
@@ -19,7 +24,7 @@ def execute(data, output_location):
 
 
     # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.symmetric_encrypt_or_decrypt_without_key(data, output_location,
+    decrypted = miscellaneous.symmetric_ed_without_key(data, output_location,
                                                                       "Decryption", "vigenere_nokey", "decrypt")
 
 

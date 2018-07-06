@@ -1,16 +1,16 @@
 import miscellaneous
-import time # For timing to write relevant information into files
 import secrets # to generate random number to figure out the number of characters to read
 
 
 
-# Store statistics from teh last encryption done here
-time_to_generate_keys = 0
-key_bits = 0
-num_blocks = 0
-block_size = 0
 
-# Store statistics from the last decryption done here
+
+# Cipher info:
+alphabet = miscellaneous.char_encoding_schemes
+key_type = "asymmetric"
+key_bits = 2048
+
+
 
 
 
@@ -25,7 +25,7 @@ def execute(data, output_location):
     """
 
     # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.asymmetric_decrypt_with_key(data, output_location, "Decryption", "rsa", "decrypt")
+    decrypted = miscellaneous.asymmetric_d_with_key(data, output_location, "Decryption", "rsa", "decrypt")
 
     # Return encrypted text to be written in cryptography_runner
     return decrypted
@@ -49,6 +49,13 @@ def testing_execute(ciphertext, output_location, plaintext, public_key, private_
     :return: None
     """
 
+    # Store statistics from the last encryption here(Just declarations):
+    testing_execute.time_to_generate_keys
+    testing_execute.num_blocks
+    testing_execute.block_size
+
+    # Store statistics from the last decryption done here.
+
     # Encryption code
     encryption_code = \
     r"""new_file.writelines([
@@ -57,16 +64,15 @@ def testing_execute(ciphertext, output_location, plaintext, public_key, private_
                              public_key +
                              "\n------------------------------------------------------------------------------------" ,
                              "\n𝐓𝐢𝐦𝐞 𝐭𝐨 𝐠𝐞𝐧𝐞𝐫𝐚𝐭𝐞 𝐛𝐨𝐭𝐡 𝐤𝐞𝐲𝐬 (𝐟𝐢𝐠𝐮𝐫𝐢𝐧𝐠 𝐨𝐮𝐭 𝐭𝐰𝐨 𝐩𝐫𝐢𝐦𝐞𝐬): " 
-                             + str(rsa.time_to_generate_keys) + " seconds",
+                             + str(rsa.testing_execute.time_to_generate_keys) + " seconds",
                              "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐞𝐧𝐜𝐨𝐝𝐢𝐧𝐠 𝐬𝐜𝐡𝐞𝐦𝐞 𝐢𝐬: " + char_encoding_scheme_of(ciphertext),
-                             "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time - rsa.time_to_generate_keys) 
+                             "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time - rsa.testing_execute.time_to_generate_keys) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters and " 
-                             + "{:,}".format(rsa.num_blocks) + " blocks (" + str(rsa.block_size) 
-                             + " characters each)",                             
+                             + "{:,}".format(rsa.testing_execute.num_blocks) 
+                             + " blocks (" + str(rsa.testing_execute.block_size) + " characters each)",                             
                              "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " 
-                             + str(((encryption_time - rsa.time_to_generate_keys) / len(plaintext)) * 1000000), 
-                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " 
-                             + str(((encryption_time - rsa.time_to_generate_keys)/ len(plaintext)) * 1000) 
+                             + str(((encryption_time - rsa.testing_execute.time_to_generate_keys) / len(plaintext)) * \
+                             1000000)
                             ])
     """
 
@@ -80,12 +86,12 @@ def testing_execute(ciphertext, output_location, plaintext, public_key, private_
                              "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 character set 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
                              "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters and "
-                             + "{:,}".format(rsa.num_blocks) + " blocks (" + str(rsa.block_size) 
-                             + " characters each)",                
+                             + "{:,}".format(rsa.testing_execute.num_blocks) 
+                             + " blocks (" + str(rsa.testing_execute.block_size) + " characters each)",                
                              "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " 
-                             + str(decryption_time/(encryption_time - rsa.time_to_generate_keys)) + "x",                             
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000), 
-                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " +  str((decryption_time / len(plaintext)) * 1000) 
+                             + str(decryption_time/(encryption_time - rsa.testing_execute.time_to_generate_keys)) 
+                             + "x",                             
+                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000)
                             ])
     """
 

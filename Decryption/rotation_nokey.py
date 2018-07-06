@@ -1,11 +1,14 @@
 import miscellaneous
-import time # To time decryption. This information will be written to a file
 
 
 
-# Store information from the last decryption done here:
-decrypted_key = ""
-percent_english = 0
+
+# Cipher info:
+alphabet = miscellaneous.char_sets
+key_type = "symmetric"
+
+
+
 
 # Decrypt without a key. Write relevant information and return decrypted text for cryptography_runner
 def execute(data, output_location):
@@ -18,7 +21,7 @@ def execute(data, output_location):
     """
 
     # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.symmetric_encrypt_or_decrypt_without_key(data, output_location,
+    decrypted = miscellaneous.symmetric_ed_without_key(data, output_location,
                                                                       "Decryption", "rotation_nokey", "decrypt")
 
 
@@ -39,6 +42,11 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
     :param encryption_time: (integer) the time it took for the plaintext to be encrypted
     :return:
     """
+    # Store information from the last encryption done here(Just declarations):
+
+    # Store information from the last decryption done here:
+    testing_execute.decrypted_key = ""
+    testing_execute.percent_english = 0
 
 
     # Encryption code
@@ -50,8 +58,7 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
                              "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
                              "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",                             
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000), 
-                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " +  str((encryption_time / len(plaintext)) * 1000) 
+                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000)
                             ])
     """
 
@@ -63,11 +70,11 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
                              "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",
                              "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + "x",                             
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000), 
-                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000),
-                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐫𝐨𝐭𝐚𝐭𝐢𝐨𝐧: "  
-                             + str(decryption_time / ord(rotation_nokey.decrypted_key) * 1000),
-                             "\n𝐏𝐞𝐫𝐜𝐞𝐧𝐭 𝐨𝐟 𝐭𝐞𝐱𝐭 𝐢𝐧 𝐄𝐧𝐠𝐥𝐢𝐬𝐡: " + str(rotation_nokey.percent_english * 100)
+                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000),
+                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐫𝐨𝐭𝐚𝐭𝐢𝐨𝐧: "  
+                             + str(decryption_time / ord(rotation_nokey.testing_execute.decrypted_key) * 1000000),
+                             "\n𝐏𝐞𝐫𝐜𝐞𝐧𝐭 𝐨𝐟 𝐭𝐞𝐱𝐭 𝐢𝐧 𝐄𝐧𝐠𝐥𝐢𝐬𝐡: " 
+                             + str(rotation_nokey.testing_execute.percent_english * 100)
                             ])
     """
 
@@ -96,8 +103,8 @@ def decrypt(ciphertext, key, char_set_size):
     """
 
     decrypted = ""
-    global decrypted_key; decrypted_key = "Default"
-    global percent_english; percent_english = 0
+    decrypted_key = "Default"
+    percent_english = 0
 
     # Figure out the most likely character set of the ciphertext
     char_set = miscellaneous.char_set_of_ciphertext(ciphertext)
@@ -141,9 +148,10 @@ def decrypt(ciphertext, key, char_set_size):
         # print updates
         print("Done with: " + chr(uni_val_key) + "\tPercent English: " + str(percent_english))
 
-        # If english, then break and  return decrypted. Also, tell what the key is
+        # If english, then break and  return decrypted plus key. Save these values in testing_execute for printing
         if is_english:
-            decrypted_key = chr(uni_val_key)
+            decrypted_key = chr(uni_val_key); testing_execute.decrypted_key = decrypted_key
+            testing_execute.percent_english = percent_english
             break
 
     return decrypted, decrypted_key
