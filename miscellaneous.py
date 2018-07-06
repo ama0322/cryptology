@@ -10,15 +10,33 @@ import codecs # For hex string to utf-8 encoding
 ################################################################################################### RESOURCES ##########
 
 # Sets containing available options for encryption/decryption. Add to this.
-encryption_set = {"vigenere", "vigenere_multiplicative",
-                  "vigenere_exponential", "rotation", "rsa"}
+encryption_set = {"blowfish", "rotation", "rsa", "vigenere", "vigenere_exponential",
+                  "vigenere_multiplicative"}
 
-decryption_set = {"vigenere", "vigenere_multiplicative",
-                  "vigenere_exponential", "rotation", "rotation_nokey", "vigenere_nokey", "rsa"}
+decryption_set = {"blowfish", "rotation", "rotation_nokey", "rsa", "vigenere", "vigenere_exponential",
+                  "vigenere_multiplicative", "vigenere_nokey"}
+
+# The set of asymmetric ciphers (decryption)
+asymmetric_ciphers = ["rsa"]
+
+# The set of symmetric ciphers (decryption)
+symmetric_ciphers = ["blowfish", "rotation", "rotation_nokey", "vigenere", "vigenere_multiplicative",
+                     "vigenere_exponential", "vigenere_nokey"]
 
 
-both_set = encryption_set & decryption_set # the set containing options in both encryption_list and decryption_list
-decryption_only_set = decryption_set - encryption_set # the set containing options only in decryption_list
+# Dictionary with encryption ciphers to the type of key used (2: any size, 1: 1 char, 0: NA) For test.py
+encryption_key_type = {
+    "blowfish": 0,
+    "rotation": 1,
+    "rsa": 0,
+    "vigenere": 2,
+    "vigenere_exponential": 2,
+    "vigenere_exponential": 2,
+}
+
+
+
+
 
 
 # The characters used for more classical type ciphers
@@ -46,44 +64,12 @@ SURROGATE_UPPER_BOUND = 57343 # inclusive
 SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
 
 
-# Dictionary with decryption methods to their corresponding encryption method
-decryption_to_corresponding_encryption = {
-    "rotation": "rotation",
-    "rotation_nokey": "rotation",
-    "vigenere": "vigenere",
-    "vigenere_multiplicative": "vigenere_multiplicative",
-    "vigenere_exponential": "vigenere_exponential",
-    "vigenere_nokey": "vigenere",
-    "rsa": "rsa"
-}
 
 
-# Dictionary with encryption methods to the type of key used (2 represents a general key of any positive size)
-encryption_key_type = {
-    "rotation": 1,
-    "vigenere": 2,
-    "vigenere_exponential": 2,
-    "vigenere_exponential": 2,
-    "rsa": 0
-}
 
 
-# Dictionary with decryption methods to determine whether or not they need keys
-does_decryption_need_key = {
-    "rotation": True,
-    "rotation_nokey": False,
-    "vigenere": True,
-    "vigenere_exponential": True,
-    "vigenere_multiplicative": True,
-    "rsa": False
-}
 
 
-# The set of asymmetric ciphers (decryption)
-asymmetric_ciphers = ["rsa"]
-
-# The set of symmetric ciphers (decryption)
-symmetric_ciphers = ["rotation", "rotation_nokey", "vigenere", "vigenere_multiplicative", "vigenere_exponential"]
 
 
 
@@ -139,8 +125,11 @@ def symmetric_encrypt_or_decrypt_with_single_char_key(data, output_location, pac
     :return: (string) the encrypted text
     """
 
-    # Obtain the char_set and the endchar
-    char_set, num_chars = _take_char_set(char_sets)
+    # If encrypting, take the characters set. If decrypting, figure it out automatically
+    if encrypt_or_decrypt == "encrypt":
+        char_set, num_chars = _take_char_set(char_sets)
+    elif encrypt_or_decrypt == "decrypt":
+        char_set = char_set_of_ciphertext(data)
 
     # Take a single character key from the user
     key = _get_single_char_key()
@@ -169,8 +158,11 @@ def symmetric_encrypt_or_decrypt_with_general_key(data, output_location, package
     :return: (string) the encrypted text
     """
 
-    # Obtain the char_set and the num_chars
-    char_set, num_chars = _take_char_set(char_sets)
+    # If encrypting, take the characters set. If decrypting, figure it out automatically
+    if encrypt_or_decrypt == "encrypt":
+        char_set, num_chars = _take_char_set(char_sets)
+    elif encrypt_or_decrypt == "decrypt":
+        char_set = char_set_of_ciphertext(data)
 
     # Take a single character key from the user
     key = _get_general_key()
@@ -186,8 +178,11 @@ def symmetric_encrypt_or_decrypt_with_general_key(data, output_location, package
 # This function runs encryption/decryption without a key.
 def symmetric_encrypt_or_decrypt_without_key(data, output_location, package, module, encrypt_or_decrypt):
 
-    # Obtain the char_set and the num_chars
-    char_set, num_chars = _take_char_set(char_sets)
+    # If encrypting, take the characters set. If decrypting, figure it out automatically
+    if encrypt_or_decrypt == "encrypt":
+        char_set, num_chars = _take_char_set(char_sets)
+    elif encrypt_or_decrypt == "decrypt":
+        char_set = char_set_of_ciphertext(data)
 
     # Execute the encryption/decryption
     text = _execute_encrypt_or_decrypt_and_write_info_no_key(data, "randomKey", char_set, output_location,
@@ -199,14 +194,14 @@ def symmetric_encrypt_or_decrypt_without_key(data, output_location, package, mod
 
 ##########  ASYMMETRIC ##########
 # This function runs encryption without a key (generates asymmetric pair of keys)
-def asymmetric_encrypt_and_generate_keys(data, output_location, package, module, encrypt_or_decrypt):
+def asymmetric_encrypt_with_or_without_key(data, output_location, package, module, encrypt_or_decrypt):
 
 
     # Obtain a character encoding scheme
     char_scheme, num_chars = _take_char_encoding_scheme(char_encoding_schemes)
 
 
-    # Obtain a public key
+    # Obtain a public key (If left empty, encrypt() will generate keys; otherwise, the user-entered key will be used)
     public_key = _get_public_key()
 
 
@@ -221,11 +216,9 @@ def asymmetric_encrypt_and_generate_keys(data, output_location, package, module,
 # This function runs decryption with a private key (asymmetric ciphers)
 def asymmetric_decrypt_with_key(data, output_location, package, module, encrypt_or_decrypt):
 
-    # Take the private key from the user
+    # Take the private key from the user, and figure out its encoding scheme
     key = _get_general_key()
-
-    # Figure out the encoding_scheme from the key. Read the first word
-    encoding_scheme = key[0: key.find(" d = ")]
+    encoding_scheme = char_encoding_scheme_of(key)
 
     # Execute encryption and write into
     text = _execute_encrypt_or_decrypt_and_write_info_with_key(data, key, encoding_scheme, output_location,
@@ -1258,9 +1251,9 @@ def _take_char_set(char_sets):
 
         #  Print out the prompt for the user. If the previous entry was invalid, say so
         if not previous_entry_invalid:
-            selection = input("Enter the character set to be used: ")
+            selection = input("Enter the character set to be used (for ciphertext): ")
         else:
-            selection = input("Character set invalid! Enter a new character set: ")
+            selection = input("Character set invalid! Enter a new character set (for ciphertext): ")
             previous_entry_invalid = False
 
         # Print out the available character sets, then continue
@@ -1309,9 +1302,9 @@ def _take_char_encoding_scheme(char_encoding_schemes):
 
         #  Print out the prompt for the user. If the previous entry was invalid, say so
         if not previous_entry_invalid:
-            selection = input("Enter the character encoding scheme to be used: ")
+            selection = input("Enter the character encoding scheme to be used (for ciphertext): ")
         else:
-            selection = input("Character encoding scheme invalid! Enter a new scheme: ")
+            selection = input("Character encoding scheme invalid! Enter a new scheme (for ciphertext): ")
             previous_entry_invalid = False
 
         # Print out the available character sets, then continue
