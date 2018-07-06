@@ -52,9 +52,9 @@ def main():
 def usage():
     print("ENCRYPTION/DECRYPTION TYPES AVAILABLE: ")
     print("Available for both encryption and decryption: ", end = "")
-    print(*miscellaneous.both_set, sep=", ")
+    print(*(miscellaneous.encryption_set & miscellaneous.decryption_set), sep=", ")
     print("Available for decryption only: ", end = "")
-    print(*miscellaneous.decryption_only_set, sep=", ")
+    print(*(miscellaneous.decryption_set - miscellaneous.encryption_set), sep=", ")
     print()
 
 

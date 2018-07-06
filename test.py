@@ -26,9 +26,9 @@ def testing_mode():
         # Forever while loop to take in user commands and execute them
         while True:
 
-                # Get the decryption type and the encryption type
+                # Get the decryption type and the encryption type (same name as decyption but w/o "_nokey")
                 decryption = _parse_user_input()
-                encryption = miscellaneous.decryption_to_corresponding_encryption.get(decryption)
+                encryption = decryption[0: decryption.find("_nokey")]
 
                 # Obtain the plaintext
                 my_file = open(plaintext_source, "r", encoding="utf-8")
@@ -54,8 +54,8 @@ def testing_mode():
                     ciphertext = eval(encryption + ".encrypt(plaintext, key, char_set_size)")
                     encryption_time = time.time() - start_time
 
-                    # Figure out if the decryption method needs a key
-                    needs_key = miscellaneous.does_decryption_need_key.get(decryption)
+                    # Figure out if the decryption method needs a key ("_nokey" doesn't need one)
+                    needs_key = "_nokey" not in decryption
 
                     # Decrypt the plaintext. Call testing execute
                     exec("from Decryption import " + decryption)
