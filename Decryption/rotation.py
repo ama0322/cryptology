@@ -1,11 +1,11 @@
 import miscellaneous
 
-
-
-
 # Cipher info:
 alphabet = miscellaneous.char_sets
-key_type = "symmetric"
+cipher_type = "symmetric"
+key_size = "single character"
+
+
 
 
 
@@ -22,20 +22,43 @@ def execute(data, output_location):
     :return: (string) the decrypted data
     """
 
-    # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.symmetric_ed_with_single_char_key(data, output_location,
-                                                                      "Decryption", "rotation", "decrypt")
 
-
-    # Return encrypted text to be written in cryptography_runner
-    return decrypted
+    # Decrypt the ciphertext. Write the plaintext and info to a file
+    miscellaneous.execute_encryption_or_decryption(data, output_location, "Decryption", "rotation", "decrypt")
 
 
 
 
+# Figure out the encryption and decryption code. Pass info to miscellaneous' testing_execute function
+def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_size, output_location):
+    """
+    Conducts a rotation decryption in testing mode
+
+    :param encryption: (string) the name of the encryption cipher to use
+    :param decryption: (string) the name of the decryption cipher to use (this)
+    :param plaintext: (string) the plaintext to encrypt
+    :param encryption_key: (string) the key to use to encrypt
+    :param char_set_size: (int) the size of the character set to use
+    :param output_location: (string) the name of the file to write statistics in
+    """
+
+
+    # Encryption code
+    encryption_code = miscellaneous.general_encryption_code
+
+    # Decryption code
+    decryption_code = miscellaneous.general_decryption_code
+
+    miscellaneous.testing_execute_encryption_and_decryption(encryption, decryption,
+                                                            plaintext, encryption_key, char_set_size,
+                                                            output_location,
+                                                            "Rotation",
+                                                            encryption_code, decryption_code)
+
+"""
 # Decrypt in testing mode. So add more statistics about performance. Check for correctness
 def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, encryption_time):
-    """
+
     Conducts a rotation decryption in testing mode
 
     :param ciphertext: (string) the ciphertext to decrypt
@@ -45,7 +68,7 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
     :param char_set_size: (integer) the size of the character set used
     :param encryption_time: (double) the time that encryption took
     :return: None
-    """
+
 
     # Encryption code
     encryption_code = miscellaneous.general_encryption_code
@@ -53,10 +76,11 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
     # Decryption code
     decryption_code = miscellaneous.general_decryption_code
 
-    miscellaneous.testing_general_decrypt_with_key(ciphertext, output_location, plaintext, key, key, char_set_size,
+    miscellaneous.testing_execute_decryption(ciphertext, output_location, plaintext, key, key, char_set_size,
                                                    encryption_time, "Decryption", "rotation",
                                                    "Rotation", "decrypt", encryption_code,
                                                    decryption_code)
+"""
 
 
 
