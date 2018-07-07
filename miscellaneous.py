@@ -16,23 +16,6 @@ encryption_set = {"blowfish", "rotation", "rsa", "vigenere", "vigenere_exponenti
 decryption_set = {"blowfish", "rotation", "rotation_nokey", "rsa", "vigenere", "vigenere_exponential",
                   "vigenere_multiplicative", "vigenere_nokey"}
 
-# The set of asymmetric ciphers (decryption)
-asymmetric_ciphers = ["rsa"]
-
-# The set of symmetric ciphers (decryption)
-symmetric_ciphers = ["blowfish", "rotation", "rotation_nokey", "vigenere", "vigenere_multiplicative",
-                     "vigenere_exponential", "vigenere_nokey"]
-
-
-# Dictionary with encryption ciphers to the type of key used (2: any size, 1: 1 char, 0: NA) For test.py
-encryption_key_type = {
-    "blowfish": 0,
-    "rotation": 1,
-    "rsa": 0,
-    "vigenere": 2,
-    "vigenere_exponential": 2,
-    "vigenere_exponential": 2,
-}
 
 
 
@@ -68,16 +51,6 @@ SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
 
 
 
-
-
-
-
-
-
-
-
-
-
 # The general code to run during testing for encryption statistics (simple symmetric)
 general_encryption_code = \
     r"""new_file.writelines([
@@ -87,8 +60,7 @@ general_encryption_code = \
                              "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
                              "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",                             
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000), 
-                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " +  str((encryption_time / len(plaintext)) * 1000) 
+                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000)
                             ])
     """
 
@@ -100,8 +72,7 @@ general_decryption_code = \
                              "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",
                              "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + "x",                             
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000), 
-                             "\n𝐌𝐢𝐥𝐥𝐢𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " +  str((decryption_time / len(plaintext)) * 1000) 
+                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000)
                             ])
     """
 
@@ -109,130 +80,198 @@ general_decryption_code = \
 ######################################################################### USER INTERFACING AND FUNCTION CALLS ##########
 
 
-##########  SYMMETRIC ##########
-# This function runs encryption/decryption on a single char key. It asks for user info and runs everything
-def symmetric_encrypt_or_decrypt_with_single_char_key(data, output_location, package, module, encrypt_or_decrypt):
+
+# This functions calls everything necessary in order to make the encryption/decryption. Once the
+# encryption/decryption is finished, this function writes two files. One is the actual encryption/decryption result,
+# and the other contains relevant information about the encryption/decryption (such as the key used or time taken)
+def execute_encryption_or_decryption(data, output_location, package, module, encrypt_or_decrypt):
     """
-    This function runs encryption/decryption on a single character key. It obtains information from the user necessary
-    to run the encryption/decryption in a particular configuration(such as with character set) and writes statistics
-    and relevant information to a file.
+    This function make all necessary calls, decrypts/encrypts, and info to the two files.
 
-    :param data: (string) the data to be encrypted/decrypted
-    :param output_location: (string) the file to write stats and relevant info to
-    :param package: (string) the package in which the encryption/decryption function is in
-    :param module: (string) the module in which the encryption/decryption function is in
-    :param encrypt_or_decrypt: (string) specifies encryption or decryption
-    :return: (string) the encrypted text
+    :param data: (string) the data to be encrypted or decrypted
+    :param output_location: (string)
+    :param package:
+    :param module:
+    :param encrypt_or_decrypt:
+    :return:
     """
-
-    # If encrypting, take the characters set. If decrypting, figure it out automatically
-    if encrypt_or_decrypt == "encrypt":
-        char_set, num_chars = _take_char_set(char_sets)
-    elif encrypt_or_decrypt == "decrypt":
-        char_set = char_set_of_ciphertext(data)
-
-    # Take a single character key from the user
-    key = _get_single_char_key()
-
-    # Execute encryption and write into
-    text = _execute_encrypt_or_decrypt_and_write_info_with_key(data, key, char_set, output_location,
-                                                     package, module, encrypt_or_decrypt)
-
-    # Return encrypted text to be written in cryptography_runner
-    return text
+    alphabet = ""                         # Is char_set_size when using char sets. Otherwise, is name of encoding scheme
+    key = ""                              # Fill the key here (if necessary)
 
 
+    # Import the decryption version of module, and store the cipher information
+    exec("import Decryption." + module)
+    alphabet =    eval("Decryption." + module + ".alphabet")
+    cipher_type = eval("Decryption." + module + ".cipher_type")
+    key_size =    eval("Decryption." + module + ".key_size")
 
-# This function runs encryption/decryption on a key of any size. It asks for user info and runs everything
-def symmetric_encrypt_or_decrypt_with_general_key(data, output_location, package, module, encrypt_or_decrypt):
-    """
-    This function runs encryption/decryption on a general key. It obtains information from the user necessary
-    to run the encryption/decryption in a particular configuration (such as with character set) and writes statistics
-    and relevant information to a file.
+    # Figure out the alphabet to use, whether it be a character set, or an encoding scheme
+    if alphabet == char_sets:                                                # If cipher uses character sets
+        if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for char set
+            alphabet = char_set_to_char_set_size.get(_take_char_set(char_sets))
 
-    :param data: (string) the data to be encrypted/decrypted
-    :param output_location: (string) the file to write stats and relevant info to
-    :param package: (string) the package in which the encryption/decryption function is in
-    :param module: (string) the module in which the encryption/decryption function is in
-    :param encrypt_or_decrypt: (string) specifies encryption or decryption
-    :return: (string) the encrypted text
-    """
+        elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find char set automatically
+            alphabet = char_set_to_char_set_size.get(char_set_of_ciphertext(data))
 
-    # If encrypting, take the characters set. If decrypting, figure it out automatically
-    if encrypt_or_decrypt == "encrypt":
-        char_set, num_chars = _take_char_set(char_sets)
-    elif encrypt_or_decrypt == "decrypt":
-        char_set = char_set_of_ciphertext(data)
+    elif alphabet == char_encoding_schemes:                                  # If cipher uses encoding schemes
+        if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for scheme
+            alphabet = _take_char_encoding_scheme(char_encoding_schemes)
 
-    # Take a single character key from the user
-    key = _get_general_key()
-
-    # Execute encryption and write into
-    text = _execute_encrypt_or_decrypt_and_write_info_with_key(data, key, char_set, output_location,
-                                                     package, module, encrypt_or_decrypt)
-
-    # Return text to be written in cryptography_runner
-    return text
+        elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find scheme automatically
+            alphabet = char_encoding_scheme_of(data)
 
 
-# This function runs encryption/decryption without a key.
-def symmetric_encrypt_or_decrypt_without_key(data, output_location, package, module, encrypt_or_decrypt):
+    # Figure out the correct key to use.
+    # "zero characters" is an encrypting cipher that doesn't need a key input
+    # "calculated characters" is a decrypting cipher that finds the key automatically
+    # "single character" is a symmetric encrypting/decrypting cipher that uses a single user-entered character
+    # "multiple characters" is an symmetric encrypting/decrypting cipher that uses user-entered multiple characters
+    # "multiple generated characters" is a symmetric encrypting/decrypting cipher that uses randomly generated keys
+    if cipher_type == "symmetric":
+        if key_size ==   "zero characters" or \
+           key_size ==   "calculated characters":
+            key = ""
 
-    # If encrypting, take the characters set. If decrypting, figure it out automatically
-    if encrypt_or_decrypt == "encrypt":
-        char_set, num_chars = _take_char_set(char_sets)
-    elif encrypt_or_decrypt == "decrypt":
-        char_set = char_set_of_ciphertext(data)
+        elif key_size == "single character":
+            key = _get_single_char_key()
 
-    # Execute the encryption/decryption
-    text = _execute_encrypt_or_decrypt_and_write_info_no_key(data, "randomKey", char_set, output_location,
-                                                             package, module, encrypt_or_decrypt)
+        elif key_size == "multiple characters":
+            key = _get_general_key()
 
-    # Return text to be written in cryptography_runner
-    return text
+        elif key_size == "multiple generated characters":
+            if encrypt_or_decrypt ==   "encrypt":                             # If encrypting, key is generated
+                key = ""
+            elif encrypt_or_decrypt == "decrypt":
+                key = _get_general_key()
 
-
-##########  ASYMMETRIC ##########
-# This function runs encryption without a key (generates asymmetric pair of keys)
-def asymmetric_encrypt_with_or_without_key(data, output_location, package, module, encrypt_or_decrypt):
-
-
-    # Obtain a character encoding scheme
-    char_scheme, num_chars = _take_char_encoding_scheme(char_encoding_schemes)
-
-
-    # Obtain a public key (If left empty, encrypt() will generate keys; otherwise, the user-entered key will be used)
-    public_key = _get_public_key()
-
-
-    # Execute the encryption/decryption.
-    ciphertext = _execute_encrypt_and_write_info_asymmetric_keys(data, public_key, char_scheme, output_location,
-                                                                  package, module, encrypt_or_decrypt)
-
-    # Return encrypted text to be written in cryptography_runner
-    return ciphertext
+    elif cipher_type == "asymmetric":
+        if encrypt_or_decrypt ==   "encrypt":
+            key = _get_public_key()
+        elif encrypt_or_decrypt == "decrypt":
+            key = _get_private_key()
 
 
-# This function runs decryption with a private key (asymmetric ciphers)
-def asymmetric_decrypt_with_key(data, output_location, package, module, encrypt_or_decrypt):
-
-    # Take the private key from the user, and figure out its encoding scheme
-    key = _get_general_key()
-    encoding_scheme = char_encoding_scheme_of(key)
-
-    # Execute encryption and write into
-    text = _execute_encrypt_or_decrypt_and_write_info_with_key(data, key, encoding_scheme, output_location,
-                                                     package, module, encrypt_or_decrypt)
-
-    # Return text to be written in cryptography_runner
-    return text
+    # Everything gathered, now call the encrypt() or decrypt() function. Also, time it
+    start_time = time.time()                                                                        # Start time
+    exec("import " + package + "." + module)                                                        # import correctly
+    output = eval(package + "." + module + "." + encrypt_or_decrypt + "(data, key, alphabet)")      # algorithm call
+    elapsed_time = time.time() - start_time                                                         # End time
 
 
+    # Open a new file to store the relevant information
+    info_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
 
 
-##########  TESTING ##########
-# This function runs decyryption with key in testing form. So write down relevant information in filee
-def testing_general_decrypt_with_key(ciphertext, output_location, plaintext, public_key, private_key, char_set_size,
+    # At this point, output may be a tuple due to multiple returns.
+    if type(output) is str:                                # If len 1, then is a symmetric cipher with USER-ENTERED keys
+        if encrypt_or_decrypt == "encrypt":                # Handle for straightforward symmetric encryption
+            info_file.writelines([
+                "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                "\n--------------- key ---------------\n" + key
+                + "\n------------------------------------------------------------------------------------",
+                "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(output),
+                "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
+                + " seconds with " + "{:,}".format(len(data)) + " characters.",
+                "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str(
+                    (elapsed_time / len(data)) * 1000000)
+            ])
+        elif encrypt_or_decrypt == "decrypt":              # Handle for straightforward symmetric decryption
+            info_file.writelines([
+                "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                "\n--------------- key ---------------\n" + key
+                + "\n------------------------------------------------------------------------------------",
+                "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(output),
+                "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
+                + " seconds with " + "{:,}".format(len(output)) + " characters.",
+                "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str(
+                    (elapsed_time / len(output)) * 1000000)
+            ])
+
+    elif len(output) == 2:                                 # If len 2, then is a symmetric cipher with GENERATED keys
+        if encrypt_or_decrypt == "encrypt":
+            info_file.writelines([
+                "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                "\n--------------- generated key ---------------\n" + key +
+                "\n------------------------------------------------------------------------------------",
+                "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(output),
+                "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
+                + " seconds with " + "{:,}".format(len(data)) + " characters.",
+                "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str(
+                    (elapsed_time / len(data)) * 1000000)
+            ])
+        elif encrypt_or_decrypt == "decrypt":
+            info_file.writelines([
+                "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                "\n--------------- key " + str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                + key
+                + "\n------------------------------------------------------------------------------------",
+                "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(output),
+                "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
+                + " seconds with " + "{:,}".format(len(output)) + " characters.",
+                "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((elapsed_time / len(output)) * 1000000)
+            ])
+
+    elif len(output) == 3:                                  # If len 3, then is an asym. cipher with GEN or USER keys
+        if encrypt_or_decrypt == "encrypt":
+            if key == "":                                   # If user did not enter key, public and private are created
+                info_file.writelines([
+                    "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                    "\n--------------- public key " +
+                    str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                    + output[1]
+                    + "\n------------------------------------------------------------------------------------",
+                    "\n--------------- private key "
+                    + str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                    + output[2]
+                    + "\n------------------------------------------------------------------------------------",
+                    "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐞𝐧𝐜𝐨𝐝𝐢𝐧𝐠 𝐬𝐜𝐡𝐞𝐦𝐞 𝐢𝐬: " + char_encoding_scheme_of(output[0]),
+                    "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
+                    + " seconds with " + "{:,}".format(len(data)) + " characters."
+                ])
+            elif key != "":                                 # Use entered public key. Print that out.
+                info_file.writelines([
+                    "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                    "\n--------------- public key "
+                    + str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                    + output[1]
+                    + "\n------------------------------------------------------------------------------------",
+                    "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐞𝐧𝐜𝐨𝐝𝐢𝐧𝐠 𝐬𝐜𝐡𝐞𝐦𝐞 𝐢𝐬: " + char_encoding_scheme_of(output[0]),
+                    "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
+                    + " seconds with " + "{:,}".format(len(data)) + " characters."
+                ])
+        elif encrypt_or_decrypt == "decrypt":                 # Print out the private key used to decrypt
+            info_file.writelines([
+                "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                "\n--------------- private key "
+                + str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                + output[2]
+                + "\n------------------------------------------------------------------------------------",
+                "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐞𝐧𝐜𝐨𝐝𝐢𝐧𝐠 𝐬𝐜𝐡𝐞𝐦𝐞 𝐢𝐬: " + char_encoding_scheme_of(
+                    output[0]),
+                "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
+                + " seconds with " + "{:,}".format(len(data)) + " characters."
+            ])
+
+    # Now print out the ciphertext/plaintext in the proper file
+    info_file.close()                                         # Close the relevant info file
+    output_file = open(output_location, "w", encoding="utf-8")
+    if type(output) is tuple: output = output[0]              # If output is a tuple, just want the text output
+    output_file.write(output)
+    output_file.close()
+
+    # Print out to console the output
+    print("*******************************************************")
+    print("\nTHIS IS THE OUTPUT:\n" + output)
+
+
+
+
+
+
+
+
+# This function runs decyryption with key in testing form. So write down relevant information in file TODO
+def testing_execute_decryption(ciphertext, output_location, plaintext, public_key, private_key, char_set_size,
                                      encryption_time, package, module, cipher_name, encrypt_or_decrypt,
                                      encryption_code, decryption_code):
     """
@@ -247,6 +286,7 @@ def testing_general_decrypt_with_key(ciphertext, output_location, plaintext, pub
     :param encryption_time: (int) the time that encryption took
     :param package: (string) the package in which the module is located in
     :param module: (string) the module that the decrypt method is located in
+    :param cipher_name: (string) the name of the string, properly formatted (such as Vigenère)
     :param encrypt_or_decrypt: (string) indicates whether the module is an encryption one or a decryption
     :param encryption_code: (string) the code to run that writes statistics for encrypt. Pass into exec()
     :param decryption_code: (string) the code to run that writes statistics for decrypt. Pass into exec()
@@ -749,7 +789,7 @@ def read_rsa_key(key):
 
 
     # Figure out how many characters to read for the exponent d/e. From the first space to the second. Convert to int
-    first_space_index = key.find(" "); second_space_index = key.find(" ", key.find(" ") + 1)
+    first_space_index = key.find(" "); second_space_index = key.find(" ", first_space_index + 1)
     length = key[ first_space_index + 1: second_space_index ]
     length = int(length, 10)
 
@@ -927,17 +967,21 @@ def generate_prime(bit_length):
             test_result, failed_prime = small_primes_primality_test(num_to_test)
 
         # If the num_to_test is too big, then continue from the beginning
-        if num_to_test.bit_length() != bit_length: continue
+        if num_to_test.bit_length() != bit_length:
+            continue
 
         # If failed the small_primes_primality_test, then generate new number
-        if test_result == False: continue
+        if test_result == False:
+            continue
 
         # If failed fermat's little theorem, then generate new number
-        if fermat_primality_test(num_to_test) == False: continue
+        if fermat_primality_test(num_to_test) == False:
+            continue
 
 
         # If the generated number was prime, then return
-        if rabin_miller_primality_test(num_to_test, 64): return num_to_test
+        if rabin_miller_primality_test(num_to_test, 64):
+            return num_to_test
 
 
 # This function returns a pair of primes whose product is of size key_bits
@@ -1241,7 +1285,6 @@ def _take_char_set(char_sets):
 
     :param char_sets: (list) the list of all character sets
     :return: (string) the user-entered character set
-    :return: (integer) the number of characters in the selected character set
     """
 
 
@@ -1281,7 +1324,7 @@ def _take_char_set(char_sets):
     # figure out the end_char of the character set
     end_char = char_set_to_char_set_size.get(selection)
 
-    return selection, end_char
+    return selection
 
 
 #  This helper function asks the user for a character encoding scheme. It will only accept character sets that are available.
@@ -1292,7 +1335,6 @@ def _take_char_encoding_scheme(char_encoding_schemes):
 
     :param char_encoding_schemes: (list) the list of all character encoding schemes
     :return: (string) the user-entered character set
-    :return: (integer) the number of characters in the selected character set
     """
 
 
@@ -1332,7 +1374,7 @@ def _take_char_encoding_scheme(char_encoding_schemes):
     # figure out the end_char of the character encoding scheme
     end_char = char_set_to_char_set_size.get(selection)
 
-    return selection, end_char
+    return selection
 
 
 
@@ -1385,7 +1427,7 @@ def _get_general_key():
     return key
 
 
-# This helper function obtains a private key from the user
+# This helper function obtains a private key from the user TODO
 def _get_private_key():
     """
     This function obtains a key of any length fro the user
@@ -1404,11 +1446,6 @@ def _get_private_key():
             key = input("No key given! Enter the private key: ")
             continue
 
-        # If the key is not in the proper format "(char_encoding_scheme) d = ..., n = ..."
-        if key[0: key.find(" ")] not in char_encoding_schemes and " d = " not in key and " n = " not in key:
-            key = input("Private key not in valid format (char_encoding_scheme + d = ... + n = ...)! Enter the private \
-                        key: ")
-            continue
 
         # All checks passed, so break out of loop
         break
@@ -1435,133 +1472,6 @@ def _get_public_key():
 
 
 
-
-# This helper function executes the specified encryption/decryption type and writes to a file encryption/decryption stat
-def _execute_encrypt_or_decrypt_and_write_info_with_key(data, key, char_set, output_location,
-                                                        package, module, encrypt_decrypt):
-    """
-    This function executes the specified encryption/decryption method
-
-    :param data: (string) the data to be encrypted/decrypted
-    :param key: (string) the key to encrypt/decrypt with
-    :param char_set: (string) the character set to be used
-    :param output_location: (string) the location to write statistics and relevant information to
-    :param package: (string) the package in which our encryption method is located in
-    :param module: (string) the module in which our encryption method is located in
-    :param encrypt_decrypt: (string) specifies encryption or decryption
-    :return: (string) the encrypted/decrypted text
-    """
-
-    # START THE TIMER
-    start_time = time.time()
-
-    # Obtain num_chars to use in the encryption method
-    num_chars = char_set_to_char_set_size.get(char_set)
-
-    # EXECUTE THE ENCRYPTION/DECRYPTION METHOD
-    exec("from " + package + " import " + module)
-    encrypted = eval(module + "." + encrypt_decrypt + "(data, key, num_chars)")
-
-    #  END THE TIMER
-    elapsed_time = time.time() - start_time
-
-
-    #  WRITE TO A NEW FILE CONTAINING RELEVANT INFO
-    new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The encryption/decryption type is: " + module,
-                         "\nThe character set is : " + char_set,
-                         "\n\nThe key is: " + key,
-                         "\n\n" + encrypt_decrypt + "ed in: " + str(elapsed_time) + " seconds.",
-                         "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
-                         "\n    That is " + str((elapsed_time/len(data) * 1000000))
-                                          + " microseconds per character."])
-    new_file.close()
-
-    return encrypted
-
-
-# This helper function executes the decryption/encryption types without a key and writes stats and info to a file
-def _execute_encrypt_or_decrypt_and_write_info_no_key(data, key, char_set, output_location,
-                                                      package, module, encrypt_decrypt):
-    """
-    This function executes the correct decryption method. This also figures out the key and char set and writes info to
-    a file
-
-    :param data: (string) the ciphertext to decrypt
-    :param output_location: (string) the file to write info into
-    :param package: (string) the package that the decryption function is located in
-    :param module: (string) the module that the decryption function is in
-    :return: (string) the decrypted text
-    """
-
-
-    # START THE TIMER and decrypt
-    start_time = time.time()
-    exec("from " + package + " import " + module)
-    deciphered, char_set, key = eval(module + "." + encrypt_decrypt + "(data, key, char_set)")
-    elapsed_time = time.time() - start_time
-
-
-    #  WRITE TO A NEW FILE CONTAINING RELEVANT INFO
-    new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The " + encrypt_decrypt + "tion type is: " + module,
-                         "\nThe character set is : " + char_set,
-                         "\n\nThe key is: " + key,
-                         "\n\n" + encrypt_decrypt + "ed in: " + str(elapsed_time) + " seconds.",
-                         "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
-                         "\n    That is " + str((elapsed_time/len(data) * 1000000))
-                                      + " microseconds per character."])
-    new_file.close()
-
-    return deciphered
-
-
-
-# This helper function executes the encryption types that generate asymmetric keys. Also, write down info
-def _execute_encrypt_and_write_info_asymmetric_keys(data, key, char_encoding_scheme, output_location,
-                                                    package, module, encrypt_decrypt):
-    """
-    This function executes the correct decryption method. This also figures out the key and char set and writes info to
-    a file
-
-    :param data: (string) the ciphertext to decrypt
-    :param key: (string) NOT USED
-    :paraim char_encoding_scheme: (string) the type of encoding scheme to use
-    :param output_location: (string) the file to write info into
-    :param package: (string) the package that the decryption function is located in
-    :param module: (string) the module that the decryption function is in
-    :return: (string) the decrypted text
-    """
-
-    # Obtain num_chars to use in the encryption method
-    num_chars = char_set_to_char_set_size.get(char_encoding_scheme)
-
-    # START THE TIMER and encrypt with the correct char_encoding_scheme
-    start_time = time.time()
-    exec("from " + package + " import " + module)
-    encrypted, public_key, private_key = eval(module + ".encrypt(data, key ,num_chars)")
-    elapsed_time = time.time() - start_time
-
-
-    # If private key is empty, then write "None provided"
-    if private_key == "":
-        private_key = "NONE PROVIDED"
-
-    #  WRITE TO A NEW FILE CONTAINING RELEVANT INFO
-    new_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
-    new_file.writelines(["The encryption type is: " + module,
-                         "\nThe encoding scheme is: " + char_encoding_scheme,
-                         "\n\n---------- BEGIN RSA PUBLIC KEY ----------\n " + public_key +
-                         "\n----------- END RSA PUBLIC KEY -----------\n" ,
-                         "\n\n---------- BEGIN RSA PRIVATE KEY ----------\n " + private_key +
-                         "\n----------- END RSA PRIVATE KEY -----------\n" ,
-                         "\n\nEncrypted in: " + str(elapsed_time) + " seconds.",
-                         "\n    That is " + str((elapsed_time / len(data) )) + " seconds per character."
-                         "\n    That is " + str((elapsed_time/len(data) * 1000000))
-                                      + " microseconds per character."])
-    new_file.close()
-
-    return encrypted
 
 
 
