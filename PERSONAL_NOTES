@@ -4,7 +4,10 @@
 
 
 
+
+
 NEED TO FINISH:
+    encrypt and decrypt blowfish
     decrypt vigenere_nokey
 
 
@@ -14,6 +17,9 @@ NEED TO FINISH:
 
 
 
+NEED TO ADD:
+    ways to combat inaccuracy of get_char_set_of_ciphertext and get_char_encoding_scheme_of
+    A sort of encrypted "database" system
 
 
 

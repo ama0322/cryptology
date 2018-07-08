@@ -1,5 +1,4 @@
-
-
+𝐍𝐎𝐓𝐄: 𝐜𝐫𝐲𝐩𝐭𝐨𝐠𝐫𝐚𝐩𝐡𝐲_𝐫𝐮𝐧𝐧𝐞𝐫.𝐩𝐲 𝐈𝐒 𝐍𝐎𝐓 𝐀𝐒 𝐑𝐄𝐋𝐈𝐀𝐁𝐋𝐄 𝐀𝐒 𝐭𝐞𝐬𝐭.𝐩𝐲
 
 USAGE
 
@@ -67,7 +66,7 @@ PROJECT STRUCTURE
             -Files_Logs - where the logs from testing go
 
         𝐓𝐇𝐈𝐒 𝐈𝐒 𝐓𝐇𝐄 𝐆𝐄𝐍𝐄𝐑𝐀𝐋 𝐒𝐓𝐑𝐔𝐂𝐓𝐔𝐑𝐄:
-            General use: 𝐜𝐫𝐲𝐩𝐭𝐨𝐠𝐫𝐚𝐩𝐡𝐲_𝐫𝐮𝐧𝐧𝐞𝐫.𝐩𝐲 takes plaintext and cipher from the user. It then calls
+            General use: 𝐜𝐫𝐲𝐩𝐭𝐨𝐠𝐫𝐚𝐩𝐡𝐲_𝐫𝐮𝐧𝐧𝐞𝐫.𝐩𝐲 takes utf-8 plaintext and cipher from the user. It then calls
                 𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐱𝐞𝐜𝐮𝐭𝐞(). That makes calls to various functions in miscellaneous that handle
                 user input and other miscellaneous aspects. Some of those functions calls 𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐧𝐜𝐫𝐲𝐩𝐭()
                 to use the actual algorithm to encrypt. Decryption works much the same way.
@@ -115,35 +114,54 @@ ENCRYPTION
         from miscellaneous' encrypt/decrypt function. When in testing mode, however, it is called from test.py
 
     ROTATION.PY
+        This shifts the unicode values of the plaintext up (addition) by the amount that the key is in unicode.
 
-    RSA.PY - This encrypts using an RSA cipher with no padding. If the text is longer than the key, then the text
-             is divided into blocks that are the same size as the key. The public key and the private key format is
-             this: "RSA (length of e or d) (e or d) n" These strings are rendered in a encoded form using
-             whichever scheme.
 
-    VIGENERE.PY - This is the regular vigenere that does what is expected
+    RSA.PY
+        This encrypts using an RSA cipher with no padding. If the text is longer than the key, then the text
+            is divided into blocks that are the same size as the key. The public key and the private key format is this:
+            "RSA (length of e or d) (e or d) n" These strings are rendered in a encoded form using whichever scheme.
 
-    VIGENERE_MULTIPLICATIVE.PY - This vigenere multiplies the character values instead of add. I added this to access
-                                 more of the characters in unicode.* For ascii, and extended_ascii, the characters are
-                                 displayed as numbers instead of in real characters, due to limitations.
+         Note: The public key in base4096 encoding is a bit difficult to enter in correctly.
 
-                                 Note: Vigenere_multiplicative stores the numbers in a list and then concatenates the
-                                 list together into a single string later on. Because of the large amount of text
-                                 involved, handling the numbers in a list is much faster.
 
-                                 Note: Only use characters in the extended_ascii set for the plaintext.
+    VIGENERE.PY
+        This is the regular vigenere that does what is expected. Straighforward.
 
-          * Unicode has certain characters called surrogates. These are unprintable. As a result, I had to adjust my
-          numbers so that any values that would match surrogates are pushed into the corresponding character. This
-          corresponding character is as far away from the end of the surrogates as the "before" value is from the
-          start of the surrogates
 
-    VIGENERE_EXPONENTIAL.PY - This vigenere takes the plaintext value to the power of the keyword character value. This
-                              results in a ciphertext whose characters are even more evenly distributed in unicode.
+    VIGENERE_EXPONENTIAL.PY
+        This vigenere takes the plaintext value to the power of the keyword character value. This
+            results in a ciphertext whose characters are even more evenly distributed in unicode.
 
-                              Note: Decryption assumes that the plaintext uses only ascii characters(for performance)
+        The ciphertext is stored in "units," which look like: (encoded+character + num_overlaps + " ") num_overlaps
+            represents the number of unicode values that, when pow(value, key_unicode_val, char_set_size), give the same
+            result as when pow(plaintext_unicode_val, key_unicode_val, char_set_size) is calculated. Storing this is
+            necessary for decryption in order to figure out which character was the original plaintext since there are
+            overlaps.
 
-                              Note: Only use characters in the extended_ascii set for the plaintext
+        Note: Decryption assumes that the plaintext uses only ascii characters(for performance)
+
+        Note: Only use characters in the extended_ascii set for the plaintext
+
+        Note*: Unicode has certain characters called surrogates. These are unprintable. As a result, I had to adjust my
+            numbers so that any values that would match surrogates are pushed into the corresponding character. This
+            corresponding character is as far away from the end of the surrogates as the "before" value is from the
+            start of the surrogates
+
+
+    VIGENERE_MULTIPLICATIVE.PY
+        This vigenere multiplies the character values instead of add. I added this to access
+            more of the characters in unicode.* For ascii, and extended_ascii, the characters are displayed as numbers
+            instead of in real characters, due to limitations.
+
+        Note: Stored ciphertext in same sort of format in VIGENERE_EXPONENTIAL
+
+        Note: See note on unicode in VIGENERE_EXPONENTIAL
+
+
+
+
+
 
 
 

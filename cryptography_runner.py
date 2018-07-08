@@ -20,7 +20,7 @@ def main():
 
 
     #  Print out info when the program first begins
-    global last;
+    global last
     if last == "":
         print()
         print("See README for usage."
@@ -297,13 +297,8 @@ def execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
         exec("from Decryption import " + cipher)
         output = eval(cipher + ".execute(data, output_location)")
 
-    print("*******************************************************")
-    print("\nTHIS IS THE OUTPUT:\n" + output)
 
-    #  WRITE THE ENCRYPTED/DECRYPTED TEXT TO THE PROPER FILE
-    new_file = open(output_location, "w", encoding="utf-8")
-    new_file.write(output)
-    new_file.close()
+
 
 
 
