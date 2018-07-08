@@ -20,13 +20,8 @@ def execute(data, output_location):
     :return: (string) the encrypted data
     """
 
-    # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.symmetric_ed_with_single_char_key(data, output_location,
-                                                                      "Encryption", "rotation", "encrypt")
-
-
-    # Return encrypted text to be written in cryptography_runner
-    return encrypted
+    # Encrypt the plaintext. Print out the ciphertext and relevant information
+    miscellaneous.execute_encryption_or_decryption(data, output_location, "Encryption", "rotation", "encrypt")
 
 
 
@@ -48,20 +43,21 @@ def encrypt(plaintext, key, char_set_size):
 
 
     for x in plaintext:
-        #  figure out the unicode value for the current character
-        uni_val_plain = ord(x)
 
-        #  figure out the unicode value for the right character in the key
-        key_char = key[key_index]
-        uni_val_key = ord(key_char)
+
+
+        uni_val_plain = ord(x)                       #  figure out the unicode value for the current character
+        uni_val_key = ord(key[key_index])            #  figure out the unicode value for the right character in the key
+
 
 
         #  figure out the character by combining the two ascii's, the add it to the encrypted string
         encrypted_char = chr((uni_val_plain + uni_val_key) % (char_set_size))
         encrypted = encrypted + encrypted_char
 
-        # update key_index for next iteration
-        key_index = (key_index + 1) % len(key)
+
+
+
 
     return encrypted
 

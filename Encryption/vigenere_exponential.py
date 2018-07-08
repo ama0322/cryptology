@@ -18,12 +18,9 @@ def execute(data, output_location):
     :return: the encrypted data
     """
 
-    # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.symmetric_ed_with_general_key(data, output_location,
-                                                                      "Encryption", "vigenere_exponential", "encrypt")
-
-    # Return encrypted text to be written in cryptography_runner
-    return encrypted
+    # Encrypt the plaintext. Print out the ciphertext and relevant information
+    miscellaneous.execute_encryption_or_decryption(data, output_location,
+                                                   "Encryption", "vigenere_exponential", "encrypt")
 
 
 
@@ -58,7 +55,7 @@ def encrypt(plaintext, key, char_set_size):
 
         # Print updates (every 1000 characters)
         if counter % 1000 == 0:
-            print("ENCRYPTION\tPercent of text done: " + str((counter / len(plaintext)) * 100) )
+            print("ENCRYPTION\tPercent of text done: " + str((counter / len(plaintext)) * 100) + "%")
         counter += 1
 
         #  figure out the unicode value for each of the characters

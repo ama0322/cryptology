@@ -22,12 +22,8 @@ def execute(data, output_location):
     """
 
 
-    # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.symmetric_ed_with_general_key(data, output_location,
-                                                                      "Encryption", "vigenere", "encrypt")
-
-    # Return encrypted text to be written in cryptography_runner
-    return encrypted
+    # Encrypt the plaintext. Print out the ciphertext and relevant information
+    miscellaneous.execute_encryption_or_decryption(data, output_location, "Encryption", "vigenere", "encrypt")
 
 
 
@@ -65,6 +61,7 @@ def encrypt(plaintext, key, char_set_size):
         #  figure out the character by combining the two unicodes, the add it to the encrypted string
         encrypted_char = chr((uni_val_plain + uni_val_key) % char_set_size)
         ciphertext = ciphertext + encrypted_char
+
 
     return ciphertext
 

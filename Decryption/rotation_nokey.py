@@ -1,11 +1,14 @@
 import miscellaneous
 
-
-
-
 # Cipher info:
 alphabet = miscellaneous.char_sets
-key_type = "symmetric"
+cipher_type = "symmetric"
+key_size = "calculated characters (single character)"
+
+
+
+
+
 
 
 
@@ -20,27 +23,24 @@ def execute(data, output_location):
     :return: (string) the decrypted data
     """
 
-    # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.symmetric_ed_without_key(data, output_location,
-                                                                      "Decryption", "rotation_nokey", "decrypt")
-
-
-    # Return encrypted text to be written in cryptography_runner
-    return decrypted
+    # Decrypt the ciphertext. Write the plaintext and info to a file
+    miscellaneous.execute_encryption_or_decryption(data, output_location, "Decryption", "rotation_nokey", "decrypt")
 
 
 
 
-# Decrypt in testing form. This means to add some more statistics about performance. Also check for correctness
-def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, encryption_time):
+# Figure out the encryption and decryption code. Pass info to miscellaneous' testing_execute function
+def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_size, output_location):
     """
-    This function executes the deciphering in testing mode. So add more statistics about performance and correctness.
+    Conducts a rotation decryption in testing mode
 
-    :param ciphertext: (string) the ciphertext to be decrypted
-    :param output_location: (string) the file to write information to
-    :param plaintext: (string) the unencrypted plaintext
-    :param encryption_time: (integer) the time it took for the plaintext to be encrypted
-    :return:
+    :param encryption: (string) the name of the encryption cipher to use
+    :param decryption: (string) the name of the decryption cipher to use (this)
+    :param plaintext: (string) the plaintext to encrypt
+    :param encryption_key: (string) the key to use to encrypt
+    :param char_set_size: (int) the size of the character set to use
+    :param output_location: (string) the name of the file to write statistics in
+    :return: None
     """
     # Store information from the last encryption done here(Just declarations):
 
@@ -53,7 +53,7 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
     encryption_code = \
     r"""new_file.writelines([
                              "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
-                             "\n--------------- key ---------------\n" + public_key +
+                             "\n--------------- key ---------------\n" + encryption_key +
                              "\n------------------------------------------------------------------------------------" ,
                              "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
                              "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time) 
@@ -72,24 +72,26 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
                              "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + "x",                             
                              "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000),
                              "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐫𝐨𝐭𝐚𝐭𝐢𝐨𝐧: "  
-                             + str(decryption_time / ord(rotation_nokey.testing_execute.decrypted_key) * 1000000),
+                             + str(decryption_time / ord(Decryption.rotation_nokey.testing_execute.decrypted_key)  
+                                                     * 1000000),
                              "\n𝐏𝐞𝐫𝐜𝐞𝐧𝐭 𝐨𝐟 𝐭𝐞𝐱𝐭 𝐢𝐧 𝐄𝐧𝐠𝐥𝐢𝐬𝐡: " 
-                             + str(rotation_nokey.testing_execute.percent_english * 100)
+                             + str(Decryption.rotation_nokey.testing_execute.percent_english * 100)
                             ])
     """
 
 
-    miscellaneous.testing_general_decrypt_with_key(ciphertext, output_location, plaintext, key, key, char_set_size,
-                                                   encryption_time, "Decryption", "rotation_nokey",
-                                                   "Rotation without key", "decrypt", encryption_code,
-                                                   decryption_code)
+    miscellaneous.testing_execute_encryption_and_decryption(encryption, decryption,
+                                                            plaintext, encryption_key, char_set_size,
+                                                            output_location,
+                                                            "Rotation",
+                                                            encryption_code, decryption_code)
 
 
 
 
 
 
-# Actual algorithm to decryption using a rotation cipher without a key
+# Returns string, string. This is the actual algorithm to decrypt
 def decrypt(ciphertext, key, char_set_size):
     """
     This function attempts to decrypt the ciphertext by running through all the characters in unicode and performing

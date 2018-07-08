@@ -1,13 +1,15 @@
 import miscellaneous
 
-
-
-
-
-
 # Cipher info:
 alphabet = miscellaneous.char_sets
-key_type = "symmetric"
+cipher_type = "symmetric"
+key_size = "multiple characters"
+
+
+
+
+
+
 
 
 
@@ -23,29 +25,26 @@ def execute(data, output_location):
     """
 
 
-    # Obtain the decrypted text. Also write statistics and relevant info to a file
-    decrypted = miscellaneous.symmetric_ed_with_general_key(data, output_location,
-                                                                      "Decryption", "vigenere", "decrypt")
-
-
-    # Return encrypted text to be written in cryptography_runner
-    return decrypted
+    # Encrypt the plaintext. Print out the ciphertext and relevant information
+    miscellaneous.execute_encryption_or_decryption(data, output_location, "Decryption", "vigenere", "decrypt")
 
 
 
-# Decrypt in testing mode. So add more statistics about performance. Check for correctness.
-def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, encryption_time):
+
+# Figure out the encryption and decryption code. Pass info to miscellaneous' testing_execute function
+def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_size, output_location):
     """
-    Decrypt and save statistics.
+    Conducts a rotation decryption in testing mode
 
-    :param ciphertext: (string) the encrypted text to decipher
-    :param output_location: (string) the file to save statistics into
-    :param plaintext: (string) the original plaintext
-    :param key: (string) the key used to decrypt
-    :param char_set_size: (int) the character set used
-    :param encryption_time: (float) the time it took to encrypt using vigenere
+    :param encryption: (string) the name of the encryption cipher to use
+    :param decryption: (string) the name of the decryption cipher to use (this)
+    :param plaintext: (string) the plaintext to encrypt
+    :param encryption_key: (string) the key to use to encrypt
+    :param char_set_size: (int) the size of the character set to use
+    :param output_location: (string) the name of the file to write statistics in
     :return: None
     """
+
 
     # Encryption code
     encryption_code = miscellaneous.general_encryption_code
@@ -53,16 +52,19 @@ def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, 
     # Decryption code
     decryption_code = miscellaneous.general_decryption_code
 
-    miscellaneous.testing_general_decrypt_with_key(ciphertext, output_location, plaintext, key, key, char_set_size,
-                                                   encryption_time, "Decryption", "vigenere", "Vigenère", "decrypt",
-                                                   encryption_code, decryption_code)
+    miscellaneous.testing_execute_encryption_and_decryption(encryption, decryption,
+                                                            plaintext, encryption_key, char_set_size,
+                                                            output_location,
+                                                            "Vigenère",
+                                                            encryption_code, decryption_code)
 
 
 
 
 
 
-# Contains the actual algorithm to decrypt with vigenere cipher with a key
+
+# Returns string. This is the actual algorithm to decrypt
 def decrypt(ciphertext, key, char_set_size):
     """
     This function decrypts with vigenere. Instead of adding, subtract

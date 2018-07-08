@@ -21,12 +21,9 @@ def execute(data, output_location):
     :return: (string) the encrypted data
     """
 
-    # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.asymmetric_e_with_or_without_key(data, output_location, "Encryption", "rsa",
-                                                                   "encrypt")
-
-    # Return encrypted text to be written in cryptography_runner
-    return encrypted
+    # Encrypt the plaintext. Print out the ciphertext and relevant information
+    miscellaneous.execute_encryption_or_decryption(data, output_location,
+                                                   "Encryption", "rsa", "encrypt")
 
 
 
@@ -35,32 +32,28 @@ def execute(data, output_location):
 
 
 # The actual algorithm to encrypt using rsa encryption
-def encrypt(plaintext, given_key, char_set_size):
+def encrypt(plaintext, given_key, encoding_scheme):
     """
     This encrypts using an rsa encryption. Random primes for the key are generated.
 
     :param plaintext: (string) the data to be encrypted
     :param given_key: (string) the public key used for encryption (not a requirement)
     :param key: (string) NOT USED
-    :param char_set_size: (int) the size of the character set
+    :param encoding_scheme: (string) the name of the encoding scheme to use
     :return: (string) the encrypted text
     :return: (string) the generated public key for this in string form
     :return: (string) the generated private key for this in string form
     """
 
-    key_size = rsa.key_bits # the bit size of the key (needs to be divisible by 8)
-    ciphertext = ""  # the string to build up the encrypted text
-    prime_num_one = 0  # one of the randoly generated prime numbers
-    prime_num_two = 0  # the other randomly generated prime numbers
-    public_key = ""
-    private_key = ""
-    e = 0 # the public encryption key (the actual number)
-    d = 0 # the private encryption key (the actual number)
-    n = 0 # the modulus for the encryption  (the number)
-
-    # Figure out which char encoding scheme to use(reverse dictionary lookup)
-    char_encoding_scheme = [key for key, value in miscellaneous.char_set_to_char_set_size.items()
-                                         if value == char_set_size][0]
+    key_size = rsa.key_bits      # the bit size of the key (needs to be divisible by 8)
+    ciphertext = ""              # the string to build up the encrypted text
+    prime_num_one = 0            # one of the randoly generated prime numbers
+    prime_num_two = 0            # the other randomly generated prime numbers
+    public_key = ""              # Store public key here
+    private_key = ""             # Store private key here
+    e = 0                        # the public encryption key (the actual number)
+    d = 0                        # the private encryption key (the actual number)
+    n = 0                        # the modulus for the encryption  (the number)
 
 
     # If the public key (given_key) not given, then generate public and private keys
@@ -74,11 +67,12 @@ def encrypt(plaintext, given_key, char_set_size):
 
 
         # Calculate the public key and the private key
-        e, d, n, public_key, private_key = _calculate_public_and_private_key(prime_one, prime_two, char_encoding_scheme)
+        e, d, n, public_key, private_key = _calculate_public_and_private_key(prime_one, prime_two, encoding_scheme)
 
     # Else, parse public_key to figure out e and n.
     else:
         e, n = miscellaneous.read_rsa_key(given_key)
+        public_key = given_key
 
 
 
@@ -103,7 +97,7 @@ def encrypt(plaintext, given_key, char_set_size):
     # For each block, run encryption with public key e. Then, turn the ciphertext number into characters with the
     # chosen character scheme
     ciphertext_blocks = [ pow(block, e, n) for block in plaintext_blocks ]
-    ciphertext_blocks = [ miscellaneous.int_to_chars_encoding_scheme_pad(block, char_encoding_scheme, key_size)
+    ciphertext_blocks = [ miscellaneous.int_to_chars_encoding_scheme_pad(block, encoding_scheme, key_size)
                           for block in ciphertext_blocks] ;rsa.testing_execute.block_size = (len(ciphertext_blocks[0]))
 
 
@@ -122,13 +116,13 @@ def encrypt(plaintext, given_key, char_set_size):
 
 
 
-def _calculate_public_and_private_key(prime_one, prime_two, char_encoding_scheme):
+def _calculate_public_and_private_key(prime_one, prime_two, encoding_scheme):
     """
     Given two primes, calculate the private and public key
 
     :param prime_one: (int) a prime
     :param prime_two: (int) another prime
-    :param char_encoding_scheme: (string) tells us which character set to use to render the public/private
+    :param encoding_scheme: (string) tells us which character set to use to render the public/private
     keys as text
     :return: (int) encryption number e
     :return: (int) decryption number d
@@ -166,17 +160,17 @@ def _calculate_public_and_private_key(prime_one, prime_two, char_encoding_scheme
     modulus_num = modulus
 
     # Convert d  and e, and modulus from numbers to encoded character version. Also do e and d's lengths
-    e = miscellaneous.int_to_chars_encoding_scheme(e, char_encoding_scheme)
+    e = miscellaneous.int_to_chars_encoding_scheme(e, encoding_scheme)
     e_len = len(e)
-    d = miscellaneous.int_to_chars_encoding_scheme(d, char_encoding_scheme)
+    d = miscellaneous.int_to_chars_encoding_scheme(d, encoding_scheme)
     d_len = len(d)
-    modulus = miscellaneous.int_to_chars_encoding_scheme(modulus, char_encoding_scheme)
+    modulus = miscellaneous.int_to_chars_encoding_scheme(modulus, encoding_scheme)
 
     # Build up the public and private keys strings. Then encode them using whichever scheme
     public_key = "RSA: " + str(e_len) + " " + e + modulus
     private_key = "RSA: " + str(d_len) + " " + d + modulus
-    public_key = miscellaneous.chars_to_chars_encoding_scheme(public_key, char_encoding_scheme)
-    private_key = miscellaneous.chars_to_chars_encoding_scheme(private_key, char_encoding_scheme)
+    public_key = miscellaneous.chars_to_chars_encoding_scheme(public_key, encoding_scheme)
+    private_key = miscellaneous.chars_to_chars_encoding_scheme(private_key, encoding_scheme)
 
     # Return the public and private keys
     return e_num, d_num, modulus_num, public_key, private_key

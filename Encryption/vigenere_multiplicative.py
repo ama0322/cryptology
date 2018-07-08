@@ -21,12 +21,9 @@ def execute(data, output_location):
     """
 
 
-    # Obtain the encrypted text. Also write statistics and relevant info a file
-    encrypted = miscellaneous.symmetric_ed_with_general_key(data, output_location,
-                                                                  "Encryption", "vigenere_multiplicative", "encrypt")
-
-    # Return encrypted text to be written in cryptography_runner
-    return encrypted
+    # Encrypt the plaintext. Print out the ciphertext and relevant information
+    miscellaneous.execute_encryption_or_decryption(data, output_location,
+                                                   "Encryption", "vigenere_multiplicative", "encrypt")
 
 
 
@@ -59,20 +56,19 @@ def encrypt(plaintext, key, char_set_size):
 
         # Print updates (every 1000 characters)
         if counter % 1000 == 0:
-            print("ENCRYPTION\tPercent of text done: " + str((counter / len(plaintext)) * 100) )
+            print("ENCRYPTION\tPercent of text done: "
+                    + str((counter / len(plaintext)) * 100) + "%")
         counter += 1
 
-        #  figure out the unicode value for each of the characters
-        uni_val_plain = ord(x)
 
-        #  figure out the unicode value for the right character in the key, then update for next iteration
-        key_char = key[key_index]
-        uni_val_key = ord(key_char)
-
-        key_index = (key_index + 1) % len(key)
+        # Obtain the two unicode values to operate on
+        uni_val_plain = ord(x)                                 # Find unicode value of plaintext char
+        key_char = key[key_index]                               # Figure out which character to use
+        uni_val_key = ord(key_char)                             # Find unicode value of the key
+        key_index = (key_index + 1) % len(key)                  # Update key index for next iteration
 
 
-        # Figure out the uni_val_cipher. Adjust it to be out of surrogate range
+        # Figure out the uni_val_cipher. Do NOT adjust for surrogates yet.
         uni_val_encrypted = (uni_val_plain * uni_val_key) % char_set_size
 
         # Obtain the number of overlaps that come before this one(this uni_val_plain) and NOT including this one
@@ -91,9 +87,10 @@ def encrypt(plaintext, key, char_set_size):
 
 
 
-        # Adjust the unival_encrypted to fit outside the surrogates
+        # Adjust the uni_val_encrypted to fit outside the surrogates if necessary
         if miscellaneous.SURROGATE_LOWER_BOUND <= uni_val_encrypted:
             uni_val_encrypted = uni_val_encrypted + miscellaneous.SURROGATE_BOUND_LENGTH
+
 
 
         #  figure out the character corresponding to the unicode value, and add to the ciphertext

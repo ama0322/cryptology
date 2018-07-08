@@ -40,6 +40,7 @@ def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_
     :param encryption_key: (string) the key to use to encrypt
     :param char_set_size: (int) the size of the character set to use
     :param output_location: (string) the name of the file to write statistics in
+    :return: None
     """
 
 
@@ -55,38 +56,13 @@ def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_
                                                             "Rotation",
                                                             encryption_code, decryption_code)
 
-"""
-# Decrypt in testing mode. So add more statistics about performance. Check for correctness
-def testing_execute(ciphertext, output_location, plaintext, key, char_set_size, encryption_time):
-
-    Conducts a rotation decryption in testing mode
-
-    :param ciphertext: (string) the ciphertext to decrypt
-    :param output_location: (string) the file to store statistics about decryption
-    :param plaintext: (string) the plaintext to check for correctness
-    :param key: (string) the key to decrypt with
-    :param char_set_size: (integer) the size of the character set used
-    :param encryption_time: (double) the time that encryption took
-    :return: None
-
-
-    # Encryption code
-    encryption_code = miscellaneous.general_encryption_code
-
-    # Decryption code
-    decryption_code = miscellaneous.general_decryption_code
-
-    miscellaneous.testing_execute_decryption(ciphertext, output_location, plaintext, key, key, char_set_size,
-                                                   encryption_time, "Decryption", "rotation",
-                                                   "Rotation", "decrypt", encryption_code,
-                                                   decryption_code)
-"""
 
 
 
 
 
-# This function contains the actual algorithm to decrypt a rotation cipher with a key
+
+# Returns string. This is the actual algorithm to decrypt
 def decrypt(ciphertext, key, char_set_size):
     """
     This function decrypts the ciphertext using the set of unicode characters from 0 to end_char.
