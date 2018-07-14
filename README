@@ -67,8 +67,8 @@ PROJECT STRUCTURE
 
         𝐓𝐇𝐈𝐒 𝐈𝐒 𝐓𝐇𝐄 𝐆𝐄𝐍𝐄𝐑𝐀𝐋 𝐒𝐓𝐑𝐔𝐂𝐓𝐔𝐑𝐄:
             General use: 𝐜𝐫𝐲𝐩𝐭𝐨𝐠𝐫𝐚𝐩𝐡𝐲_𝐫𝐮𝐧𝐧𝐞𝐫.𝐩𝐲 takes utf-8 plaintext and cipher from the user. It then calls
-                𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐱𝐞𝐜𝐮𝐭𝐞(). That makes calls to various functions in miscellaneous that handle
-                user input and other miscellaneous aspects. Some of those functions calls 𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐧𝐜𝐫𝐲𝐩𝐭()
+                𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐱𝐞𝐜𝐮𝐭𝐞(). That makes calls to various functions in misc that handle
+                user input and other misc aspects. Some of those functions calls 𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐧𝐜𝐫𝐲𝐩𝐭()
                 to use the actual algorithm to encrypt. Decryption works much the same way.
 
             Testing: 𝐭𝐞𝐬𝐭.𝐩𝐲 takes in parameters for testing and calls 𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐱𝐞𝐜𝐮𝐭𝐞() to get the
@@ -80,7 +80,7 @@ CRYPTOGRAPHY_RUNNER.PY
 
 
 
-MISCELLANEOUS.PY
+misc.PY
     This file holds functions and resources useful throughout the project
 
     Structure:
@@ -105,13 +105,13 @@ TEST.PY
 ENCRYPTION
 
     GENERAL FILE FORMAT
-        def execute() - this function makes a call to miscellaneous's function to encrypt/decrypt in the section:
-        USER INTERFACING AND FUNCTION CALLS. miscellaneous's function asks for user input and and writes down
+        def execute() - this function makes a call to misc's function to encrypt/decrypt in the section:
+        USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input and and writes down
         relevant information to a file. It also returns the encrypted text for this function(execute) to return
         back to cryptography_runner.py. This function is called from cryptography_runner.py
 
         def encrypt() - this function contains the actual algorithm to encrypt the plaintext. It is generally called
-        from miscellaneous' encrypt/decrypt function. When in testing mode, however, it is called from test.py
+        from misc' encrypt/decrypt function. When in testing mode, however, it is called from test.py
 
     ROTATION.PY
         This shifts the unicode values of the plaintext up (addition) by the amount that the key is in unicode.
@@ -170,15 +170,15 @@ ENCRYPTION
 DECRYPTION
 
     GENERAL FILE FORMAT
-        def execute() - this function makes a call to miscellaneous's function to encrypt/decrypt in the section:
-        USER INTERFACING AND FUNCTION CALLS. miscellaneous's function asks for user input if necessary and and writes
+        def execute() - this function makes a call to misc's function to encrypt/decrypt in the section:
+        USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input if necessary and and writes
         down relevant information to a file. It also returns the decrypted text for this function(execute) to return
         back to cryptography_runner.py. This function is called from cryptography_runner.py
 
         def testing_execute() - this function is called from test.py. It is the testing form of execute, which means
         that file are not generated in Files_Encrypted or Files_Decrypted. Instead, it writes statistics and
-        plain and ciphertext to a file in Files_Logs. This function either calls a general one from miscellaneous, or it
+        plain and ciphertext to a file in Files_Logs. This function either calls a general one from misc, or it
         writes specialized statistics itself directly from this function.
 
         def decrypt() - this function contains the actual algorithm to decrypt the ciphertext. It is generally called
-        from miscellaneous' encrypt/decrypt function. When in testing mode, however, it is called from testing_execute()
+        from misc' encrypt/decrypt function. When in testing mode, however, it is called from testing_execute()
