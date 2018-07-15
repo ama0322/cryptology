@@ -12,7 +12,7 @@ key_size = "multiple generated characters"
 
 
 # Cipher settings:
-key_bits = 1024
+key_bits = 2048
 
 
 
@@ -64,20 +64,22 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     r"""new_file.writelines([
                              "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                              "\n--------------- public key " 
-                                + str(rsa.key_bits) + "-bit ---------------\n" + 
-                             public_key +
-                             "\n------------------------------------------------------------------------------------" ,
+                                + str(rsa.key_bits) + "-bit ---------------\n" 
+                                + public_key 
+                                + "\n-----------------------------------------------"
+                                + "-------------------------------------" ,
                              "\n𝐓𝐢𝐦𝐞 𝐭𝐨 𝐠𝐞𝐧𝐞𝐫𝐚𝐭𝐞 𝐛𝐨𝐭𝐡 𝐤𝐞𝐲𝐬 (𝐟𝐢𝐠𝐮𝐫𝐢𝐧𝐠 𝐨𝐮𝐭 𝐭𝐰𝐨 𝐩𝐫𝐢𝐦𝐞𝐬): " 
                                 + str(rsa.testing_execute.time_to_generate_keys) + " seconds",
                              "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐞𝐧𝐜𝐨𝐝𝐢𝐧𝐠 𝐬𝐜𝐡𝐞𝐦𝐞 𝐢𝐬: " + char_encoding_scheme_of(ciphertext),
-                             "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " 
+                             "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧 these seconds: " 
                                 + str(encryption_time - rsa.testing_execute.time_to_generate_keys) 
-                                + " seconds with " + "{:,}".format(len(plaintext)) + " characters and " 
+                                + " (s) with " + "{:,}".format(len(plaintext)) + " characters and " 
                                 + "{:,}".format(rsa.testing_execute.num_blocks) 
                                 + " blocks (" + str(rsa.testing_execute.block_size) + " characters each)",                        
                              "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " 
                                 + str(((encryption_time - rsa.testing_execute.time_to_generate_keys) 
-                             / len(plaintext)) * 1000000)
+                                / len(plaintext)) * 1000000)
+                                + " (μs)"
                             ])
     """
 
@@ -86,18 +88,20 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     r"""new_file.writelines([
                              "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                              "\n--------------- private key " + str(rsa.key_bits) 
-                                + "-bit ---------------\n" + private_key +
-                             "\n------------------------------------------------------------------------------------" ,
+                                + "-bit ---------------\n" + private_key 
+                                + "\n---------------------------------------------"
+                                + "---------------------------------------" ,
                              "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 character set 𝐢𝐬: " + alphabet_of(ciphertext),
-                             "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
-                                + " seconds with " + "{:,}".format(len(plaintext)) + " characters and "
+                             "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧 these seconds: " + str(decryption_time) 
+                                + " (s) with " + "{:,}".format(len(plaintext)) + " characters and "
                                 + "{:,}".format(rsa.testing_execute.num_blocks) 
                                 + " blocks (" + str(rsa.testing_execute.block_size) + " characters each)",                
                              "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " 
                                 + str(decryption_time/(encryption_time - 
                              rsa.testing_execute.time_to_generate_keys)) 
-                                + "x",                             
+                                + " (times)",                             
                              "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000)
+                                + " (μs)"
                             ])
     """
 
