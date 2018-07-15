@@ -183,16 +183,39 @@ def parse_user_input():
         # Otherwise, a file is given
         else:
 
-            file_given = True # update file_given
+            file_given = True                           # update file_given
+            file_name = commands[index]                 # The name of the file
 
-            #  open the file and store its contents in the string data
+
+
+            #  Try to open the file as is (the literal file path)
             try:
-                my_file = open(commands[index], "r", encoding="utf-8")
+                my_file = open(file_name, "r", encoding="utf-8")
                 data = my_file.read()
                 my_file.close()
-            except IOError:
-                statement = input("No such file or directory! Try again: ")
-                continue
+
+            except IOError: # Search within Resources/Library, Resources/Files_Encrypted, and Resources/Files_Decrypted
+                try:                                                                  # Search Resources/Library
+                    my_file = open("Resources/Library/" + file_name, "r", encoding="utf-8")
+                    data = my_file.read()
+                    my_file.close()
+
+                except IOError:
+                    try:                                                              # Search Resources/Files_Encrypted
+                        my_file = open("Resources/Files_Encrypted/" + file_name, "r", encoding="utf-8")
+                        data = my_file.read()
+                        my_file.close()
+
+                    except IOError:
+                        try:                                                          # Search Resources/Files_Decrypted
+                            my_file = open("Resources/Files_Decrypted/" + file_name, "r", encoding="utf-8")
+                            data = my_file.read()
+                            my_file.close()
+
+                        except IOError:                                               # File not found
+                            # File could not be found, inform the user of the error
+                            statement = input("No such file or directory! Try again: ")
+                            continue
 
             # update index
             index = index + 1
