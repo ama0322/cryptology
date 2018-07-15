@@ -1,8 +1,10 @@
-import datetime # to be used in fileName
-import os # to delete files in decrypted and encrypted
-import test # to run testing mode
 from Cryptography import misc
 from Cryptography import test
+
+
+import datetime # to be used in fileName
+import os # to delete files in decrypted and encrypted
+
 
 
 
@@ -102,7 +104,7 @@ def parse_user_input():
 
         # If command is "test", then enter testing mode
         elif commands[0] == "test":
-            test.testing_mode()
+            test.manual_testing()
 
         # If command is "-e", then set encrypt and check for the following argument
         elif commands[0] == "-e":
@@ -121,11 +123,11 @@ def parse_user_input():
 
         elif commands[0] == "clear":
             # delete files in /Files_Decrypted
-            for file in os.listdir("Files_Decrypted"):
-                    os.unlink("Files_Decrypted/" + file)
+            for file in os.listdir("Resources/Files_Decrypted"):
+                    os.unlink("Resources/Files_Decrypted/" + file)
             # delete files in /Files_Encrypted
-            for file in os.listdir("Files_Encrypted"):
-                    os.unlink("Files_Encrypted/" + file)
+            for file in os.listdir("Resources/Files_Encrypted"):
+                    os.unlink("Resources/Files_Encrypted/" + file)
 
             # Obtain next command
             statement = input("Files deleted. Enter statement: ")  # obtain user input

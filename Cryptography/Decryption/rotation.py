@@ -30,12 +30,14 @@ def execute(data, output_location):
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
-def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_size, output_location):
+def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, char_set_size,
+                    output_location):
     """
     Conducts a rotation decryption in testing mode
 
     :param encryption: (string) the name of the encryption cipher to use
     :param decryption: (string) the name of the decryption cipher to use (this)
+    :param plaintext_source: (string) the location where the plaintext is found
     :param plaintext: (string) the plaintext to encrypt
     :param encryption_key: (string) the key to use to encrypt
     :param char_set_size: (int) the size of the character set to use
@@ -51,7 +53,7 @@ def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_
     decryption_code = misc.general_decryption_code
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
-                                                            plaintext, encryption_key, char_set_size,
+                                                            plaintext, plaintext_source, encryption_key, char_set_size,
                                                             output_location,
                                                             "Rotation",
                                                             encryption_code, decryption_code)

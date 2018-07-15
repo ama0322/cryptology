@@ -1,4 +1,5 @@
 from Cryptography import misc
+
 import datetime # for labelling the date that files are created
 import os # for deleting files
 
@@ -9,6 +10,9 @@ import os # for deleting files
 
 # MODIFY THESE VALUES
 plaintext_source = "Resources/Library/Eleonora.txt"
+
+
+
 
 char_set_size = misc.char_set_to_char_set_size.get("unicode_plane0")
 key = "This is a key for testing"
@@ -21,7 +25,7 @@ encoding_scheme = "base64"
 
 
 # This function enters the testing mode where the user can enter commands to see check ciphers and see stats
-def testing_mode():
+def manual_testing():
 
     # Forever while loop to take in user commands and execute them
     while True:
@@ -32,7 +36,8 @@ def testing_mode():
         # Pass this info to decryption's testing_execute
         exec("import Decryption." + decryption)
         exec("Decryption." + decryption
-             + ".testing_execute(encryption, decryption, plaintext, encryption_key, alphabet, output_location)")
+                + ".testing_execute(encryption, decryption, plaintext, plaintext_source, "
+                + "                 encryption_key, alphabet, output_location)")
 
 
 
@@ -143,8 +148,8 @@ def _parse_user_input():
                 # Check if the user decides to clear logs
                 if command[0] == "clear":
                         # delete files in /Files_Logs
-                        for file in os.listdir("Files_Logs"):
-                                os.unlink("Files_Logs/" + file)
+                        for file in os.listdir("Resources/Files_Logs"):
+                                os.unlink("Resources/Files_Logs/" + file)
 
                         statement = input("Logs cleared. Enter a testing mode command: ")
                         continue

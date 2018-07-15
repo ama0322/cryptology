@@ -37,12 +37,14 @@ def execute(data, output_location):
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
-def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_size, output_location):
+def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, char_set_size,
+                    output_location):
     """
-    Conducts a rotation decryption in testing mode
+    Conducts an rsa decryption in testing mode
 
     :param encryption: (string) the name of the encryption cipher to use
     :param decryption: (string) the name of the decryption cipher to use (this)
+    :param plaintext_source: (string) the location where the plaintext is found
     :param plaintext: (string) the plaintext to encrypt
     :param encryption_key: (string) the key to use to encrypt
     :param char_set_size: (int) the size of the character set to use
@@ -62,19 +64,19 @@ def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_
     r"""new_file.writelines([
                              "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                              "\n--------------- public key " 
-                             + str(Decryption.rsa.key_bits) + "-bit ---------------\n" + 
+                                + str(rsa.key_bits) + "-bit ---------------\n" + 
                              public_key +
                              "\n------------------------------------------------------------------------------------" ,
                              "\n𝐓𝐢𝐦𝐞 𝐭𝐨 𝐠𝐞𝐧𝐞𝐫𝐚𝐭𝐞 𝐛𝐨𝐭𝐡 𝐤𝐞𝐲𝐬 (𝐟𝐢𝐠𝐮𝐫𝐢𝐧𝐠 𝐨𝐮𝐭 𝐭𝐰𝐨 𝐩𝐫𝐢𝐦𝐞𝐬): " 
-                             + str(Decryption.rsa.testing_execute.time_to_generate_keys) + " seconds",
+                                + str(rsa.testing_execute.time_to_generate_keys) + " seconds",
                              "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐞𝐧𝐜𝐨𝐝𝐢𝐧𝐠 𝐬𝐜𝐡𝐞𝐦𝐞 𝐢𝐬: " + char_encoding_scheme_of(ciphertext),
                              "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " 
-                             + str(encryption_time - Decryption.rsa.testing_execute.time_to_generate_keys) 
-                             + " seconds with " + "{:,}".format(len(plaintext)) + " characters and " 
-                             + "{:,}".format(Decryption.rsa.testing_execute.num_blocks) 
-                             + " blocks (" + str(Decryption.rsa.testing_execute.block_size) + " characters each)",                        
+                                + str(encryption_time - rsa.testing_execute.time_to_generate_keys) 
+                                + " seconds with " + "{:,}".format(len(plaintext)) + " characters and " 
+                                + "{:,}".format(rsa.testing_execute.num_blocks) 
+                                + " blocks (" + str(rsa.testing_execute.block_size) + " characters each)",                        
                              "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " 
-                             + str(((encryption_time - Decryption.rsa.testing_execute.time_to_generate_keys) 
+                                + str(((encryption_time - rsa.testing_execute.time_to_generate_keys) 
                              / len(plaintext)) * 1000000)
                             ])
     """
@@ -83,24 +85,24 @@ def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_
     decryption_code = \
     r"""new_file.writelines([
                              "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
-                             "\n--------------- private key " + str(Decryption.rsa.key_bits) 
-                             + "-bit ---------------\n" + private_key +
+                             "\n--------------- private key " + str(rsa.key_bits) 
+                                + "-bit ---------------\n" + private_key +
                              "\n------------------------------------------------------------------------------------" ,
                              "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 character set 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
                              "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
-                             + " seconds with " + "{:,}".format(len(plaintext)) + " characters and "
-                             + "{:,}".format(Decryption.rsa.testing_execute.num_blocks) 
-                             + " blocks (" + str(Decryption.rsa.testing_execute.block_size) + " characters each)",                
+                                + " seconds with " + "{:,}".format(len(plaintext)) + " characters and "
+                                + "{:,}".format(rsa.testing_execute.num_blocks) 
+                                + " blocks (" + str(rsa.testing_execute.block_size) + " characters each)",                
                              "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " 
-                             + str(decryption_time/(encryption_time - 
-                             Decryption.rsa.testing_execute.time_to_generate_keys)) 
-                             + "x",                             
+                                + str(decryption_time/(encryption_time - 
+                             rsa.testing_execute.time_to_generate_keys)) 
+                                + "x",                             
                              "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000)
                             ])
     """
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
-                                                            plaintext, encryption_key, char_set_size,
+                                                            plaintext, plaintext_source, encryption_key, char_set_size,
                                                             output_location,
                                                             "RSA",
                                                             encryption_code, decryption_code)

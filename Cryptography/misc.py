@@ -1,9 +1,10 @@
+
+
 import time # for timing the encryption/decryption processes
 import csv # to convert ngram csv to a dictionary
 import base64 # for several character encoding schemes
 import random # to generate random numbers
 import secrets # to generate cryptographically secure numbers
-import test # To get access to test's variables
 import codecs # For hex string to utf-8 encoding
 
 
@@ -28,7 +29,7 @@ char_sets = ["unicode", "unicode_plane0", "ascii", "extended_ascii"]
 # Encoding schemes (completely random bits to characters)
 char_encoding_schemes = ["base16", "base32", "base64", "base85", "ascii", "extended_ascii", "base4096"]
 
-# Dictionery with character sets to the number of characters in them
+# Dictionary with character sets to the number of characters in them
 char_set_to_char_set_size = {
     "base16": 16,
     "base32": 32,
@@ -99,11 +100,12 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
     key = ""                              # Fill the key here (if necessary)
 
 
+
     # Import the decryption version of module, and store the cipher information
-    exec("import Decryption." + module)
-    alphabet =    eval("Decryption." + module + ".alphabet")
-    cipher_type = eval("Decryption." + module + ".cipher_type")
-    key_size =    eval("Decryption." + module + ".key_size")
+    exec("from Cryptography.Decryption import " + module)
+    alphabet =    eval(module + ".alphabet")
+    cipher_type = eval(module + ".cipher_type")
+    key_size =    eval(module + ".key_size")
 
     # Figure out the alphabet to use, whether it be a character set, or an encoding scheme
     if alphabet == char_sets:                                                # If cipher uses CHARACTER SETS
@@ -155,10 +157,10 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
 
 
     # Everything gathered, now call the encrypt() or decrypt() function. Also, time it
-    start_time = time.time()                                                                        # Start time
-    exec("import " + package + "." + module)                                                        # import correctly
-    output = eval(package + "." + module + "." + encrypt_or_decrypt + "(data, key, alphabet)")      # algorithm call
-    elapsed_time = time.time() - start_time                                                         # End time
+    start_time = time.time()                                                           # Start time
+    exec("from Cryptography." + package + " import " + module)                         # import correctly
+    output = eval(module + "." + encrypt_or_decrypt + "(data, key, alphabet)")         # algorithm call
+    elapsed_time = time.time() - start_time                                            # End time
 
 
     # Open a new file to store the relevant information
@@ -303,7 +305,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
 
 # This function runs encryption and decryption and writes statistics about the process
 def testing_execute_encryption_and_decryption(encryption, decryption,
-                                              plaintext, encryption_key, alphabet,
+                                              plaintext, plaintext_source, encryption_key, alphabet,
                                               output_location,
                                               cipher_name,
                                               encryption_code, decryption_code
@@ -311,29 +313,34 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     """
     This function runs encryption and decryption and writes statistics about the process
 
-    :param encryption:      (string)        the name of the encryption cipher to use
-    :param decryption:      (string)        the name of the decryption cipher to use
-    :param plaintext:       (string)        the plaintext to perform encryption on
-    :param encryption_key:  (string)        the key to encrypt with
-    :param alphabet:        (string or int) either the encoding scheme or the size of the character set used
-    :param output_location: (string)        the file to write statistics into
-    :param cipher_name:     (string)        the formal name of the cipher that is used
-    :param encryption_code: (string)        the code to run that writes info about encryption
-    :param decryption_code: (string)        the code to run that writes info about decryption
+    :param encryption:       (string)        the name of the encryption cipher to use
+    :param decryption:       (string)        the name of the decryption cipher to use
+    :param plaintext:        (string)        the plaintext to perform encryption on
+    :param plaintext_source: (string)        the location where the plaintext is found
+    :param encryption_key:   (string)        the key to encrypt with
+    :param alphabet:         (string or int) either the encoding scheme or the size of the character set used
+    :param output_location:  (string)        the file to write statistics into
+    :param cipher_name:      (string)        the formal name of the cipher that is used
+    :param encryption_code:  (string)        the code to run that writes info about encryption
+    :param decryption_code:  (string)        the code to run that writes info about decryption
     :return: None
     """
 
 
-    # Run encryption, save time and ciphertext, along with relevant keys
+    # Relevant info from encryption
     ciphertext = ""
     public_key = ""                                                    # May not be used
     private_key = ""                                                   # May not be used
     generated_key = ""                                                 # Symmetric generated keys. May not be used
     decryption_key = encryption_key                                    # The key used to decrypt. Symmetric by default
+
+
+    # Execute the encryption, and store the output
     start_time = time.time()
-    exec("import Encryption." + encryption)                            # Import module for encryption
-    encryption_output = eval("Encryption." + encryption                # Run the actual encryption
-                  + ".encrypt(plaintext, encryption_key, alphabet)" )
+    exec("from Cryptography.Encryption import " + encryption)          # Import module for encryption
+    encryption_output = eval(encryption                                # Run the encryption
+                + ".encrypt(plaintext, encryption_key, alphabet)" )
+    encryption_time = time.time() - start_time
     if type(encryption_output) is tuple:                               # If tuple, then ciphertext is in the first index
         ciphertext = encryption_output[0]
 
@@ -345,31 +352,32 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
         elif len(encryption_output) == 2:                              # Len 2 indicates symmetric key generated
             generated_key = encryption_output[1]
             decryption_key = generated_key
-    else:
+    else:                                                              # Not tuple, just regular ciphertext output
         ciphertext = encryption_output
-    encryption_time = time.time() - start_time
+
 
 
     # Run decryption, save time and decrypted text
     decrypted = ""
     start_time = time.time()
-    exec("import Decryption." + decryption)                            # Import module for decryption
-    decryption_output = eval("Decryption." + decryption                # Run the actual decryption
-                  + ".decrypt(ciphertext, decryption_key, alphabet)" )
-    if type(decryption_output) is tuple:                               # If tuple, then ciphertext is in the first index
-        decrypted = decryption_output[0]
-    else:
-        decrypted = decryption_output
+    exec("from Cryptography.Decryption import " + decryption)          # Import module for decryption
+    decryption_output = eval(decryption                                # Run the actual decryption
+                 + ".decrypt(ciphertext, decryption_key, alphabet)" )
     decryption_time = time.time() - start_time
+    if type(decryption_output) is tuple:                               # If tuple, then decrypted is in the first index
+        decrypted = decryption_output[0]
+    else:                                                              # Otherwise, decrypted is the only output
+        decrypted = decryption_output
+
 
 
     # Open file for writing, and set up a space for personal notes
     new_file = open(output_location, "w", encoding="utf-8")
     if decrypted == plaintext:
-        new_file.writelines([cipher_name + " on " + test.plaintext_source + "\nCORRECT \nNotes: "])
+        new_file.writelines([cipher_name + " on " + plaintext_source + "\nCORRECT \nNotes: "])
         print(cipher_name + ": 	𝐂𝐎𝐑𝐑𝐄𝐂𝐓\n")
     else:
-        new_file.writelines([cipher_name + " on " + test.plaintext_source + "\nINCORRECT \t\t\t\t\t"
+        new_file.writelines([cipher_name + " on " + plaintext_source + "\nINCORRECT \t\t\t\t\t"
                              + "Characters different: " + str(sum(1 for a, b in zip(plaintext, decrypted) if a != b))
                              + "\t Percent different: " + str((sum(1 for a, b in zip(plaintext, decrypted) if a != b) /
                                                              len(plaintext) * 100))
@@ -1111,7 +1119,8 @@ def is_english_bag_of_words(data):
 
     # Create inner static variable of set of english words. Load into this the first time this function is called
     if not hasattr(is_english_bag_of_words, "english_words"):
-        is_english_bag_of_words.english_words = set(line.strip() for line in open("Library/English_Words.txt"))
+        is_english_bag_of_words.english_words = set(line.strip()
+                                                    for line in open("Resources/Library/English_Words.txt"))
 
 
 

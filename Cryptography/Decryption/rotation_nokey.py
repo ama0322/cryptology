@@ -30,18 +30,21 @@ def execute(data, output_location):
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
-def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_size, output_location):
+def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, char_set_size,
+                    output_location):
     """
-    Conducts a rotation decryption in testing mode
+    Conducts a rotation_nokey decryption in testing mode
 
     :param encryption: (string) the name of the encryption cipher to use
     :param decryption: (string) the name of the decryption cipher to use (this)
+    :param plaintext_source: (string) the location where the plaintext is found
     :param plaintext: (string) the plaintext to encrypt
     :param encryption_key: (string) the key to use to encrypt
     :param char_set_size: (int) the size of the character set to use
     :param output_location: (string) the name of the file to write statistics in
     :return: None
     """
+
     # Store information from the last encryption done here(Just declarations):
 
     # Store information from the last decryption done here:
@@ -50,38 +53,40 @@ def testing_execute(encryption, decryption, plaintext, encryption_key, char_set_
 
 
     # Encryption code
-    encryption_code = \
-    r"""new_file.writelines([
-                             "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
-                             "\n--------------- key ---------------\n" + encryption_key +
-                             "\n------------------------------------------------------------------------------------" ,
-                             "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
-                             "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time) 
-                             + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",                             
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000)
-                            ])
+    encryption_code =\
+    r"""\
+    new_file.writelines([
+                        "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                        "\n--------------- key ---------------\n" + encryption_key +
+                        "\n------------------------------------------------------------------------------------" ,
+                        "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                        "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time) 
+                            + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",                             
+                        "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000)
+                        ])
     """
 
     # Decryption code
-    decryption_code = \
-    r"""new_file.writelines([
-                             "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
-                             "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
-                             "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
+    decryption_code =\
+    r"""\
+    new_file.writelines([
+                        "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                        "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                        "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",
-                             "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + "x",                             
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000),
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐫𝐨𝐭𝐚𝐭𝐢𝐨𝐧: "  
-                             + str(decryption_time / ord(Decryption.rotation_nokey.testing_execute.decrypted_key)  
+                        "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + "x",                             
+                        "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000),
+                        "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐫𝐨𝐭𝐚𝐭𝐢𝐨𝐧: "  
+                             + str(decryption_time / ord(rotation_nokey.testing_execute.decrypted_key)  
                                                      * 1000000),
-                             "\n𝐏𝐞𝐫𝐜𝐞𝐧𝐭 𝐨𝐟 𝐭𝐞𝐱𝐭 𝐢𝐧 𝐄𝐧𝐠𝐥𝐢𝐬𝐡: " 
-                             + str(Decryption.rotation_nokey.testing_execute.percent_english * 100)
-                            ])
+                        "\n𝐏𝐞𝐫𝐜𝐞𝐧𝐭 𝐨𝐟 𝐭𝐞𝐱𝐭 𝐢𝐧 𝐄𝐧𝐠𝐥𝐢𝐬𝐡: " 
+                             + str(rotation_nokey.testing_execute.percent_english * 100)
+                        ])
     """
 
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
-                                                            plaintext, encryption_key, char_set_size,
+                                                            plaintext, plaintext_source, encryption_key, char_set_size,
                                                             output_location,
                                                             "Rotation",
                                                             encryption_code, decryption_code)
