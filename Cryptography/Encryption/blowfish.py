@@ -3,7 +3,7 @@ from Cryptography import misc
 
 import secrets # To generate a random key
 import copy    # To deepcopy
-
+import time    # To time functions
 
 
 
@@ -65,24 +65,29 @@ def encrypt(plaintext, key, encoding_scheme):
         block = plaintext[0: 16]                            # 64 bits is equal to 16 hex digits
         plaintext_blocks.append(int(block, 16))             # Save integer value into plaintext_blocks list
         plaintext = plaintext[16:]                          # Update for next iteration
-        print("Converting utf-8 to integer blocks: "        # Print updates
-                + str(len(plaintext_blocks)) )
 
 
-    # Conduct the key schedule
-    from Cryptography.Decryption import blowfish                           # import decryption type to get array and box
+
+
+
+
+    # Conduct the key schedule (and time it)
+    from Cryptography.Decryption import blowfish                               # import decryption type for vars
     p_array = copy.deepcopy(blowfish.p_array)
     s_boxes = copy.deepcopy(blowfish.s_boxes)
-    key, p_array, s_boxes = run_key_schedule("", p_array, s_boxes)        # Run the key schedule
+    start_time = time.time()
+    key, p_array, s_boxes = run_key_schedule("", p_array, s_boxes)             # Run the key schedule
+    blowfish.testing_execute.time_for_key_schedule = time.time() - start_time  # Save time in Decryption's blowfish
 
 
-
-    # Encrypt the text
+    # Encrypt the text (and save block information)
     for i in range(len(plaintext_blocks)):
-        ciphertext_blocks.append(blowfish_on_64_bits(plaintext_blocks[i], # Run blowfish on each plaintext block
+        ciphertext_blocks.append(blowfish_on_64_bits(plaintext_blocks[i],   # Run blowfish on each plaintext block
                                                       p_array, s_boxes))
-        print("Encrypting: " + str((i / len(plaintext_blocks)) * 100)      # Print updates
-                + "%")
+        #print("Encrypting: " + str((i / len(plaintext_blocks)) * 100)      # Print updates
+        #        + "%")
+
+
 
 
     # Turn the blocks of ints into blocks of characters with encoding scheme. Then, concatenate for final ciphertext
@@ -90,7 +95,8 @@ def encrypt(plaintext, key, encoding_scheme):
                                                             for block in ciphertext_blocks]
     for block in ciphertext_blocks:                                                            # Concatenate blocks
         ciphertext += block
-
+    blowfish.testing_execute.num_blocks = len(ciphertext_blocks)            # Save block info into Decryption's blowfish
+    blowfish.testing_execute.block_size = len(ciphertext_blocks[0])
 
 
 
@@ -133,12 +139,15 @@ def run_key_schedule(key, p_array, s_boxes):
 
 
     # Each entry in p_array is XOR'ed with key, in groups of 4 bytes (32 bits), and cycling the key.
+    key_index = 0                                                            # Start with first four bytes of key
     for p_index in range(0, len(p_array)):
-        val_to_xor =   (key[ p_index      % len(key)] << 24)  \
-                     + (key[(p_index + 1) % len(key)] << 16)  \
-                     + (key[(p_index + 2) % len(key)] <<  8)  \
-                     + (key[(p_index + 3) % len(key)]      )
-        p_array[p_index] = p_array[p_index] ^ val_to_xor
+        val_to_xor        =   (key[ key_index      % len(key)] << 24)  \
+                            + (key[(key_index + 1) % len(key)] << 16)  \
+                            + (key[(key_index + 2) % len(key)] <<  8)  \
+                            + (key[(key_index + 3) % len(key)]      )
+
+        p_array[p_index] ^= val_to_xor                                        # XOR bytes with p_array element
+        key_index += 4                                                        # Move key index up 4 bytes
 
 
 
@@ -148,7 +157,7 @@ def run_key_schedule(key, p_array, s_boxes):
     # all of p_array and all of s_boxes have been replaced
     ciphertext = 0                                                         # Encryption process starts with all 0 block
     for i in range(0, len(p_array), 2):                                    # Start replacing p_array
-        ciphertext = blowfish_on_64_bits(ciphertext, p_array, s_boxes)    # Encryption processes uses last ciphertext
+        ciphertext = blowfish_on_64_bits(ciphertext, p_array, s_boxes)     # Encryption processes uses last ciphertext
         p_array[i    ] = ciphertext & 0xFFFFFFFF00000000 >> 32             # Left half of ciphertext replaces curr entry
         p_array[i + 1] = ciphertext & 0x00000000FFFFFFFF                   # Right half replaces the entry right after
 
@@ -190,17 +199,19 @@ def blowfish_on_64_bits(input, p_array, s_boxes):
 
         # Obtain the bit patterns for each quarter (8-bits each) of the 32-bit number.
         far_left     = (input & 0xFF000000) >> 24
-        center_left  = (input & 0x00FF0000) >> 16  # bit-mask out the unnecessary bits
-        center_right = (input & 0x0000FF00) >> 8  # and shift all the way to one's place
+        center_left  = (input & 0x00FF0000) >> 16  # bit-mask out the unneeded bits and shift all the way to one's place
+        center_right = (input & 0x0000FF00) >> 8
         far_right    = (input & 0x000000FF)
 
-        # Perform the +, ^, + operations on the mappings from s_boxes
+        # Perform the +, ^, + operations on the mappings from s_boxes (s_boxes elements are 32 bits)
         output =          s_boxes[0][far_left    ]
-        output = output + s_boxes[1][center_left ] % 4294967296  # Obtain the modular result with 2^32
-        output = output ^ s_boxes[2][center_right]
-        output = output + s_boxes[3][far_right   ] % 4294967296  # Obtain the modular result with 2^32
+        output = (output + s_boxes[1][center_left ]) % 4294967296  # Obtain the modular result with 2^32
+        output = (output ^ s_boxes[2][center_right])
+        output = (output + s_boxes[3][far_right   ]) % 4294967296  # Obtain the modular result with 2^32
+
 
         return output
+
 
 
     # Obtain the bit patterns of the left half and the right half
@@ -208,10 +219,12 @@ def blowfish_on_64_bits(input, p_array, s_boxes):
     right = (input & 0x00000000FFFFFFFF)                                 # Right 32 bits
 
 
+
     # Run the rounds 16 times (for indices 0, 1, ...15)
     for i in range(16):
+
         # Round operations:
-        left     ^= p_array[i]              # update left with xor result of left with the p_array element
+        left     ^= p_array[i]              # update left with xor result of left with the p_array element (32 bits)
         f_result  = f_function(left)        # apply the f_function to the xor_result
         right    ^= f_result                # update right with xor result of the right with the f_result
 
@@ -223,8 +236,10 @@ def blowfish_on_64_bits(input, p_array, s_boxes):
     left, right = right, left
 
     # Whiten the output
-    right = right & p_array[16]                      # Second to last index
+    right = right ^ p_array[16]                      # Second to last index
     left  = left  ^ p_array[17]                      # Last index
+
+
 
 
     # Combine the left and right and return the 64 bits

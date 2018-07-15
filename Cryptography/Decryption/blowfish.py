@@ -327,11 +327,50 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     """
 
 
-    # Encryption code
-    encryption_code = misc.general_encryption_code
+    # Store statistics from the last encryption here (Just declarations):
+    testing_execute.time_for_key_schedule = 0
+    testing_execute.num_blocks = 0
+    testing_execute.block_size = 0
 
-    # Decryption code
-    decryption_code = misc.general_decryption_code
+    # Encryption code
+    encryption_code = \
+		r"""new_file.writelines([
+                                 "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                                 "\n--------------- key " 
+                                    + str(blowfish.key_bits) + "-bit ---------------\n" 
+                                    + generated_key 
+                                    + "\n-----------------------------------------------"
+                                    + "-------------------------------------" ,
+                                 "\nTime to conduct key schedule: " 
+                                    + str(blowfish.testing_execute.time_for_key_schedule) + "(s)",
+                                 "\n𝐓𝐡𝐞 cipher𝐭𝐞𝐱𝐭'𝐬 encoding scheme 𝐢𝐬: " + char_encoding_scheme_of(ciphertext),
+                                 "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧 these seconds: " 
+                                    + str(encryption_time - blowfish.testing_execute.time_for_key_schedule) + " (s)" 
+                                    + " with " + "{:,}".format(len(plaintext)) + " characters and " 
+                                    + "{:,}".format(blowfish.testing_execute.num_blocks) 
+                                    + " blocks (" + str(blowfish.testing_execute.block_size) + " characters each)",                       
+                                 "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000)
+                                    + " (μs)"
+                                ])
+        """
+
+    # Decryption Code
+    decryption_code = \
+		r"""new_file.writelines([
+                                 "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
+                                 "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(plaintext),
+                                 "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧 these seconds: " + str(decryption_time) + " (s)"
+                                    + " with " + "{:,}".format(len(plaintext)) + " characters and " 
+                                    + "{:,}".format(blowfish.testing_execute.num_blocks) 
+                                    + " blocks (" + str(blowfish.testing_execute.block_size) + " characters each)",  
+                                 "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " 
+                                    + str(decryption_time/(encryption_time 
+                                    - blowfish.testing_execute.time_for_key_schedule)) 
+                                    + "x",                                     
+                                 "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000)
+                                    + " (μs)"
+                                ])
+        """
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
                                                             plaintext, plaintext_source, encryption_key, alphabet_size,
@@ -381,6 +420,7 @@ def decrypt(ciphertext, key, encoding):
     s_boxes_schedule = copy.deepcopy(s_boxes)                               # Get original s boxes
     key = misc.chars_to_int_decoding_scheme(key, encoding)                  # Decode the char key to int
     key, p_array_schedule, s_boxes_schedule = blowfish.run_key_schedule(key, p_array_schedule, s_boxes_schedule)
+
 
 
     # Decrypt the text (on each 64-bit block)
