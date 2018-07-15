@@ -134,8 +134,8 @@ ENCRYPTION
             results in a ciphertext whose characters are even more evenly distributed in unicode.
 
         The ciphertext is stored in "units," which look like: (encoded+character + num_overlaps + " ") num_overlaps
-            represents the number of unicode values that, when pow(value, key_unicode_val, char_set_size), give the same
-            result as when pow(plaintext_unicode_val, key_unicode_val, char_set_size) is calculated. Storing this is
+            represents the number of unicode values that, when pow(value, key_unicode_val, alphabet_size), give the same
+            result as when pow(plaintext_unicode_val, key_unicode_val, alphabet_size) is calculated. Storing this is
             necessary for decryption in order to figure out which character was the original plaintext since there are
             overlaps.
 

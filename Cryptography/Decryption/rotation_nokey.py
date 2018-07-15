@@ -1,7 +1,7 @@
 from Cryptography import misc
 
 # Cipher info:
-alphabet = misc.char_sets
+char_set = misc.alphabets
 cipher_type = "symmetric"
 key_size = "calculated characters (single character)"
 
@@ -30,7 +30,7 @@ def execute(data, output_location):
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
-def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, char_set_size,
+def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, alphabet_size,
                     output_location):
     """
     Conducts a rotation_nokey decryption in testing mode
@@ -40,7 +40,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     :param plaintext_source: (string) the location where the plaintext is found
     :param plaintext: (string) the plaintext to encrypt
     :param encryption_key: (string) the key to use to encrypt
-    :param char_set_size: (int) the size of the character set to use
+    :param alphabet_size: (int) the size of the character set to use
     :param output_location: (string) the name of the file to write statistics in
     :return: None
     """
@@ -59,7 +59,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
                         "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                         "\n--------------- key ---------------\n" + encryption_key +
                         "\n------------------------------------------------------------------------------------" ,
-                        "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                        "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(ciphertext),
                         "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time) 
                             + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",                             
                         "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000)
@@ -71,7 +71,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     r"""\
     new_file.writelines([
                         "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
-                        "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                        "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(ciphertext),
                         "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",
                         "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + "x",                             
@@ -86,7 +86,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
 
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
-                                                            plaintext, plaintext_source, encryption_key, char_set_size,
+                                                            plaintext, plaintext_source, encryption_key, alphabet_size,
                                                             output_location,
                                                             "Rotation",
                                                             encryption_code, decryption_code)
@@ -97,14 +97,14 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
 
 
 # Returns string, string. This is the actual algorithm to decrypt
-def decrypt(ciphertext, key, char_set_size):
+def decrypt(ciphertext, key, alphabet_size):
     """
     This function attempts to decrypt the ciphertext by running through all the characters in unicode and performing
     a reverse rotation on the ciphertext. The result is checked for English content as confirmation that it is decoded.
 
     :param ciphertext: (string) the ciphertext to be decrypted
     :param key: (string) NOT USED
-    :param char_set_size: (int) NOT USED
+    :param alphabet_size: (int) NOT USED
     :return: (string) the decrypted text
     :return: (string) the key that was used for encryption
     """
@@ -114,12 +114,12 @@ def decrypt(ciphertext, key, char_set_size):
     percent_english = 0
 
     # Figure out the most likely character set of the ciphertext
-    char_set = misc.char_set_of_ciphertext(ciphertext)
-    char_set_size = misc.char_set_to_char_set_size.get(char_set)
+    alphabet = misc.alphabet_of(ciphertext)
+    alphabet_size = misc.char_set_to_size.get(alphabet)
 
 
     # Decrypt the encrypted text using every possible unicode value
-    for uni_val_key in range(0, char_set_size):
+    for uni_val_key in range(0, alphabet_size):
 
         #  refresh decrypted for this cycle
         decrypted = ""
@@ -128,7 +128,7 @@ def decrypt(ciphertext, key, char_set_size):
         # Shortened decryption process(First 50,000 letters or less, whichever comes first)
         max = min(49999, len(ciphertext))
         for x in range(0, max):
-            decrypted_list.append(chr((ord(ciphertext[x]) - uni_val_key) % char_set_size))
+            decrypted_list.append(chr((ord(ciphertext[x]) - uni_val_key) % alphabet_size))
         decrypted = "".join(decrypted_list)
         is_english, percent_english = misc.is_english_bag_of_words(decrypted)
 
@@ -145,7 +145,7 @@ def decrypt(ciphertext, key, char_set_size):
         for x in ciphertext:
 
             #  figure out the character by combining the two unicodes, the add it to the decrypted string
-            decrypted += (chr((ord(x) - uni_val_key) % char_set_size))
+            decrypted += (chr((ord(x) - uni_val_key) % alphabet_size))
 
 
         # Check if the decrypted text is in English

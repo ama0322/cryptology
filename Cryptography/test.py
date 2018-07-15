@@ -14,7 +14,7 @@ plaintext_source = "Resources/Library/Eleonora.txt"
 
 
 
-char_set_size = misc.char_set_to_char_set_size.get("unicode_plane0")
+alphabet_size = misc.char_set_to_size.get("unicode_plane0")
 key = "This is a key for testing"
 
 
@@ -31,13 +31,13 @@ def manual_testing():
     while True:
 
         # Get information necessary for encrypting and decryption
-        encryption, decryption, plaintext, output_location, encryption_key, alphabet = _get_testing_info()
+        encryption, decryption, plaintext, output_location, encryption_key, char_set = _get_testing_info()
 
         # Pass this info to decryption's testing_execute
         exec("import Decryption." + decryption)
         exec("Decryption." + decryption
                 + ".testing_execute(encryption, decryption, plaintext, plaintext_source, "
-                + "                 encryption_key, alphabet, output_location)")
+                + "                 encryption_key, char_set, output_location)")
 
 
 
@@ -57,7 +57,7 @@ def _get_testing_info():
     plaintext = ""
     output_location = ""
     encryption_key = key                                    # Modify key as needed for the chosen cipher
-    alphabet = ""                                           # num for char sets, name for encoding scheme
+    char_set = ""                                           # num for alphabets, name for encoding scheme
 
     # Get the decryption type and the encryption type (same name as decyption but w/o "_nokey")
     decryption = _parse_user_input()
@@ -82,7 +82,7 @@ def _get_testing_info():
     # "multiple generated characters" is a symmetric encrypting/decrypting cipher that uses randomly generated chars
     exec("import Decryption." + decryption)                               # Import module to read cipher properties
     key_size =    eval("Decryption." + decryption + ".key_size")          # The size of the key used (see comment above)
-    alphabet =    eval("Decryption." + decryption + ".alphabet")          # Alphabet used
+    char_set =    eval("Decryption." + decryption + ".char_set")          # char_set used
     cipher_type = eval("Decryption." + decryption + ".cipher_type")       # Symmetric or asymmetric
 
 
@@ -109,14 +109,14 @@ def _get_testing_info():
         encryption_key = ""
 
 
-    # Figure out the alphabet to use
-    if alphabet == misc.char_encoding_schemes:                   # If encoding scheme, just return name
-        alphabet = encoding_scheme
-    elif alphabet == misc.char_sets:                             # If char set, return the size of the set
-        alphabet = char_set_size
+    # Figure out the char_set to use
+    if char_set == misc.binary_to_char_encoding_schemes:                   # If encoding scheme, just return name
+        char_set = encoding_scheme
+    elif char_set == misc.alphabets:                             # If alphabet, return the size of the set
+        char_set = alphabet_size
 
 
-    return encryption, decryption, plaintext, output_location, encryption_key, alphabet
+    return encryption, decryption, plaintext, output_location, encryption_key, char_set
 
 
 

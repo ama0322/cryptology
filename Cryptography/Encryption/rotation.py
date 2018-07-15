@@ -28,13 +28,13 @@ def execute(data, output_location):
 
 
 # This function contains the actual algorithm to encrypt in a rotation cipher using a key
-def encrypt(plaintext, key, char_set_size):
+def encrypt(plaintext, key, alphabet_size):
     """
-    This function encrypts the plaintext using the set of unicode characters from 0 to char_set_size - 1.
+    This function encrypts the plaintext using the set of unicode characters from 0 to alphabet_size - 1.
 
     :param plaintext: (string )the text to be encrypted
     :param key: (string) the key with which the encryption is done
-    :param char_set_size: (int) The number of characters in the character set
+    :param alphabet_size: (int) The number of characters in the character set
     :return: (string) the encrypted text
     """
 
@@ -52,7 +52,7 @@ def encrypt(plaintext, key, char_set_size):
 
 
         #  figure out the character by combining the two ascii's, the add it to the encrypted string
-        encrypted_char = chr((uni_val_plain + uni_val_key) % (char_set_size))
+        encrypted_char = chr((uni_val_plain + uni_val_key) % (alphabet_size))
         encrypted = encrypted + encrypted_char
 
 

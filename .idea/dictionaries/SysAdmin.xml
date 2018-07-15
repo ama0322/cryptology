@@ -1,11 +1,14 @@
 <component name="ProjectDictionaryState">
   <dictionary name="SysAdmin">
     <words>
+      <w>asymm</w>
       <w>bitsize</w>
       <w>blowfish</w>
       <w>bytearray</w>
       <w>ciphertext</w>
       <w>ngram</w>
+      <w>nokey</w>
+      <w>vigenere</w>
     </words>
   </dictionary>
 </component>

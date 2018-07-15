@@ -29,14 +29,14 @@ def execute(data, output_location):
 
 
 # The actual algorithm to encrypt using a vigenere cipher
-def encrypt(plaintext, key, char_set_size):
+def encrypt(plaintext, key, alphabet_size):
     """
     This function encrypts with a straight vigenere cipher. This uses the set of unicode values from 0 to
-    char_set_size - 1.
+    alphabet_size - 1.
 
     :param plaintext: (string) the plaintext to encrypt with
     :param key: (string) the string to encrypt with
-    :param char_set_size: (integer) the number of characters in the character set used
+    :param alphabet_size: (integer) the number of characters in the character set used
     :return: (string) the encrypted text
     """
 
@@ -58,7 +58,7 @@ def encrypt(plaintext, key, char_set_size):
 
 
         #  figure out the character by combining the two unicodes, the add it to the encrypted string
-        encrypted_char = chr((uni_val_plain + uni_val_key) % char_set_size)
+        encrypted_char = chr((uni_val_plain + uni_val_key) % alphabet_size)
         ciphertext = ciphertext + encrypted_char
 
 

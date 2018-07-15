@@ -27,14 +27,14 @@ def execute(data, output_location):
 
 
 # The actual algorithm to encrypt using a vigenere cipher(exponents instead of addition)
-def encrypt(plaintext, key, char_set_size):
+def encrypt(plaintext, key, alphabet_size):
     """
     This works the same as regular vigenere, but uses exponents instead of addition. When using unicode_plane0 or
     unicode, adjust to ignore the Surrogates.
 
     :param plaintext: (string) the data to be encrypted
     :param key: (string) the key to encrypt with
-    :param char_set_size: (int) the size of the character set to use
+    :param alphabet_size: (int) the size of the character set to use
     :return: (string) the encrypted data
     """
 
@@ -43,9 +43,9 @@ def encrypt(plaintext, key, char_set_size):
     key_index = 0 # This indicates the index of the key that the vigenere cipher is currently on
     counter = 0 # To print regular updates
 
-    # Adjust the char set size to exclude surrogates
-    if char_set_size > 256:
-        char_set_size -= misc.SURROGATE_BOUND_LENGTH
+    # Adjust the alphabet size to exclude surrogates
+    if alphabet_size > 256:
+        alphabet_size -= misc.SURROGATE_BOUND_LENGTH
 
 
 
@@ -68,13 +68,13 @@ def encrypt(plaintext, key, char_set_size):
 
 
         # Figure out the uni_val_cipher. Adjust it to be out of surrogate range
-        uni_val_encrypted = pow(uni_val_plain, uni_val_key, char_set_size)
+        uni_val_encrypted = pow(uni_val_plain, uni_val_key, alphabet_size)
 
         # Obtain the number of overlaps that come before this one(this uni_val_plain) and NOT including this one
         overlap_counter = 0;
         for i in range(0, 1114112):
             # If it is an overlap character
-            if pow(i, uni_val_key, char_set_size) == uni_val_encrypted and i != uni_val_plain:
+            if pow(i, uni_val_key, alphabet_size) == uni_val_encrypted and i != uni_val_plain:
                 overlap_counter += 1
                 continue
 

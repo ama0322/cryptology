@@ -23,14 +23,15 @@ decryption_set = {"blowfish", "rotation", "rotation_nokey", "rsa", "vigenere", "
 
 
 
-# The characters used for more classical type ciphers
-char_sets = ["unicode", "unicode_plane0", "ascii", "extended_ascii"]
+# The characters used for more classical-type ciphers
+alphabets = ["unicode", "unicode_plane0", "ascii", "extended_ascii"]
 
 # Encoding schemes (completely random bits to characters)
-char_encoding_schemes = ["base16", "base32", "base64", "base85", "ascii", "extended_ascii", "base4096"]
+binary_to_char_encoding_schemes = ["base16", "base32", "base64", "base85", "ascii", "extended_ascii", "base4096"]
+
 
 # Dictionary with character sets to the number of characters in them
-char_set_to_char_set_size = {
+char_set_to_size = {
     "base16": 16,
     "base32": 32,
     "base64": 64,
@@ -43,8 +44,8 @@ char_set_to_char_set_size = {
 }
 
 # Unprintable characters in unicode
-SURROGATE_LOWER_BOUND = 55296 # inclusive
-SURROGATE_UPPER_BOUND = 57343 # inclusive
+SURROGATE_LOWER_BOUND  = 55296              # inclusive
+SURROGATE_UPPER_BOUND  = 57343              # inclusive
 SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
 
 
@@ -53,12 +54,12 @@ SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
 
 
 # The general code to run during testing for encryption statistics (simple symmetric)
-general_encryption_code = \
+general_encryption_code =\
     r"""new_file.writelines([
                              "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                              "\n--------------- key ---------------\n" + encryption_key +
                              "\n------------------------------------------------------------------------------------" ,
-                             "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                             "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(ciphertext),
                              "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(encryption_time) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",                             
                              "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000)
@@ -66,10 +67,10 @@ general_encryption_code = \
     """
 
 # The general code to run during testing for decryption statistics (simple symmetric)
-general_decryption_code = \
+general_decryption_code =\
     r"""new_file.writelines([
                              "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
-                             "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                             "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(ciphertext),
                              "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
                              + " seconds with " + "{:,}".format(len(plaintext)) + " characters.",
                              "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + "x",                             
@@ -96,31 +97,31 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
     :param encrypt_or_decrypt:
     :return:
     """
-    alphabet = ""                         # Is char_set_size when using char sets. Otherwise, is name of encoding scheme
+    char_set = ""                         # Is alphabet_size when using alphabets. Otherwise, is name of encoding scheme
     key = ""                              # Fill the key here (if necessary)
 
 
 
     # Import the decryption version of module, and store the cipher information
     exec("from Cryptography.Decryption import " + module)
-    alphabet =    eval(module + ".alphabet")
+    char_set =    eval(module + ".char_set")
     cipher_type = eval(module + ".cipher_type")
     key_size =    eval(module + ".key_size")
 
-    # Figure out the alphabet to use, whether it be a character set, or an encoding scheme
-    if alphabet == char_sets:                                                # If cipher uses CHARACTER SETS
-        if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for char set
-            alphabet = char_set_to_char_set_size.get(_take_char_set(char_sets))
+    # Figure out the char_set to use, whether it be an alphabet, or an encoding scheme
+    if char_set == alphabets:                                                # If cipher uses ALPHABETS
+        if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for alphabet
+            char_set = char_set_to_size.get(_take_alphabet(alphabets))       # char_set becomes the size of alphabet
 
-        elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find char set automatically
-            alphabet = char_set_to_char_set_size.get(char_set_of_ciphertext(data))
+        elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find alphabet automatically
+            char_set = char_set_to_size.get(alphabet_of(data))               # char_set becomes the size of alphabet
 
-    elif alphabet == char_encoding_schemes:                                  # If cipher uses ENCODING SCHEMES
+    elif char_set == binary_to_char_encoding_schemes:                        # If cipher uses ENCODING SCHEMES
         if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for scheme
-            alphabet = _take_char_encoding_scheme(char_encoding_schemes)
+            char_set = _take_char_encoding_scheme(binary_to_char_encoding_schemes)
 
         elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find scheme automatically
-            alphabet = char_encoding_scheme_of(data)
+            char_set = char_encoding_scheme_of(data)
 
 
     # Figure out the correct key to use.
@@ -143,7 +144,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
             key = _get_general_key()
 
         elif key_size    ==    "multiple generated characters":
-            if encrypt_or_decrypt ==   "encrypt":                             # If encrypting, key is generated
+            if encrypt_or_decrypt ==   "encrypt":                      # If encrypting, key is generated
                 key = ""
             elif encrypt_or_decrypt == "decrypt":
                 key = _get_general_key()
@@ -151,16 +152,20 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
 
     elif cipher_type == "asymmetric":
         if encrypt_or_decrypt ==   "encrypt":
-            key = _get_public_key()
+            key = _get_public_key()                                    # _get_public_key() will get the user to enter a
+                                                                       # public key from some previous encryption or
+                                                                       # blank. If blank, encrypt() functions in
+                                                                       # Encryption will generate their own public and
+                                                                       # private keys.
         elif encrypt_or_decrypt == "decrypt":
-            key = _get_private_key()
+            key = _get_private_key()                                   # Private keys are required, unlike public ones
 
 
     # Everything gathered, now call the encrypt() or decrypt() function. Also, time it
-    start_time = time.time()                                                           # Start time
+    start_time = time.time()
     exec("from Cryptography." + package + " import " + module)                         # import correctly
-    output = eval(module + "." + encrypt_or_decrypt + "(data, key, alphabet)")         # algorithm call
-    elapsed_time = time.time() - start_time                                            # End time
+    output = eval(module + "." + encrypt_or_decrypt + "(data, key, char_set)")         # algorithm call
+    elapsed_time = time.time() - start_time
 
 
     # Open a new file to store the relevant information
@@ -168,13 +173,13 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
 
 
     # Print out relevant information for the encryption/decryption. At this point, output may be a tuple.
-    if type(output) is str:                                # If len 1, then is a symmetric cipher with USER-ENTERED keys
+    if type(output) is str:                                # If str, then is a symmetric cipher with USER-ENTERED keys
         if encrypt_or_decrypt == "encrypt":                # Handle for straightforward symmetric encryption
             info_file.writelines([
                 "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                 "\n--------------- key ---------------\n" + key
                     + "\n------------------------------------------------------------------------------------",
-                "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(output),
+                "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(output),
                 "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
                     + " seconds with " + "{:,}".format(len(data)) + " characters.",
                 "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str(
@@ -185,7 +190,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
                 "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                 "\n--------------- key ---------------\n" + key
                     + "\n------------------------------------------------------------------------------------",
-                "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(output),
+                "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(output),
                 "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
                     + " seconds with " + "{:,}".format(len(output)) + " characters.",
                 "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str(
@@ -193,13 +198,13 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
             ])
 
     elif len(output) == 2:                                 # If len 2, then is a symmetric cipher with GENERATED keys
-        if alphabet in char_sets:                          # Uses CHAR SETS
+        if char_set in alphabets:                          # Uses alphabetS
             if encrypt_or_decrypt == "encrypt":
                 info_file.writelines([
                     "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                     "\n--------------- generated key ---------------\n" + output[1] +
                     "\n------------------------------------------------------------------------------------",
-                    "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(output[0]),
+                    "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(output[0]),
                     "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
                         + " seconds with " + "{:,}".format(len(data)) + " characters.",
                     "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str(
@@ -212,13 +217,13 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
                         + str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
                         + output[1]
                         + "\n------------------------------------------------------------------------------------",
-                    "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(output[0]),
+                    "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(output[0]),
                     "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
                         + " seconds with " + "{:,}".format(len(output)) + " characters.",
                     "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str(
                         (elapsed_time / len(output)) * 1000000)
                 ])
-        elif alphabet in char_encoding_schemes:              # Uses ENCODING SCHEMES
+        elif char_set in binary_to_char_encoding_schemes:              # If uses ENCODING SCHEMES
             if encrypt_or_decrypt == "encrypt":
                 info_file.writelines([
                     "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
@@ -237,7 +242,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
                         eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
                         + output[1]
                         + "\n------------------------------------------------------------------------------------",
-                    "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + char_set_of_ciphertext(output[0]),
+                    "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(output[0]),
                     "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
                         + " seconds with " + "{:,}".format(len(output)) + " characters.",
                     "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str(
@@ -245,7 +250,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
                 ])
 
 
-    elif len(output) == 3:                                  # If len 3, then is an asym. cipher with GEN or USER keys
+    elif len(output) == 3:                                  # If len 3, then is an asymm. cipher with GEN'D or USER keys
         if encrypt_or_decrypt == "encrypt":
             if key == "":                                   # If user did not enter key, public and private are created
                 info_file.writelines([
@@ -262,7 +267,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
                     "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(elapsed_time)
                         + " seconds with " + "{:,}".format(len(data)) + " characters."
                 ])
-            elif key != "":                                 # Use entered public key. Print that out.
+            elif key != "":                                 # If user gave public key. Print that out.
                 info_file.writelines([
                     "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                     "\n--------------- public key "
@@ -305,7 +310,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
 
 # This function runs encryption and decryption and writes statistics about the process
 def testing_execute_encryption_and_decryption(encryption, decryption,
-                                              plaintext, plaintext_source, encryption_key, alphabet,
+                                              plaintext, plaintext_source, encryption_key, char_set,
                                               output_location,
                                               cipher_name,
                                               encryption_code, decryption_code
@@ -318,8 +323,8 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     :param plaintext:        (string)        the plaintext to perform encryption on
     :param plaintext_source: (string)        the location where the plaintext is found
     :param encryption_key:   (string)        the key to encrypt with
-    :param alphabet:         (string or int) either the encoding scheme or the size of the character set used
-    :param output_location:  (string)        the file to write statistics into
+    :param char_set:         (string or int) either the encoding scheme or the size of the alphabet used
+    :param output_location:  (string)        the file to write statistics into this
     :param cipher_name:      (string)        the formal name of the cipher that is used
     :param encryption_code:  (string)        the code to run that writes info about encryption
     :param decryption_code:  (string)        the code to run that writes info about decryption
@@ -339,7 +344,7 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     start_time = time.time()
     exec("from Cryptography.Encryption import " + encryption)          # Import module for encryption
     encryption_output = eval(encryption                                # Run the encryption
-                + ".encrypt(plaintext, encryption_key, alphabet)" )
+                + ".encrypt(plaintext, encryption_key, char_set)" )
     encryption_time = time.time() - start_time
     if type(encryption_output) is tuple:                               # If tuple, then ciphertext is in the first index
         ciphertext = encryption_output[0]
@@ -362,7 +367,7 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     start_time = time.time()
     exec("from Cryptography.Decryption import " + decryption)          # Import module for decryption
     decryption_output = eval(decryption                                # Run the actual decryption
-                 + ".decrypt(ciphertext, decryption_key, alphabet)" )
+                 + ".decrypt(ciphertext, decryption_key, char_set)" )
     decryption_time = time.time() - start_time
     if type(decryption_output) is tuple:                               # If tuple, then decrypted is in the first index
         decrypted = decryption_output[0]
@@ -410,7 +415,7 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
 
 ########## CHARACTER SET DETERMINATION ##########
 # This function figures out what character set the encrypted data is in. More reliable on longer texts
-def char_set_of_ciphertext(ciphertext):
+def alphabet_of(ciphertext):
     """
     This fucntion iterates through all the characters in the ciphertext and checks what sort of character set they are
     in. Note that this does not 100% guarantee that the plaintext was encrypted using this particular character
@@ -447,24 +452,24 @@ def char_encoding_scheme_of(text):
     :return: (string) the name of the character encoding scheme used
     """
 
-    # If characters only in base16 alphabet, return "base16"
+    # If characters only in base16 char_set, return "base16"
     if all(character in "0123456789ABCDEF" for character in text):
         return "base16"
 
-    # Test base32 alphabet
+    # Test base32 char_set
     if all(character in "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567" for character in text):
         return "base32"
 
-    # Test base64 alphabet
+    # Test base64 char_set
     if all(character in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" for character in text):
         return "base64"
 
-    # Test base85 alphabet
+    # Test base85 char_set
     if all(character in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~"
                         for character in text):
         return "base85"
 
-    # Test extended_ascii alphabet
+    # Test extended_ascii char_set
     if all( 0 <= ord(character) <256 for character in text):
         return "extended_ascii"
 
@@ -482,7 +487,7 @@ def int_to_chars_encoding_scheme_pad(number, encoding, key_size):
     statements to build up the encoded string declared in the beginning. It is returned all the way in the end.
 
     :param number: (int) the number to encode
-    :param encoding: (string) the type of character encoding to use (see dict char_encoding_schemes)
+    :param encoding: (string) the type of character encoding to use (see dict binary_to_char_encoding_schemes)
     :param key_size: (string) The size of the key in bits (and thus, the ciphertext). Pad 0's in front if necessary.
                               This should be divisible by 8.
     :return: (string) the encoded form.
@@ -574,7 +579,7 @@ def int_to_chars_encoding_scheme(number, encoding):
     statements to build up the encoded string declared in the beginning. It is returned all the way in the end.
 
     :param number: (int) the number to encode
-    :param encoding: (string) the type of character encoding to use (see dict char_encoding_schemes)
+    :param encoding: (string) the type of character encoding to use (see dict binary_to_char_encoding_schemes)
     :return: (string) the encoded form.
     """
 
@@ -1352,13 +1357,13 @@ def is_english_n_grams(data):
 
 ############################################################################################ HELPER FUNCTIONS ##########
 
-#  Returns char_set. This helper function asks the user for a character set.
-def _take_char_set(char_sets):
+#  Returns alphabet. This helper function asks the user for a character set.
+def _take_alphabet(alphabets):
     """
-    This functions asks the user to input a selection(a char set). THis selection is compared against char_sets
+    This functions asks the user to input a selection(a alphabet). THis selection is compared against alphabets
     in order to make sure that it is a valid selection
 
-    :param char_sets: (list) the list of all character sets
+    :param alphabets: (list) the list of all character sets
     :return: (string) the user-entered character set
     """
 
@@ -1377,14 +1382,14 @@ def _take_char_set(char_sets):
         # Print out the available character sets, then continue
         if selection[0:4] == "info":
             print("The available character sets are: ")
-            for x in range(0, len(char_sets)):
-                print("                                  " + char_sets[x])
+            for x in range(0, len(alphabets)):
+                print("                                  " + alphabets[x])
             continue
 
         # Test that the user entry is a valid character set. If so, exit out of the forever loop
-        for x in range(0, len(char_sets)):
+        for x in range(0, len(alphabets)):
             broken = False
-            if selection.rstrip() == char_sets[x]:
+            if selection.rstrip() == alphabets[x]:
                 broken = True
                 break
         if broken:
@@ -1397,18 +1402,18 @@ def _take_char_set(char_sets):
 
 
     # figure out the end_char of the character set
-    end_char = char_set_to_char_set_size.get(selection)
+    end_char = char_set_to_size.get(selection)
 
     return selection
 
 
 #  Returns char_encoding_scheme. This helper function asks the user for a character encoding scheme.
-def _take_char_encoding_scheme(char_encoding_schemes):
+def _take_char_encoding_scheme(binary_to_char_encoding_schemes):
     """
     This functions asks the user to input a selection(a char encoding scheme. The selection is compared against hte
     given list to ensure that it is a legitimate selection
 
-    :param char_encoding_schemes: (list) the list of all character encoding schemes
+    :param binary_to_char_encoding_schemes: (list) the list of all character encoding schemes
     :return: (string) the user-entered character set
     """
 
@@ -1427,14 +1432,14 @@ def _take_char_encoding_scheme(char_encoding_schemes):
         # Print out the available character sets, then continue
         if selection[0:4] == "info":
             print("The available character encoding schemes are: ")
-            for x in range(0, len(char_encoding_schemes)):
-                print("                                  " + char_encoding_schemes[x])
+            for x in range(0, len(binary_to_char_encoding_schemes)):
+                print("                                  " + binary_to_char_encoding_schemes[x])
             continue
 
         # Test that the user entry is a valid character set. If so, exit out of the forever loop
-        for x in range(0, len(char_encoding_schemes)):
+        for x in range(0, len(binary_to_char_encoding_schemes)):
             broken = False
-            if selection.rstrip() == char_encoding_schemes[x]:
+            if selection.rstrip() == binary_to_char_encoding_schemes[x]:
                 broken = True
                 break
         if broken:
@@ -1447,7 +1452,7 @@ def _take_char_encoding_scheme(char_encoding_schemes):
 
 
     # figure out the end_char of the character encoding scheme
-    end_char = char_set_to_char_set_size.get(selection)
+    end_char = char_set_to_size.get(selection)
 
     return selection
 

@@ -2,7 +2,7 @@ from Cryptography import misc
 import secrets # to generate random number to figure out the number of characters to read
 
 # Cipher info:
-alphabet = misc.char_encoding_schemes
+char_set = misc.binary_to_char_encoding_schemes
 cipher_type = "asymmetric"
 key_size = "multiple generated characters"
 
@@ -37,7 +37,7 @@ def execute(data, output_location):
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
-def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, char_set_size,
+def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, alphabet_size,
                     output_location):
     """
     Conducts an rsa decryption in testing mode
@@ -47,7 +47,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     :param plaintext_source: (string) the location where the plaintext is found
     :param plaintext: (string) the plaintext to encrypt
     :param encryption_key: (string) the key to use to encrypt
-    :param char_set_size: (int) the size of the character set to use
+    :param alphabet_size: (int) the size of the character set to use
     :param output_location: (string) the name of the file to write statistics in
     :return: None
     """
@@ -88,7 +88,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
                              "\n--------------- private key " + str(rsa.key_bits) 
                                 + "-bit ---------------\n" + private_key +
                              "\n------------------------------------------------------------------------------------" ,
-                             "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 character set 𝐢𝐬: " + char_set_of_ciphertext(ciphertext),
+                             "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 character set 𝐢𝐬: " + alphabet_of(ciphertext),
                              "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧: " + str(decryption_time) 
                                 + " seconds with " + "{:,}".format(len(plaintext)) + " characters and "
                                 + "{:,}".format(rsa.testing_execute.num_blocks) 
@@ -102,7 +102,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     """
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
-                                                            plaintext, plaintext_source, encryption_key, char_set_size,
+                                                            plaintext, plaintext_source, encryption_key, alphabet_size,
                                                             output_location,
                                                             "RSA",
                                                             encryption_code, decryption_code)

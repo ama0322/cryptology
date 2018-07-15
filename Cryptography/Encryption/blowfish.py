@@ -1,6 +1,8 @@
 from Cryptography import misc
-import secrets # To generate a random key
 
+
+import secrets # To generate a random key
+import copy    # To deepcopy
 
 
 
@@ -49,14 +51,16 @@ def encrypt(plaintext, key, encoding_scheme):
     """
 
 
+    plaintext         = plaintext          # The plaintext to encrypt
+    plaintext_blocks  = []                 # Build up the plaintext blocks here
+    ciphertext_blocks = []                 # Build up the ciphertext blocks here
+    ciphertext        = ""                 # Build up the ciphertext here
 
-    # Build up the ciphertext here
-    ciphertext = ""
 
 
-    # Blowfish encrypts text in 64-bit int blocks. Divide plaintext into hex, then int and save blocks.
-    plaintext = plaintext.encode("utf-8").hex()[2 : ]       # Remove leading "0x"
-    plaintext_blocks = []
+    # Blowfish encrypts text in 64-bit int blocks. Turn the plaintext into a hex string. Then, divide the string into 16
+    # digits each (64-bits each). Then, turn those hex blocks into int blocks.
+    plaintext = plaintext.encode("utf-8").hex()[2 : ]       # Convert to hex. Remove leading "0x"
     while plaintext != "":                                  # While there is still plaintext to process
         block = plaintext[0: 16]                            # 64 bits is equal to 16 hex digits
         plaintext_blocks.append(int(block, 16))             # Save integer value into plaintext_blocks list
@@ -65,11 +69,17 @@ def encrypt(plaintext, key, encoding_scheme):
                 + str(len(plaintext_blocks)) )
 
 
+    # Conduct the key schedule
+    from Cryptography.Decryption import blowfish                           # import decryption type to get array and box
+    p_array = copy.deepcopy(blowfish.p_array)
+    s_boxes = copy.deepcopy(blowfish.s_boxes)
+    key, p_array, s_boxes = run_key_schedule("", p_array, s_boxes)        # Run the key schedule
+
+
+
     # Encrypt the text
-    key, p_array, s_boxes = _run_key_schedule()                            # Run the key schedule in preparation
-    ciphertext_blocks = []                                                 # Build up ciphertext blocks here
     for i in range(len(plaintext_blocks)):
-        ciphertext_blocks.append(_blowfish_on_64_bits(plaintext_blocks[i], # Run blowfish on each plaintext block
+        ciphertext_blocks.append(blowfish_on_64_bits(plaintext_blocks[i], # Run blowfish on each plaintext block
                                                       p_array, s_boxes))
         print("Encrypting: " + str((i / len(plaintext_blocks)) * 100)      # Print updates
                 + "%")
@@ -80,8 +90,6 @@ def encrypt(plaintext, key, encoding_scheme):
                                                             for block in ciphertext_blocks]
     for block in ciphertext_blocks:                                                            # Concatenate blocks
         ciphertext += block
-
-
 
 
 
@@ -98,24 +106,31 @@ def encrypt(plaintext, key, encoding_scheme):
 
 
 # Returns: key, p_array, s_boxes. Key schedule setup for the algorithm.
-def _run_key_schedule():
+def run_key_schedule(key, p_array, s_boxes):
     """
     Key setup for blowfish
 
-    :return: (string) the generated key (in encoded form)
-    :return: (list) p_array to be used in encryption
-    :return: (list) s_boxes to be used in encryption
+    :param: key     (string) the key to use (during decryption mode)
+    :param: p_array (list) the p array
+    :param: s_boxes (2-d list) the s boxes
+    :return:        (string) the generated key (in encoded form)
+    :return:        (list) p_array to be used in encryption
+    :return:        (list) s_boxes to be used in encryption
     """
 
 
-    # Generate a key (generates random bits)
-    from Cryptography.Decryption import blowfish
-    return_key = secrets.randbits(blowfish.key_bits)                 # Generate num with right bitsize
-    key = return_key.to_bytes((blowfish.key_bits + 7)// 8, "big")    # Turn to bytearray (round up to nearest byte)
 
-    # First, copy over the base p_array and s_boxes from Decryption/blowfish.py
-    p_array = blowfish.p_array.deepcopy()
-    s_boxes = blowfish.s_boxes.deepcopy()
+    if key == "":                                                        # If key not given, generate a key
+        from Cryptography.Decryption import blowfish
+        return_key = secrets.randbits(blowfish.key_bits)                 # Generate num with right bitsize (rand bits)
+        key = return_key.to_bytes((blowfish.key_bits + 7) // 8, "big")   # Turn to bytearray (round up to nearest byte)
+
+    else:                                                                # Else key is given. Use that
+        from Cryptography.Decryption import blowfish
+        return_key = key
+        key = key.to_bytes((blowfish.key_bits + 7) // 8, "big")          # Turn to bytearray (round up to nearest byte)
+
+
 
     # Each entry in p_array is XOR'ed with key, in groups of 4 bytes (32 bits), and cycling the key.
     for p_index in range(0, len(p_array)):
@@ -133,17 +148,16 @@ def _run_key_schedule():
     # all of p_array and all of s_boxes have been replaced
     ciphertext = 0                                                         # Encryption process starts with all 0 block
     for i in range(0, len(p_array), 2):                                    # Start replacing p_array
-        ciphertext = _blowfish_on_64_bits(ciphertext, p_array, s_boxes)    # Encryption processes uses last ciphertext
+        ciphertext = blowfish_on_64_bits(ciphertext, p_array, s_boxes)    # Encryption processes uses last ciphertext
         p_array[i    ] = ciphertext & 0xFFFFFFFF00000000 >> 32             # Left half of ciphertext replaces curr entry
         p_array[i + 1] = ciphertext & 0x00000000FFFFFFFF                   # Right half replaces the entry right after
 
 
     for i in range(len(s_boxes)):                                          # s_boxes: Iterate through outer 4 objects
         for j in range(0, len(s_boxes[i]), 2):                             # For each group in s_boxes, replace in twos
-            ciphertext = _blowfish_on_64_bits(ciphertext, p_array, s_boxes)
-            p_array[i][j    ] = ciphertext & 0xFFFFFFFF00000000 >> 32
-            p_array[i][j + 1] = ciphertext & 0x00000000FFFFFFFF >> 0
-
+            ciphertext = blowfish_on_64_bits(ciphertext, p_array, s_boxes)
+            s_boxes[i][j    ] = ciphertext & 0xFFFFFFFF00000000 >> 32
+            s_boxes[i][j + 1] = ciphertext & 0x00000000FFFFFFFF
 
 
 
@@ -151,13 +165,17 @@ def _run_key_schedule():
 
 
 
+
+
 # Returns: encrypted_block. The actual algorithm run on a 64-bit integer input.
-def _blowfish_on_64_bits(input, p_array, s_boxes):
+def blowfish_on_64_bits(input, p_array, s_boxes):
     """
     This is algorithm that runs on the 64-bit integer blocks
 
-    :param input: (int) the 64-bit block of plaintext to encrypt
-    :return: (int) the encrypted result
+    :param input:   (int) the 64-bit block of plaintext to encrypt
+    :param p_array: (list) the p array
+    :param s_boxes: (2-d list) the s boxes
+    :return:        (int) the encrypted result
     """
 
     # F-function to be used during encryption

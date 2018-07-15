@@ -1,7 +1,7 @@
 from Cryptography import misc
 
 # Cipher info:
-alphabet = misc.char_sets
+char_set = misc.alphabets
 cipher_type = "symmetric"
 key_size = "multiple characters"
 
@@ -32,7 +32,7 @@ def execute(data, output_location):
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
-def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, char_set_size,
+def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, alphabet_size,
                     output_location):
     """
     Conducts a vigenere decryption in testing mode
@@ -42,7 +42,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     :param plaintext_source: (string) the location where the plaintext is found
     :param plaintext: (string) the plaintext to encrypt
     :param encryption_key: (string) the key to use to encrypt
-    :param char_set_size: (int) the size of the character set to use
+    :param alphabet_size: (int) the size of the character set to use
     :param output_location: (string) the name of the file to write statistics in
     :return: None
     """
@@ -55,7 +55,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     decryption_code = misc.general_decryption_code
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
-                                                            plaintext, plaintext_source, encryption_key, char_set_size,
+                                                            plaintext, plaintext_source, encryption_key, alphabet_size,
                                                             output_location,
                                                             "Vigenère",
                                                             encryption_code, decryption_code)
@@ -67,13 +67,13 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
 
 
 # Returns string. This is the actual algorithm to decrypt
-def decrypt(ciphertext, key, char_set_size):
+def decrypt(ciphertext, key, alphabet_size):
     """
     This function decrypts with vigenere. Instead of adding, subtract
 
     :param ciphertext: (string) the ciphertext to decrypt
     :param key: (string) the key to decrypt with
-    :param char_set_size: (integer) the size of the character set that is used
+    :param alphabet_size: (integer) the size of the character set that is used
     :return: (string) the deciphered text
     """
 
@@ -95,7 +95,7 @@ def decrypt(ciphertext, key, char_set_size):
 
 
         #  figure out the character by subtracting the two unicodes, the add it to the decrypted string
-        decrypted_char = chr(   (uni_val_cipher - uni_val_key) % char_set_size   )
+        decrypted_char = chr(   (uni_val_cipher - uni_val_key) % alphabet_size   )
         plaintext += decrypted_char
 
 

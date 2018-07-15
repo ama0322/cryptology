@@ -1,7 +1,7 @@
 from Cryptography import misc
 
 # Cipher info:
-alphabet = misc.char_sets
+char_set = misc.alphabets
 cipher_type = "symmetric"
 key_size = "multiple characters"
 
@@ -29,7 +29,7 @@ def execute(data, output_location):
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
-def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, char_set_size,
+def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, alphabet_size,
                     output_location):
     """
     Conducts a vigenere_exponential decryption in testing mode
@@ -39,7 +39,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     :param plaintext_source: (string) the location where the plaintext is found
     :param plaintext: (string) the plaintext to encrypt
     :param encryption_key: (string) the key to use to encrypt
-    :param char_set_size: (int) the size of the character set to use
+    :param alphabet_size: (int) the size of the character set to use
     :param output_location: (string) the name of the file to write statistics in
     :return: None
     """
@@ -52,7 +52,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     decryption_code = misc.general_decryption_code
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
-                                                            plaintext, plaintext_source, encryption_key, char_set_size,
+                                                            plaintext, plaintext_source, encryption_key, alphabet_size,
                                                             output_location,
                                                             "Vigenère using Modular Exponentiation",
                                                             encryption_code, decryption_code)
@@ -62,13 +62,13 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
 
 
 # Returns string. This is the actual algorithm to decrypt
-def decrypt(ciphertext, key, char_set_size):
+def decrypt(ciphertext, key, alphabet_size):
     """
     This function decrypts with vigenere. Instead of exponents, take the nth root.
 
     :param ciphertext: (string) the ciphertext to decrypt
     :param key: (string) the string to decrypt with
-    :param char_set_size: (int) the size of the character set used
+    :param alphabet_size: (int) the size of the character set used
     :return: (string) the deciphered text
     """
 
@@ -77,9 +77,9 @@ def decrypt(ciphertext, key, char_set_size):
     char_counter = 0
     num_chars = ciphertext.count(" ")
 
-    # Adjust the char set size to exclude surrogates (if necessary)
-    if char_set_size > 256:
-        char_set_size -= misc.SURROGATE_BOUND_LENGTH
+    # Adjust the alphabet size to exclude surrogates (if necessary)
+    if alphabet_size > 256:
+        alphabet_size -= misc.SURROGATE_BOUND_LENGTH
 
 
 
@@ -115,11 +115,11 @@ def decrypt(ciphertext, key, char_set_size):
         plain_char = "\0"
         for i in range(0, 1114112):
             # If overlap(count has not yet reached number)
-            if pow(i, uni_val_key, char_set_size) == uni_val_cipher and count != number:
+            if pow(i, uni_val_key, alphabet_size) == uni_val_cipher and count != number:
                 count += 1
                 continue
             # ELIF no more overlaps(overlap matches number)
-            elif pow(i, uni_val_key, char_set_size) == uni_val_cipher and count == number:
+            elif pow(i, uni_val_key, alphabet_size) == uni_val_cipher and count == number:
                 plain_char = chr(i)
                 break
 
