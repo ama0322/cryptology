@@ -1,16 +1,20 @@
 from Cryptography import misc
 
-
+import copy # Used to deepcopy
 
 
 # Cipher info:
-alphabet = misc.char_encoding_schemes
+char_set = misc.binary_to_char_encoding_schemes
 cipher_type = "symmetric"
-key_size = "multiple generated characters"
-key_bits = 448                                 # 32-448
+key_size = "multiple generated characters"           # encrypt() generates its own key
+
+
+# Cipher settings:
+key_bits = 448                                       # 32-448 bits long
 
 
 
+# Cipher resources:
 p_array = [
 			0x243F6A88, 0x85A308D3, 0x13198A2E, 0x03707344,
 			0xA4093822, 0x299F31D0, 0x082EFA98, 0xEC4E6C89,
@@ -285,4 +289,118 @@ s_boxes = [
 				0xB74E6132, 0xCE77E25B, 0x578FDFE3, 0x3AC372E6
 			]
 		]
+
+
+
+
+# Decrypt using user-entered info. Write relevant information and return decrypted text for cryptography_runner
+def execute(data, output_location):
+    """
+    This function decrypts data using a user-provided key.
+
+    :param data: (string) the data to be decrypted
+    :param output_location: (string) the location to write out relevant info and statistics
+    :return: (string) the decrypted data
+    """
+
+
+    # Decrypt the ciphertext. Write the plaintext and info to a file
+    misc.execute_encryption_or_decryption(data, output_location, "Decryption", "blowfish", "decrypt")
+
+
+
+
+# Figure out the encryption and decryption code. Pass info to misc' testing_execute function
+def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, alphabet_size,
+                    output_location):
+    """
+    Conducts a rotation decryption in testing mode
+
+    :param encryption: (string) the name of the encryption cipher to use
+    :param decryption: (string) the name of the decryption cipher to use (this)
+    :param plaintext_source: (string) the location where the plaintext is found
+    :param plaintext: (string) the plaintext to encrypt
+    :param encryption_key: (string) the key to use to encrypt
+    :param alphabet_size: (int) the size of the character set to use
+    :param output_location: (string) the name of the file to write statistics in
+    :return: None
+    """
+
+
+    # Encryption code
+    encryption_code = misc.general_encryption_code
+
+    # Decryption code
+    decryption_code = misc.general_decryption_code
+
+    misc.testing_execute_encryption_and_decryption(encryption, decryption,
+                                                            plaintext, plaintext_source, encryption_key, alphabet_size,
+                                                            output_location,
+                                                            "Blowfish",
+                                                            encryption_code, decryption_code)
+
+
+
+
+
+# Returns string. This is the actual algorithm to decrypt
+def decrypt(ciphertext, key, encoding):
+    """
+    This function decrypts using blowfish cipher. Process is almost exactly the same, but the p_array is used in reverse
+    order
+
+    :param ciphertext: (string )the text to be encrypted
+    :param key:        (string) the key with which the encryption is done
+    :param encoding:   (string) Name of the binary-to-char encoding scheme
+    :return:           (string) the encrypted text
+    """
+
+
+    ciphertext        = ciphertext          # The ciphertext to decrypt
+    ciphertext_blocks = []                  # Store ciphertext_blocks here
+    plaintext_blocks  = []                  # Store plaintext_blocks here
+    plaintext         = ""                  # Create plaintext here
+
+
+
+    # Divide the ciphertext into 64-bit int blocks.
+    sample_64_bits = misc.int_to_chars_encoding_scheme(0xFFFFFFFF00000000, encoding)  # Turn 64 bits to chars w/ encode
+    chars_to_read = len(sample_64_bits)                                               # Save how many chars to read
+    while ciphertext != "":                                                           # Read ciphertext until done
+        ciphertext_blocks.append(ciphertext[0 : chars_to_read])                       # Save block
+        ciphertext = ciphertext[ chars_to_read : ]                                    # Cut out what was just read
+    ciphertext_blocks = [misc.chars_to_int_decoding_scheme(block, encoding)           # Turn chars to int
+                         for block in ciphertext_blocks]
+
+
+    # Conduct the key schedule. Exactly the same as was done in Encryption
+    from Cryptography.Encryption import blowfish                            # import Encryption's blowfish for schedule
+    global p_array                                                          # Get original p_array
+    p_array_schedule = copy.deepcopy(p_array)
+    global s_boxes
+    s_boxes_schedule = copy.deepcopy(s_boxes)                               # Get original s boxes
+    key = misc.chars_to_int_decoding_scheme(key, encoding)                  # Decode the char key to int
+    key, p_array_schedule, s_boxes_schedule = blowfish.run_key_schedule(key, p_array_schedule, s_boxes_schedule)
+
+
+    # Decrypt the text (on each 64-bit block)
+    p_array_schedule.reverse()                          # Reverse p_array (because decryption uses p_array reversed)
+    plaintext_blocks = [blowfish.blowfish_on_64_bits(block, p_array_schedule, s_boxes_schedule)
+                        for block in ciphertext_blocks]
+
+
+
+    # Convert the decrypted int blocks into utf-8 text
+    plaintext_blocks = [hex(block)[2:]                         # Convert int blocks to hex blocks (remove lead "0x")
+                        for block in plaintext_blocks]
+    plaintext_blocks = [ ((len(block) % 16) * "0" + block)     # Pad with 0's up to 16 digits
+                        for block in plaintext_blocks]
+    for block in plaintext_blocks:                             # Concatenate all the blocks
+        plaintext += block
+    plaintext = bytearray.fromhex(plaintext).decode("utf-8")   # Read hex as utf-8
+
+
+
+    return plaintext
+
 
