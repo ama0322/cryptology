@@ -366,7 +366,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
                                  "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " 
                                     + str(decryption_time/(encryption_time 
                                     - blowfish.testing_execute.time_for_key_schedule)) 
-                                    + "x",                                     
+                                    + " (times)",                                     
                                  "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000)
                                     + " (μs)"
                                 ])
@@ -388,7 +388,7 @@ def decrypt(ciphertext, key, encoding):
     This function decrypts using blowfish cipher. Process is almost exactly the same, but the p_array is used in reverse
     order
 
-    :param ciphertext: (string )the text to be encrypted
+    :param ciphertext: (string) the text to be encrypted
     :param key:        (string) the key with which the encryption is done
     :param encoding:   (string) Name of the binary-to-char encoding scheme
     :return:           (string) the encrypted text
@@ -429,15 +429,15 @@ def decrypt(ciphertext, key, encoding):
                         for block in ciphertext_blocks]
 
 
-
     # Convert the decrypted int blocks into utf-8 text
-    plaintext_blocks = [hex(block)[2:]                         # Convert int blocks to hex blocks (remove lead "0x")
+    plaintext_blocks = [hex(block)[2:]                          # Convert int blocks to hex blocks (remove lead "0x")
                         for block in plaintext_blocks]
-    plaintext_blocks = [ ((len(block) % 16) * "0" + block)     # Pad with 0's up to 16 digits
-                        for block in plaintext_blocks]
-    for block in plaintext_blocks:                             # Concatenate all the blocks
+    for i in range(1, len(plaintext_blocks)):                   # Pad with 0's up to 16 digits (except 1st, the 0 index)
+        plaintext_blocks[i] = (16 - len(plaintext_blocks[i])) \
+                              * "0" + plaintext_blocks[i]
+    for block in plaintext_blocks:                              # Concatenate all the blocks
         plaintext += block
-    plaintext = bytearray.fromhex(plaintext).decode("utf-8")   # Read hex as utf-8
+    plaintext = bytearray.fromhex(plaintext).decode("utf-8")    # Read hex as utf-8
 
 
 

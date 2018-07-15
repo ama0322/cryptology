@@ -60,13 +60,13 @@ def encrypt(plaintext, key, encoding_scheme):
 
     # Blowfish encrypts text in 64-bit int blocks. Turn the plaintext into a hex string. Then, divide the string into 16
     # digits each (64-bits each). Then, turn those hex blocks into int blocks.
-    plaintext = plaintext.encode("utf-8").hex()[2 : ]       # Convert to hex. Remove leading "0x"
+    plaintext = plaintext.encode("utf-8").hex()            # Convert to hex. Remove leading "0x"
+
+
     while plaintext != "":                                  # While there is still plaintext to process
-        block = plaintext[0: 16]                            # 64 bits is equal to 16 hex digits
-        plaintext_blocks.append(int(block, 16))             # Save integer value into plaintext_blocks list
-        plaintext = plaintext[16:]                          # Update for next iteration
-
-
+        block = plaintext[-16:]                             # 64 bits is equal to 16 hex digits (read from end)
+        plaintext_blocks.insert(0, (int(block, 16)))        # Save int value into plaintext_blocks
+        plaintext = plaintext[:-16]                         # Cut out the portion that was just read
 
 
 
