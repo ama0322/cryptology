@@ -63,17 +63,108 @@ def usage():
 # Parse user input and return relevant information
 def parse_user_input():
     """
-    This function parses user input and returns relevant information
+    This function parses user input and returns relevant information.
+    User input is unix-like, with: command [options] (argument) <optional argument>
+        encrypt (cipher) (plaintext_file_path*) <output_file_path>
+        decrypt (cipher) (ciphertext_file_path) <output_file_path>
+        test    [options] <cipher>
+        help
+        database TODO
 
-    :return: cipher - (string) stroes the cipher type that the user wants to use
-    :return: encrypt - (boolean) decides whether encryption or decryption is used
-    :return: data - (string) the information to be encrypted/decrypted
-    :return: output_location - (string) the output location of the generated file
+    * File paths with spaces in the name must be escaped with "\ ".
+    So the path:     Resources/Library/Space File.txt
+    is typed out as: Resources/Library/Space\ File.txt
+
+    :return: cipher           (string) stores the cipher type that the user wants to use
+    :return: encrypt          (boolean) decides whether encryption or decryption is used
+    :return: data             (string) the information to be encrypted/decrypted
+    :return: output_location  (string) the output location of the generated file
     """
 
+    # Variables to return
+    cipher          = ""      # The name of the cipher to use
+    encrypt_mode    = True    # Whether I am in encrypt mode or in decrypt mode
+    data            = ""      # The string of the input. Either plaintext or ciphertext
+    output_location = ""      # The file path to store the output of encryption/decryption
 
 
 
+
+
+    statement = input("Enter statement: ")                # Obtain the user input
+
+
+    # While the statement is invalid, keep prompting the user. If valid, break from the loop
+    while True:
+
+
+        # Read command (the first word)
+        if statement.find(" ") != -1:                                      # If multiple words
+            command = statement[0 : statement.find(" ")]
+        else:
+            command = statement                                            # Else, statement is the word
+
+        # Handle command: help
+        if command == "help":
+
+            # Execute help. So print out helpful information and return a prompt.
+            def handle_help():
+                """
+                Prints out testing information for the user to use, returns the prompt to use
+
+                :return: (string) The prompt given to the user
+                """
+                usage()
+                return "Enter statement: "
+            statement = input(handle_help())                            # Obtain user input for next iteration
+            continue                                                    # Jump to next iteration
+
+
+        # Handle command: test <cipher>
+        if command == "test":
+
+            # Execute test command. Parse any optional arguments and enter testing mode. When exiting testing mode, ask
+            # the user to enter another statement
+            def handle_test(statement):
+                """
+                Enters the asked for testing mode. When testing is done, asks the user for another statement.
+
+                :return: (string) The prompt given to the user
+                """
+
+                prompt = ""                                                        # The prompt to return
+
+                # Split statement into words separated by spaces
+                statement = statement.split(" ")
+
+                # There should only be two arguments total (the command + option) or (the command + optional_arg). If
+                # there are more arguments than two, then return error
+                if len(statement) > 2:
+                    extra_args = " ".join(statement)                                                  # List to string
+                    extra_args = extra_args[extra_args.find(" ", extra_args.find(" ") + 1) + 1:]      # After 2nd space
+                    return "Extra argument (" + extra_args + ") given! Enter another statement: "
+
+                # If no optional arguments or flags provided, enter testing mode with no cipher provided
+                if len(statement) == 1:
+                    test.manual_testing("")
+                    return "Manual testing done! Enter another statement: "
+
+                # Read for the "-a" flag for automated testing
+                if statement[1] == "-a":
+                    test.automated_testing()
+                    return "Automated testing done! Enter another statement: "
+
+                # If a Decryption cipher is provided, enter manual testing and run the test on that cipher
+                else:
+                    test.manual_testing(statement[1])
+                    return "Manual testing done! Enter another statement: "
+            statement = input(handle_test(statement))                   # Obtain user input for next iteration
+            continue                                                    # Jump to the next iteration
+
+
+
+
+    """
     statement = input("Enter statement: ") # obtain user input
 
     # While the statement is invalid, keep prompting the user. If valid, break from loop
@@ -304,6 +395,8 @@ def parse_user_input():
     # End of while loop to take user command
 
     return cipher, encrypt, data, output_location
+    """
+
 
 
 # Print data and the output location
