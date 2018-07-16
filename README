@@ -28,20 +28,19 @@ EXAMPLES
     This will encrypt the word "qwertyuiop qwertyuiop" using a vigenere cipher. A default name and location is provided
     for the generated file
 
-"-e Library/plain.txt vigenere"
-    This will encrypt plain.txt, which is located in Library, using a vigenere cipher. A default name and location is
-    provided for the generated file
+"-e Resources/Library/plain.txt vigenere" (or "-e plain.txt vigenere")
+    This will encrypt plain.txt, which is located in Resources/Library, using a vigenere cipher. A default name and
+    location is provided for the generated file
 
-"-e Library/plain.txt vigenere Encrypted/vigenere_encrypted_plain.txt"
+
+"-e plain.txt vigenere Resources/Files_Encrypted/vigenere_encrypted_plain.txt"
     This will encrypt plain.txt, which is located in Library, using a vigenere cipher. In addition, the name and
     location for the generated file is created.
 
-"-d Encrypted/unknown_encrypted_plain.txt"
-    This will attempt to decrypt unknown_encrypted_plain.txt using all methods. Use this when the method of encryption
-    is unknown
 
-"-d Encrypted/vigenere_encrypted_plain.txt"
-    This will decrypt plain.txt using a vigenere cipher, with or without a key. Further instructions will be provided.
+"-d encrypted.txt vigenere"
+    This will decrypt encrypted.txt using a vigenere cipher, with or without a key. Further instructions will be
+    provided.
 
 
 
