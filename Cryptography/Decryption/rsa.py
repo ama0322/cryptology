@@ -12,7 +12,7 @@ key_size = "multiple generated characters"
 
 
 # Cipher settings:
-key_bits = 2048
+key_bits = 1024
 
 
 

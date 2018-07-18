@@ -88,7 +88,7 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
                                                             plaintext, plaintext_source, encryption_key, alphabet_size,
                                                             output_location,
-                                                            "Rotation",
+                                                            "Rotation without Key",
                                                             encryption_code, decryption_code)
 
 
