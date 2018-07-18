@@ -1,10 +1,12 @@
 from Cryptography import misc
 
+
+
 # Cipher info:
-char_set = misc.alphabets
+char_set = misc.ALPHABETS
 cipher_type = "symmetric"
 key_size = "single character"
-
+ciphertext_alphabet_restricted = True
 
 
 
@@ -47,10 +49,10 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
 
 
     # Encryption code
-    encryption_code = misc.general_encryption_code
+    encryption_code = misc.GENERAL_ENCRYPTION_CODE
 
     # Decryption code
-    decryption_code = misc.general_decryption_code
+    decryption_code = misc.GENERAL_DECRYPTION_CODE
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
                                                             plaintext, plaintext_source, encryption_key, alphabet_size,

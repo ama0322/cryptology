@@ -11,10 +11,10 @@ import codecs # For hex string to utf-8 encoding
 ################################################################################################### RESOURCES ##########
 
 # Sets containing available options for encryption/decryption. Add to this.
-encryption_set = {"blowfish", "rotation", "rsa", "vigenere", "vigenere_exponential",
+ENCRYPTION_SET = {"blowfish", "rotation", "rsa", "vigenere", "vigenere_exponential",
                   "vigenere_multiplicative"}
 
-decryption_set = {"blowfish", "rotation", "rotation_nokey", "rsa", "vigenere", "vigenere_exponential",
+DECRYPTION_SET = {"blowfish", "rotation", "rotation_nokey", "rsa", "vigenere", "vigenere_exponential",
                   "vigenere_multiplicative",}
 
 
@@ -22,16 +22,15 @@ decryption_set = {"blowfish", "rotation", "rotation_nokey", "rsa", "vigenere", "
 
 
 
-
 # The characters used for more classical-type ciphers
-alphabets = ["unicode", "unicode_plane0", "ascii", "extended_ascii"]
+ALPHABETS = ["unicode", "unicode_plane0", "ascii", "extended_ascii"]
 
 # Encoding schemes (completely random bits to characters)
-binary_to_char_encoding_schemes = ["base16", "base32", "base64", "base85", "ascii", "extended_ascii", "base4096"]
+BINARY_TO_CHAR_ENCODING_SCHEMES = ["base16", "base32", "base64", "base85", "ascii", "extended_ascii", "base4096"]
 
 
 # Dictionary with character sets to the number of characters in them
-char_set_to_size = {
+CHAR_SET_TO_SIZE = {
     "base16": 16,
     "base32": 32,
     "base64": 64,
@@ -54,7 +53,7 @@ SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
 
 
 # The general code to run during testing for encryption statistics (simple symmetric)
-general_encryption_code =\
+GENERAL_ENCRYPTION_CODE =\
     r"""new_file.writelines([
                              "\n\n\n𝓔𝓝𝓒𝓡𝓨𝓟𝓣𝓘𝓞𝓝",
                              "\n--------------- 𝐊𝐄𝐘 ---------------\n" + encryption_key 
@@ -69,7 +68,7 @@ general_encryption_code =\
     """
 
 # The general code to run during testing for decryption statistics (simple symmetric)
-general_decryption_code =\
+GENERAL_DECRYPTION_CODE =\
     r"""new_file.writelines([
                              "\n\n\n𝓓𝓔𝓒𝓡𝓨𝓟𝓣𝓘𝓞𝓝",
                              "\n𝐓𝐇𝐄 𝐏𝐋𝐀𝐈𝐍𝐓𝐄𝐗𝐓'𝐒 𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑 𝐒𝐄𝐓 𝐈𝐒: " + alphabet_of(plaintext),
@@ -100,7 +99,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
     :param encrypt_or_decrypt:
     :return:
     """
-    char_set = ""                         # Is alphabet_size when using alphabets. Otherwise, is name of encoding scheme
+    char_set = ""                         # Is alphabet_size when using ALPHABETS. Otherwise, is name of encoding scheme
     key = ""                              # Fill the key here (if necessary)
 
 
@@ -112,16 +111,16 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
     key_size =    eval(module + ".key_size")
 
     # Figure out the char_set to use, whether it be an alphabet, or an encoding scheme
-    if char_set == alphabets:                                                # If cipher uses ALPHABETS
+    if char_set == ALPHABETS:                                                # If cipher uses ALPHABETS
         if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for alphabet
-            char_set = char_set_to_size.get(_take_alphabet(alphabets))       # char_set becomes the size of alphabet
+            char_set = CHAR_SET_TO_SIZE.get(_take_alphabet(ALPHABETS))       # char_set becomes the size of alphabet
 
         elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find alphabet automatically
-            char_set = char_set_to_size.get(alphabet_of(data))               # char_set becomes the size of alphabet
+            char_set = CHAR_SET_TO_SIZE.get(alphabet_of(data))               # char_set becomes the size of alphabet
 
-    elif char_set == binary_to_char_encoding_schemes:                        # If cipher uses ENCODING SCHEMES
+    elif char_set == BINARY_TO_CHAR_ENCODING_SCHEMES:                        # If cipher uses ENCODING SCHEMES
         if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for scheme
-            char_set = _take_char_encoding_scheme(binary_to_char_encoding_schemes)
+            char_set = _take_char_encoding_scheme(BINARY_TO_CHAR_ENCODING_SCHEMES)
 
         elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find scheme automatically
             char_set = char_encoding_scheme_of(data)
@@ -201,7 +200,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
             ])
 
     elif len(output) == 2:                                 # If len 2, then is a symmetric cipher with GENERATED keys
-        if char_set in alphabets:                          # Uses alphabetS
+        if char_set in ALPHABETS:                          # Uses ALPHABETS
             if encrypt_or_decrypt == "encrypt":
                 info_file.writelines([
                     "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
@@ -226,7 +225,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
                     "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str(
                         (elapsed_time / len(output)) * 1000000)
                 ])
-        elif char_set in binary_to_char_encoding_schemes:              # If uses ENCODING SCHEMES
+        elif char_set in BINARY_TO_CHAR_ENCODING_SCHEMES:              # If uses ENCODING SCHEMES
             if encrypt_or_decrypt == "encrypt":
                 info_file.writelines([
                     "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
@@ -336,12 +335,32 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
 
 
     # Relevant info from encryption
-    ciphertext = ""
-    public_key = ""                                                    # May not be used
-    private_key = ""                                                   # May not be used
-    generated_key = ""                                                 # Symmetric generated keys. May not be used
+    ciphertext     = ""                                                # Build ciphertext here
+    public_key     = ""                                                # May not be used
+    private_key    = ""                                                # May not be used
+    generated_key  = ""                                                # Symmetric generated keys. May not be used
     decryption_key = encryption_key                                    # The key used to decrypt. Symmetric by default
 
+
+    # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext alphabet is
+    # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
+    # So switch to use the plaintext's alphabet for encryption, and inform the user
+    exec("from Cryptography.Decryption import " + decryption)
+    try:
+        restrict = eval(decryption                                     # Ciphertext alphabet restricted
+                        + ".ciphertext_alphabet_restricted")
+        if restrict == True:                                           # Restrict by using plaintext's alphabet.
+            alphabet = alphabet_of(plaintext)
+            char_set = CHAR_SET_TO_SIZE.get(alphabet)
+            print("The chosen alphabet for encryption is"
+                    + " insufficient for the alphabet that"
+                    + " the plaintext's alphabet is in."
+                    + "\nTherefore, the alphabet for"
+                    + " encryption is switched to: "
+                    + alphabet)
+
+    except Exception:                                                  # Ciphertext alphabet not restricted. Do nothing
+        pass
 
     # Execute the encryption, and store the output
     start_time = time.time()
@@ -349,7 +368,7 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     encryption_output = eval(encryption                                # Run the encryption
                 + ".encrypt(plaintext, encryption_key, char_set)" )
     encryption_time = time.time() - start_time
-    if type(encryption_output) is tuple:                               # If tuple, then ciphertext is in the first index
+    if type(encryption_output) is tuple:                               # If tuple, then ciphertext is in 1st index
         ciphertext = encryption_output[0]
 
         if len(encryption_output) == 3:                                # Len 3 indicates asymmetric keys generated
@@ -490,7 +509,7 @@ def int_to_chars_encoding_scheme_pad(number, encoding, key_size):
     statements to build up the encoded string declared in the beginning. It is returned all the way in the end.
 
     :param number: (int) the number to encode
-    :param encoding: (string) the type of character encoding to use (see dict binary_to_char_encoding_schemes)
+    :param encoding: (string) the type of character encoding to use (see dict BINARY_TO_CHAR_ENCODING_SCHEMES)
     :param key_size: (string) The size of the key in bits (and thus, the ciphertext). Pad 0's in front if necessary.
                               This should be divisible by 8.
     :return: (string) the encoded form.
@@ -582,7 +601,7 @@ def int_to_chars_encoding_scheme(number, encoding):
     statements to build up the encoded string declared in the beginning. It is returned all the way in the end.
 
     :param number: (int) the number to encode
-    :param encoding: (string) the type of character encoding to use (see dict binary_to_char_encoding_schemes)
+    :param encoding: (string) the type of character encoding to use (see dict BINARY_TO_CHAR_ENCODING_SCHEMES)
     :return: (string) the encoded form.
     """
 
@@ -1361,12 +1380,12 @@ def is_english_n_grams(data):
 ############################################################################################ HELPER FUNCTIONS ##########
 
 #  Returns alphabet. This helper function asks the user for a character set.
-def _take_alphabet(alphabets):
+def _take_alphabet(ALPHABETS):
     """
-    This functions asks the user to input a selection(a alphabet). THis selection is compared against alphabets
+    This functions asks the user to input a selection(a alphabet). THis selection is compared against ALPHABETS
     in order to make sure that it is a valid selection
 
-    :param alphabets: (list) the list of all character sets
+    :param ALPHABETS: (list) the list of all character sets
     :return: (string) the user-entered character set
     """
 
@@ -1385,14 +1404,14 @@ def _take_alphabet(alphabets):
         # Print out the available character sets, then continue
         if selection[0:4] == "info":
             print("The available character sets are: ")
-            for x in range(0, len(alphabets)):
-                print("                                  " + alphabets[x])
+            for x in range(0, len(ALPHABETS)):
+                print("                                  " + ALPHABETS[x])
             continue
 
         # Test that the user entry is a valid character set. If so, exit out of the forever loop
-        for x in range(0, len(alphabets)):
+        for x in range(0, len(ALPHABETS)):
             broken = False
-            if selection.rstrip() == alphabets[x]:
+            if selection.rstrip() == ALPHABETS[x]:
                 broken = True
                 break
         if broken:
@@ -1405,18 +1424,18 @@ def _take_alphabet(alphabets):
 
 
     # figure out the end_char of the character set
-    end_char = char_set_to_size.get(selection)
+    end_char = CHAR_SET_TO_SIZE.get(selection)
 
     return selection
 
 
 #  Returns char_encoding_scheme. This helper function asks the user for a character encoding scheme.
-def _take_char_encoding_scheme(binary_to_char_encoding_schemes):
+def _take_char_encoding_scheme(BINARY_TO_CHAR_ENCODING_SCHEMES):
     """
     This functions asks the user to input a selection(a char encoding scheme. The selection is compared against hte
     given list to ensure that it is a legitimate selection
 
-    :param binary_to_char_encoding_schemes: (list) the list of all character encoding schemes
+    :param BINARY_TO_CHAR_ENCODING_SCHEMES: (list) the list of all character encoding schemes
     :return: (string) the user-entered character set
     """
 
@@ -1435,14 +1454,14 @@ def _take_char_encoding_scheme(binary_to_char_encoding_schemes):
         # Print out the available character sets, then continue
         if selection[0:4] == "info":
             print("The available character encoding schemes are: ")
-            for x in range(0, len(binary_to_char_encoding_schemes)):
-                print("                                  " + binary_to_char_encoding_schemes[x])
+            for x in range(0, len(BINARY_TO_CHAR_ENCODING_SCHEMES)):
+                print("                                  " + BINARY_TO_CHAR_ENCODING_SCHEMES[x])
             continue
 
         # Test that the user entry is a valid character set. If so, exit out of the forever loop
-        for x in range(0, len(binary_to_char_encoding_schemes)):
+        for x in range(0, len(BINARY_TO_CHAR_ENCODING_SCHEMES)):
             broken = False
-            if selection.rstrip() == binary_to_char_encoding_schemes[x]:
+            if selection.rstrip() == BINARY_TO_CHAR_ENCODING_SCHEMES[x]:
                 broken = True
                 break
         if broken:
@@ -1455,7 +1474,7 @@ def _take_char_encoding_scheme(binary_to_char_encoding_schemes):
 
 
     # figure out the end_char of the character encoding scheme
-    end_char = char_set_to_size.get(selection)
+    end_char = CHAR_SET_TO_SIZE.get(selection)
 
     return selection
 

@@ -1,10 +1,10 @@
 from Cryptography import misc
 
 # Cipher info:
-char_set = misc.alphabets
+char_set = misc.ALPHABETS
 cipher_type = "symmetric"
 key_size = "calculated characters (single character)"
-
+ciphertext_alphabet_restricted = True
 
 
 
@@ -115,7 +115,7 @@ def decrypt(ciphertext, key, alphabet_size):
 
     # Figure out the most likely character set of the ciphertext
     alphabet = misc.alphabet_of(ciphertext)
-    alphabet_size = misc.char_set_to_size.get(alphabet)
+    alphabet_size = misc.CHAR_SET_TO_SIZE.get(alphabet)
 
 
     # Decrypt the encrypted text using every possible unicode value
