@@ -15,7 +15,7 @@ encryption_set = {"blowfish", "rotation", "rsa", "vigenere", "vigenere_exponenti
                   "vigenere_multiplicative"}
 
 decryption_set = {"blowfish", "rotation", "rotation_nokey", "rsa", "vigenere", "vigenere_exponential",
-                  "vigenere_multiplicative", "vigenere_nokey"}
+                  "vigenere_multiplicative",}
 
 
 
@@ -56,14 +56,14 @@ SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
 # The general code to run during testing for encryption statistics (simple symmetric)
 general_encryption_code =\
     r"""new_file.writelines([
-                             "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
-                             "\n--------------- key ---------------\n" + encryption_key 
+                             "\n\n\n𝓔𝓝𝓒𝓡𝓨𝓟𝓣𝓘𝓞𝓝",
+                             "\n--------------- 𝐊𝐄𝐘 ---------------\n" + encryption_key 
                                 + "\n-----------------------------------------------------------" 
                                 + "-------------------------",
-                             "\n𝐓𝐡𝐞 cipher𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(ciphertext),
-                             "\n𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧 these seconds: " + str(encryption_time) + " (s) with "
-                                + "{:,}".format(len(plaintext)) + " characters",                             
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((encryption_time / len(plaintext)) * 1000000)
+                             "\n𝐓𝐇𝐄 𝐂𝐈𝐏𝐇𝐄𝐑𝐓𝐄𝐗𝐓'𝐒 𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑 𝐒𝐄𝐓 𝐈𝐒: " + alphabet_of(ciphertext),
+                             "\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐄𝐃 𝐈𝐍 𝐓𝐇𝐄𝐒𝐄 𝐒𝐄𝐂𝐎𝐍𝐃𝐒: " + str(encryption_time) + " (s) 𝐖𝐈𝐓𝐇 "
+                                + "{:,}".format(len(plaintext)) + " 𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑𝐒",                             
+                             "\n𝐌𝐈𝐂𝐑𝐎𝐒𝐄𝐂𝐎𝐍𝐃𝐒 𝐏𝐄𝐑 𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑: " + str((encryption_time / len(plaintext)) * 1000000)
                                 + " (μs)"
                             ])
     """
@@ -71,12 +71,12 @@ general_encryption_code =\
 # The general code to run during testing for decryption statistics (simple symmetric)
 general_decryption_code =\
     r"""new_file.writelines([
-                             "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
-                             "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(plaintext),
-                             "\n𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝 𝐢𝐧 these seconds: " + str(decryption_time) + " (s) with "
-                                + "{:,}".format(len(plaintext)) + " characters",
-                             "\n𝐓𝐢𝐦𝐞𝐬 𝐥𝐨𝐧𝐠𝐞𝐫 𝐭𝐡𝐚𝐧 𝐞𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧: " + str(decryption_time/encryption_time) + " (times)",                  
-                             "\n𝐌𝐢𝐜𝐫𝐨𝐬𝐞𝐜𝐨𝐧𝐝𝐬 𝐩𝐞𝐫 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫: " + str((decryption_time / len(plaintext)) * 1000000)
+                             "\n\n\n𝓓𝓔𝓒𝓡𝓨𝓟𝓣𝓘𝓞𝓝",
+                             "\n𝐓𝐇𝐄 𝐏𝐋𝐀𝐈𝐍𝐓𝐄𝐗𝐓'𝐒 𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑 𝐒𝐄𝐓 𝐈𝐒: " + alphabet_of(plaintext),
+                             "\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐄𝐃 𝐈𝐍 𝐓𝐇𝐄𝐒𝐄 𝐒𝐄𝐂𝐎𝐍𝐃𝐒: " + str(decryption_time) + " (s) 𝐖𝐈𝐓𝐇 "
+                                + "{:,}".format(len(plaintext)) + " 𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑𝐒",
+                             "\n𝐓𝐈𝐌𝐄𝐒 𝐋𝐎𝐍𝐆𝐄𝐑 𝐓𝐇𝐀𝐍 𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍: " + str(decryption_time/encryption_time) + " (times)",                 
+                             "\n𝐌𝐈𝐂𝐑𝐎𝐒𝐄𝐂𝐎𝐍𝐃𝐒 𝐏𝐄𝐑 𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑: " + str((decryption_time / len(plaintext)) * 1000000)
                                 + " (μs)"
                             ])
     """
