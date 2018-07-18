@@ -1,5 +1,5 @@
 from Cryptography import misc
-from Cryptography import test
+from Cryptography import test                                 # for manual/automatic testing
 
 
 import datetime # to be used in fileName
@@ -94,7 +94,7 @@ def parse_user_input():
     statement = input("Enter statement: ")                # Obtain the user input
 
 
-    # While the statement is invalid, keep prompting the user. If valid, break from the loop
+    # Return only when the statements are "encrypt" or "decrypt". Otherwise, keep looping when handling other commands.
     while True:
 
 
@@ -162,7 +162,14 @@ def parse_user_input():
             continue                                                    # Jump to the next iteration
 
 
+        # Handle command: encrypt (cipher) (plaintext_file_path*) <output_file_path>
+        if command == "encrypt":
+            pass
 
+
+        # Handle command: decrypt (cipher) (ciphertext_file_path*) <output_file_path>
+        if command == "decrypt":
+            pass
 
     """
     statement = input("Enter statement: ") # obtain user input
