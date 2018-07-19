@@ -112,6 +112,23 @@ def parse_user_input():
             statement = input("Enter statement: ")                      # Obtain user input for next iteration
             continue                                                    # Jump to next iteration
 
+        # Handle command: clear
+        if command == "clear":
+
+            # delete files in /Files_Decrypted
+            for file in os.listdir("Resources/Files_Decrypted"):
+                    os.unlink("Resources/Files_Decrypted/" + file)
+            # delete files in /Files_Encrypted
+            for file in os.listdir("Resources/Files_Encrypted"):
+                    os.unlink("Resources/Files_Encrypted/" + file)
+            # Obtain next command
+            statement = input("Files deleted. Enter statement: ")        # obtain user input
+            continue
+
+        # Handle command: exit
+        if command == "exit":
+            print("Exiting program...")
+            exit(0)
 
         # Handle command: test <cipher>
         if command == "test":
@@ -144,11 +161,6 @@ def parse_user_input():
 
             statement = input(prompt)                                   # Obtain user input for next iteration
             continue                                                    # Jump to the next iteration
-
-        # Handle command: exit
-        if command == "exit":
-            print("Exiting program...")
-            exit(0)
 
 
         # Handle command: encrypt or decrypt (cipher) (plaintext_file_path*) <output_file_path>
@@ -242,7 +254,6 @@ def parse_user_input():
                 except IOError:
                     statement = input("There is no last file! Try again: ")
                     continue
-
             # Otherwise, a source is given (NOT last)
             elif not input_path == "last":
 
@@ -278,25 +289,79 @@ def parse_user_input():
                                 statement = input("No such file or directory! Try again: ")
                                 continue
 
-                 # if the input was empty, return an error
+
+                # if the input was empty, return an error
                 if len(data) == 0:
                     statement = input("There is no data to process in file("
                                       + input_path + ")! Try again: ")
                     continue
 
 
+            # Read the THIRD argument (output file path if it exists)
+            try: output_path = statement_list[3]
+            except: pass
+
+            # If an output filepath is given, use that. Check that it could be opened or if it already exists
+            if len(statement_list) == 1 + 3:
+                output_location = statement_list[3]
+
+                # See if the file already exists
+                try:                                                                   # See if file already exists
+                    my_file = open(output_location, "r", encoding="utf-8")
+                    data = my_file.read()
+                    my_file.close()
+                except IOError:
+                    statement = input("File (" + output_location + ") already exists."
+                                      + "If you do not want to overwrite, then enter another new statement."
+                                      + "Otherwise, to overwrite, press \"Enter.\" Proceed: ")
+                    if not statement == "":                                            # New statement
+                        continue
+                    elif statement == "":                                              # User wants to overwrit, proceed
+                        pass
+
+                # See if the file is openable
+                try:                                                                   # Try to open file
+                    my_file = open(output_location, "w", encoding="utf-8")
+                    data = my_file.read()
+                    my_file.close()
+                except Exception:
+                    statement = input("File (" + output_location+ ") is not openable! Enter another statement: ")
+                    continue
+            # Output filepath not given. Use default format
+            else:
+
+                # Encrypt default format
+                if command == "Encrypt":                               # Encrypt's default format
+                    now = datetime.datetime.now()                      # For the time and date
+                    output_location = "Resources/Files_Encrypted/" + input_path + cipher + "_encrypted_" \
+                                      + now.strftime("%Y-%m-%d_h%Hm%Ms%S")
+
+                # Decrypt default format
+                else:                                                  # Decrypt's default format
+                    now = datetime.datetime.now()                      # For the time and date
+                    output_location = "Resources/Files_Decrypted/" + input_path + cipher + "_decrypted_" \
+                                      + now.strftime("%Y-%m-%d_h%Hm%Ms%S")
+
+
+            # Return all relevant variables
+            return cipher, encrypt_mode, data, output_location
+
+
+
+
+            # The command has not been found. Tell the user to enter another legitimate command
 
 
 
 
 
 
-        # The command has not been found. Tell the user to enter another legitimate command
+
+        # Command not recognized
         else:
-
             # Print out prompt
             statement = input("Command (" + command + ") not recognized! Enter another statement: ")
-
+            continue
 
 
 
