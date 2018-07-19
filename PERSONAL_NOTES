@@ -6,11 +6,13 @@
 
 
 
-NEED TO FINISH:
-    encrypt/decrypt commands for parse_user_input() in cryptography_runner
+NEED TO FINISH/FIX:
+    Whatever was caught by automatic tests
+    Update README
     decrypt vigenere_nokey
-    FIX VIGENERE_MULTIPLICATIVE
-    automated tests
+
+
+
 
 
 

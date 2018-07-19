@@ -9,11 +9,11 @@ import os          # for deleting files
 ############################################################################################## MANUAL TESTING ##########
 
 # MODIFY THESE VALUES
-plaintext_source = "Resources/Library/Eleonora.txt"
+plaintext_source = "Resources/Library/Test.txt"
 
 
 
-alphabet_size = misc.CHAR_SET_TO_SIZE.get("ascii")
+alphabet_size = misc.CHAR_SET_TO_SIZE.get("unicode")
 key = "This is a key for testing"
 
 
@@ -399,6 +399,7 @@ def automated_testing():
         # FOR ALL THE ALPHABETS/CHARACTER_ENCODING_SCHEMES
         for char_set in character_sets:
 
+
             # If char_set uses alphabet_size, then calculate that
             if char_set in misc.ALPHABETS:
                 char_set = misc.CHAR_SET_TO_SIZE.get(char_set)
@@ -430,39 +431,37 @@ def automated_testing():
             # FOR ALL OF THE PLAINTEXTS TO TEST
             for plaintext in testing_plaintexts:
 
+                # If decrypt_cipher does not allow short texts, then skip the short texts
+                try:
+                    if eval(decrypt_cipher + ".no_short_texts") == True:
+                        continue
+                except Exception:                                       # Short texts allowed, do nothing
+                    pass
+
 
                 # Run the ENCRYPTION, and parse the output (may be a tuple) to get ciphertext and key
-                try:
-                    exec("import Cryptography.Encryption."
-                         + encrypt_cipher)
-                    encryption_output = eval("Cryptography.Encryption."                    # Run encryption
-                                             + encrypt_cipher
-                            + ".encrypt(plaintext, encrypt_key, char_set)")
-                    ciphertext = ""                                                             # Fill this in
-                    decrypt_key = ""                                                            # Fill this in
+                exec("import Cryptography.Encryption."
+                     + encrypt_cipher)
+                encryption_output = eval("Cryptography.Encryption."  # Run encryption
+                                         + encrypt_cipher
+                                         + ".encrypt(plaintext, encrypt_key, char_set)")
+                ciphertext = ""  # Fill this in
+                decrypt_key = ""  # Fill this in
 
-                    # Parse the output of the encryption to figure out ciphertext and decrypt_key
-                    if type(encryption_output) is tuple:                    # If tuple, then ciphertext is 1st index
-                        ciphertext = encryption_output[0]
+                # Parse the output of the encryption to figure out ciphertext and decrypt_key
+                if type(encryption_output) is tuple:  # If tuple, then ciphertext is 1st index
+                    ciphertext = encryption_output[0]
 
-                        if len(encryption_output) == 3:                     # Len 3 indicates asymmetric keys made
-                            public_key = encryption_output[1]
-                            private_key = encryption_output[2]
-                            decrypt_key = private_key
+                    if len(encryption_output) == 3:  # Len 3 indicates asymmetric keys made
+                        decrypt_key = encryption_output[2]
 
-                        elif len(encryption_output) == 2:                   # Len 2 indicates symmetric key generated
-                            generated_key = encryption_output[1]
-                            decrypt_key = generated_key
+                    elif len(encryption_output) == 2:  # Len 2 indicates symmetric key generated
+                        decrypt_key = encryption_output[1]
 
-                    else:                                                   # Not tuple, just regular ciphertext
-                        ciphertext = encryption_output
-                        decrypt_key = encrypt_key
-                except:                                                     # Encryption fail
-                    print("IMPORTANT ENCRYPTION FAILURE: "
-                            + encrypt_cipher
-                            + " with " + str(encrypt_key) + " and "
-                            + str(char_set))
-                    exit(1)
+                else:  # Not tuple, just regular ciphertext
+                    ciphertext = encryption_output
+                    decrypt_key = encrypt_key
+
 
 
 
@@ -480,15 +479,16 @@ def automated_testing():
 
                     # Check if the decrypted text is same as plaintext and add to graph
                     if decrypted != plaintext:
-                        incorrect_ciphers.append(decrypt_cipher)
+                        incorrect_ciphers.append(decrypt_cipher + " (I)")
                 except:                                                   # Catch all exceptions, because decrypt wrong
-                    incorrect_ciphers.append(decrypt_cipher)
+                    incorrect_ciphers.append(decrypt_cipher + " (F)")
                     continue
 
 
 
 
     # Print out incorrect ciphers (may be duplicates)
+    incorrect_ciphers.sort()
     print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢 ", end="")
     print(*incorrect_ciphers, sep=", ")
 

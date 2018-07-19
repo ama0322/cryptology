@@ -331,15 +331,15 @@ def parse_user_input():
             else:
 
                 # Encrypt default format
-                if command == "Encrypt":                               # Encrypt's default format
+                if command == "encrypt":                               # Encrypt's default format
                     now = datetime.datetime.now()                      # For the time and date
-                    output_location = "Resources/Files_Encrypted/" + input_path + cipher + "_encrypted_" \
+                    output_location = "Resources/Files_Encrypted/" + input_path + "__" + cipher + "_encrypted_" \
                                       + now.strftime("%Y-%m-%d_h%Hm%Ms%S")
 
                 # Decrypt default format
                 else:                                                  # Decrypt's default format
                     now = datetime.datetime.now()                      # For the time and date
-                    output_location = "Resources/Files_Decrypted/" + input_path + cipher + "_decrypted_" \
+                    output_location = "Resources/Files_Decrypted/" + input_path + "__" + cipher + "_decrypted_" \
                                       + now.strftime("%Y-%m-%d_h%Hm%Ms%S")
 
 

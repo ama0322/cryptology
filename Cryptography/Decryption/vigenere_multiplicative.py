@@ -4,6 +4,8 @@ from Cryptography import misc
 char_set = misc.ALPHABETS
 cipher_type = "symmetric"
 key_size = "multiple characters"
+ciphertext_alphabet_restricted = True
+
 
 
 
@@ -96,9 +98,6 @@ def decrypt(ciphertext, key, alphabet_size):
 
         # Read in one block/unit (one char, followed by a number, followed by a space). Then, update ciphertext
         char = ciphertext[0]
-        if ciphertext[1:ciphertext.find(" ")] == "":
-            print(ciphertext)
-            exit
         number = int(ciphertext[1 :ciphertext.find(" ")], 10)
         ciphertext = ciphertext[ciphertext.find(" ") + 1: ]
 

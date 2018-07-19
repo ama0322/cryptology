@@ -1,6 +1,6 @@
 from Cryptography import misc
-import time # To measure the amount of time for finding a public key
-from Cryptography.Decryption import rsa
+import time                                      # To measure the amount of time for finding a public key
+from Cryptography.Decryption import rsa          # RSA cipher info and read_rsa_key()
 
 
 # Encrypt using user-entered info. Write relevant information and return encrypted text for cryptography_runner
@@ -65,7 +65,7 @@ def encrypt(plaintext, given_key, encoding_scheme):
 
     # Else, parse public_key to figure out e and n.
     else:
-        e, n = misc.read_rsa_key(given_key)
+        e, n = rsa.read_rsa_key(given_key)
         public_key = given_key
 
 

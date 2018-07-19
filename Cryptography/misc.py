@@ -393,6 +393,8 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     encryption_output = eval(encryption                                # Run the encryption
                 + ".encrypt(plaintext, encryption_key, char_set)" )
     encryption_time = time.time() - start_time
+
+    # Store the encryption's output
     if type(encryption_output) is tuple:                               # If tuple, then ciphertext is in 1st index
         ciphertext = encryption_output[0]
 
@@ -416,6 +418,8 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     decryption_output = eval(decryption                                # Run the actual decryption
                  + ".decrypt(ciphertext, decryption_key, char_set)" )
     decryption_time = time.time() - start_time
+
+    # Store the decryption's output
     if type(decryption_output) is tuple:                               # If tuple, then decrypted is in the first index
         decrypted = decryption_output[0]
     else:                                                              # Otherwise, decrypted is the only output
@@ -897,36 +901,6 @@ def chars_to_chars_decoding_scheme(string, encoding):
         decoded = codecs.decode(decoded, "hex").decode("utf-8") # Decode hex to string using utf-8
     return decoded
 
-# Reads an rsa key and returns the public/private key and modulus
-def read_rsa_key(key):
-    """
-    This reads the rsa key which is in the format of "RSA (character length of e or d) (e or d) n"
-
-    :param key: (string) the rsa key
-    :return: (int) the public/private exponent key
-    :return: (int) the modulus for rsa
-    """
-
-    # Figure out the character scheme of the key
-    scheme = char_encoding_scheme_of(key)
-
-    # Decode the key to format: "RSA (character length of e or d) (e or d) n"
-    key = chars_to_chars_decoding_scheme(key, scheme)
-
-
-    # Figure out how many characters to read for the exponent d/e. From the first space to the second. Convert to int
-    first_space_index = key.find(" "); second_space_index = key.find(" ", first_space_index + 1)
-    length = key[ first_space_index + 1: second_space_index ]
-    length = int(length, 10)
-
-    # Read length characters to figure out e/d and also n. Decode them into ints
-    exponent = key[ second_space_index + 1: second_space_index + 1 + length ]
-    n = key[ second_space_index + 1 + length: ]
-    exponent = chars_to_int_decoding_scheme(exponent, scheme)
-    n = chars_to_int_decoding_scheme(n, scheme)
-
-    # Return the exponent and the modulus
-    return exponent, n
 
 
 
@@ -1405,7 +1379,7 @@ def is_english_n_grams(data):
 ############################################################################################ HELPER FUNCTIONS ##########
 
 #  Returns alphabet. This helper function asks the user for a character set.
-def _take_alphabet(ALPHABETS):
+def _take_alphabet(alphabets):
     """
     This functions asks the user to input a selection(a alphabet). THis selection is compared against ALPHABETS
     in order to make sure that it is a valid selection
@@ -1429,14 +1403,14 @@ def _take_alphabet(ALPHABETS):
         # Print out the available character sets, then continue
         if selection[0:4] == "info":
             print("The available character sets are: ")
-            for x in range(0, len(ALPHABETS)):
-                print("                                  " + ALPHABETS[x])
+            for x in range(0, len(alphabets)):
+                print("                                  " + alphabets[x])
             continue
 
         # Test that the user entry is a valid character set. If so, exit out of the forever loop
-        for x in range(0, len(ALPHABETS)):
+        for x in range(0, len(alphabets)):
             broken = False
-            if selection.rstrip() == ALPHABETS[x]:
+            if selection.rstrip() == alphabets[x]:
                 broken = True
                 break
         if broken:
@@ -1455,12 +1429,12 @@ def _take_alphabet(ALPHABETS):
 
 
 #  Returns char_encoding_scheme. This helper function asks the user for a character encoding scheme.
-def _take_char_encoding_scheme(BINARY_TO_CHAR_ENCODING_SCHEMES):
+def _take_char_encoding_scheme(binary_to_char_encoding_scheme):
     """
     This functions asks the user to input a selection(a char encoding scheme. The selection is compared against hte
     given list to ensure that it is a legitimate selection
 
-    :param BINARY_TO_CHAR_ENCODING_SCHEMES: (list) the list of all character encoding schemes
+    :param binary_to_char_encoding_scheme: (list) the list of all character encoding schemes
     :return: (string) the user-entered character set
     """
 
@@ -1479,14 +1453,14 @@ def _take_char_encoding_scheme(BINARY_TO_CHAR_ENCODING_SCHEMES):
         # Print out the available character sets, then continue
         if selection[0:4] == "info":
             print("The available character encoding schemes are: ")
-            for x in range(0, len(BINARY_TO_CHAR_ENCODING_SCHEMES)):
-                print("                                  " + BINARY_TO_CHAR_ENCODING_SCHEMES[x])
+            for x in range(0, len(binary_to_char_encoding_scheme)):
+                print("                                  " + binary_to_char_encoding_scheme[x])
             continue
 
         # Test that the user entry is a valid character set. If so, exit out of the forever loop
-        for x in range(0, len(BINARY_TO_CHAR_ENCODING_SCHEMES)):
+        for x in range(0, len(binary_to_char_encoding_scheme)):
             broken = False
-            if selection.rstrip() == BINARY_TO_CHAR_ENCODING_SCHEMES[x]:
+            if selection.rstrip() == binary_to_char_encoding_scheme[x]:
                 broken = True
                 break
         if broken:

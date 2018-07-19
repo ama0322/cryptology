@@ -47,22 +47,22 @@ EXAMPLES
 
 DOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATION
 
-PROJECT STRUCTURE
+PROJECT STRUCTURE (Cryptography)
     This project has four main components, as well as four folders for storage.
 
         The five main components are:
             -cryptography_runner.py - this file holds the main runner program that takes in user input, and performs the
                       encryption/decryption.
-            -miscellanous.py - this file holds functions and resources useful throughout the project.
+            -misc.py - this file holds functions and resources useful throughout the project.
             -test.py - this file runs the decryption/encryption functions and tests for correctness and performance
             -package Decryption - this package holds all files necessary to perform a decryption
             -package Encryption - this package holds all files necessary to perform an encryption
 
         The four folders are:
-            -Library - this folder stores all text files you want to use with this program
-            -Files_Decrypted - this is where the generated decrypted files go
-            -Files_Encrypted - this is where the generated encrypetd files go
-            -Files_Logs - where the logs from testing go
+            -Resources/Library - this folder stores all text files you want to use with this program
+            -Resources/Files_Decrypted - this is where the generated decrypted files go
+            -Resources/Files_Encrypted - this is where the generated encrypted files go
+            -Resources/Files_Logs - where the logs from testing go
 
         𝐓𝐇𝐈𝐒 𝐈𝐒 𝐓𝐇𝐄 𝐆𝐄𝐍𝐄𝐑𝐀𝐋 𝐒𝐓𝐑𝐔𝐂𝐓𝐔𝐑𝐄:
             General use: 𝐜𝐫𝐲𝐩𝐭𝐨𝐠𝐫𝐚𝐩𝐡𝐲_𝐫𝐮𝐧𝐧𝐞𝐫.𝐩𝐲 takes utf-8 plaintext and cipher from the user. It then calls

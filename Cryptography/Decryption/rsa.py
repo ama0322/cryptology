@@ -137,7 +137,7 @@ def decrypt(ciphertext, private_key, encoding_scheme):
 
 
     # Figure out d and n from the private key
-    d, n = misc.read_rsa_key(private_key)
+    d, n = read_rsa_key(private_key)
 
 
 
@@ -180,4 +180,41 @@ def decrypt(ciphertext, private_key, encoding_scheme):
     return plaintext
 
 
+
+
+
+
+
+
+
+# Reads an rsa key and returns the public/private key and modulus
+def read_rsa_key(key):
+    """
+    This reads the rsa key which is in the format of "RSA (character length of e or d) (e or d) n"
+
+    :param key: (string) the rsa key
+    :return: (int) the public/private exponent key
+    :return: (int) the modulus for rsa
+    """
+
+    # Figure out the character scheme of the key
+    scheme = misc.char_encoding_scheme_of(key)
+
+    # Decode the key to format: "RSA (character length of e or d) (e or d) n"
+    key = misc.chars_to_chars_decoding_scheme(key, scheme)
+
+
+    # Figure out how many characters to read for the exponent d/e. From the first space to the second. Convert to int
+    first_space_index = key.find(" "); second_space_index = key.find(" ", first_space_index + 1)
+    length = key[ first_space_index + 1: second_space_index ]
+    length = int(length, 10)
+
+    # Read length characters to figure out e/d and also n. Decode them into ints
+    exponent = key[ second_space_index + 1: second_space_index + 1 + length ]
+    n = key[ second_space_index + 1 + length: ]
+    exponent = misc.chars_to_int_decoding_scheme(exponent, scheme)
+    n = misc.chars_to_int_decoding_scheme(n, scheme)
+
+    # Return the exponent and the modulus
+    return exponent, n
 
