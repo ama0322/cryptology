@@ -8,6 +8,7 @@
       <w>ciphertext</w>
       <w>ngram</w>
       <w>nokey</w>
+      <w>plaintexts</w>
       <w>vigenere</w>
     </words>
   </dictionary>

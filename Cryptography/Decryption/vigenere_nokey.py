@@ -4,7 +4,7 @@ from Cryptography import misc
 
 
 # Cipher info:
-char_set = misc.alphabets
+char_set = misc.ALPHABETS
 cipher_type = "symmetric"
 key_size = "calculated characters (multiple characters) "
 

@@ -7,21 +7,19 @@
 
 
 NEED TO FINISH:
-    encrypt and decrypt blowfish
+    encrypt/decrypt commands for parse_user_input() in cryptography_runner
     decrypt vigenere_nokey
-
-
+    FIX VIGENERE_MULTIPLICATIVE
+    automated tests
 
 
 
 
 NEED TO ADD:
     add cbc for block ciphers
-    way to automatically switch ciphertext alphabet based on plaintext's alphabet (for rotations)
     ways to combat inaccuracy of get_alphabet_of and get_char_encoding_scheme_of
     A sort of encrypted "database" system
 
-    cryptography_runner's handle_user_input() may need some polish
 
 
 

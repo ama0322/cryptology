@@ -110,6 +110,7 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
     cipher_type = eval(module + ".cipher_type")
     key_size =    eval(module + ".key_size")
 
+
     # Figure out the char_set to use, whether it be an alphabet, or an encoding scheme
     if char_set == ALPHABETS:                                                # If cipher uses ALPHABETS
         if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for alphabet
@@ -124,6 +125,30 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
 
         elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find scheme automatically
             char_set = char_encoding_scheme_of(data)
+
+
+    # FOR ENCRYPTION
+    # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext alphabet is
+    # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
+    # So switch to use the plaintext's alphabet for encryption, and inform the user
+    if encrypt_or_decrypt == "encrypt":
+        try:
+            restrict = eval(module                                      # Ciphertext alphabet restricted
+                        + ".ciphertext_alphabet_restricted")
+            if restrict == True:                                        # Restrict by using plaintext's alphabet.
+                alphabet = alphabet_of(data)
+                char_set = CHAR_SET_TO_SIZE.get(alphabet)
+                print("The chosen alphabet for encryption is"
+                        + " insufficient for the alphabet that"
+                        + " the plaintext's alphabet is in."
+                        + "\nTherefore, the alphabet for"
+                        + " encryption is switched to: "
+                        + alphabet)
+
+        except Exception:                                               # Ciphertext alphabet not restricted. Do nothing
+            pass
+
+
 
 
     # Figure out the correct key to use.

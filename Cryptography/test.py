@@ -1,7 +1,7 @@
 from Cryptography import misc
 
-import datetime # for labelling the date that files are created
-import os # for deleting files
+import datetime    # for labelling the date that files are created
+import os          # for deleting files
 
 
 
@@ -13,8 +13,7 @@ plaintext_source = "Resources/Library/Eleonora.txt"
 
 
 
-
-alphabet_size = misc.char_set_to_size.get("extended_ascii")
+alphabet_size = misc.CHAR_SET_TO_SIZE.get("ascii")
 key = "This is a key for testing"
 
 
@@ -49,7 +48,7 @@ def manual_testing(given_cipher):
             plaintext = ""
             output_location = ""
             encryption_key = key  # Modify key as needed for the chosen cipher
-            char_set = ""  # num for alphabets, name for encoding scheme
+            char_set = ""  # num for ALPHABETS, name for encoding scheme
 
             # Get the decryption type and the encryption type (same name as decryption but w/o "_nokey")
             def parse_user_input_with_command(command):
@@ -85,7 +84,7 @@ def manual_testing(given_cipher):
                         continue
 
                     # Check that the command is a legitimate decryption type. If so, break out of loop
-                    if statement in misc.decryption_set:
+                    if statement in misc.DECRYPTION_SET:
                         break
 
                     # Prompt the user for a command again
@@ -142,9 +141,9 @@ def manual_testing(given_cipher):
                 encryption_key = ""
 
             # Figure out the char_set to use
-            if char_set == misc.binary_to_char_encoding_schemes:  # If encoding scheme, just return name
+            if char_set == misc.BINARY_TO_CHAR_ENCODING_SCHEMES:  # If encoding scheme, just return name
                 char_set = encoding_scheme
-            elif char_set == misc.alphabets:  # If alphabet, return the size of the set
+            elif char_set == misc.ALPHABETS:  # If alphabet, return the size of the set
                 char_set = alphabet_size
 
             return encryption, decryption, plaintext, output_location, encryption_key, char_set
@@ -193,7 +192,7 @@ def _get_testing_info():
     plaintext = ""
     output_location = ""
     encryption_key = key                                    # Modify key as needed for the chosen cipher
-    char_set = ""                                           # num for alphabets, name for encoding scheme
+    char_set = ""                                           # num for ALPHABETS, name for encoding scheme
 
     # Get the decryption type and the encryption type (same name as decryption but w/o "_nokey")
     decryption = _parse_user_input()
@@ -219,9 +218,9 @@ def _get_testing_info():
     # Figure out the char_set to use
     exec("from Cryptography.Decryption import " + decryption)
     char_set = eval(decryption + ".char_set")                              # char_set used
-    if char_set == misc.binary_to_char_encoding_schemes:                   # If encoding scheme, just return name
+    if char_set == misc.BINARY_TO_CHAR_ENCODING_SCHEMES:                   # If encoding scheme, just return name
         char_set = encoding_scheme
-    elif char_set == misc.alphabets:                             # If alphabet, return the size of the alphabet
+    elif char_set == misc.ALPHABETS:                             # If alphabet, return the size of the alphabet
         char_set = alphabet_size
 
 
@@ -319,7 +318,7 @@ def _parse_user_input():
 
 
                 # Check that the command is a legitimate decryption type. If so, break out of loop
-                if statement in misc.decryption_set:
+                if statement in misc.DECRYPTION_SET:
                     break
 
                 # Prompt the user for a command again
@@ -361,7 +360,7 @@ def automated_testing():
         2: Decrypt with the Decryption cipher
         3: Checking the decrypted text against the original plaintext
 
-    Run tests with all Decryption ciphers, alphabets/encoding_schemes, and different* plaintext lengths (for blocks),
+    Run tests with all Decryption ciphers, ALPHABETS/encoding_schemes, and different* plaintext lengths (for blocks),
     and also plaintexts of different character sets.
     While testing is conducted, print out the results.
     *In general, use short text so that the test doesn't take too long.
@@ -384,7 +383,7 @@ def automated_testing():
 
 
     # FOR ALL DECRYPTION CIPHERS, test them
-    for decrypt_cipher in misc.decryption_set:
+    for decrypt_cipher in misc.DECRYPTION_SET:
 
         # Figure out which encrypting cipher to use (same name, but without "_nokey" if it exists)
         encrypt_cipher = decrypt_cipher if decrypt_cipher.find("_nokey") == -1 else decrypt_cipher[0: -6]
@@ -401,8 +400,32 @@ def automated_testing():
         for char_set in character_sets:
 
             # If char_set uses alphabet_size, then calculate that
-            if char_set in misc.alphabets:
-                char_set = misc.char_set_to_size.get(char_set)
+            if char_set in misc.ALPHABETS:
+                char_set = misc.CHAR_SET_TO_SIZE.get(char_set)
+
+            # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext alphabet is
+            # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
+            # So switch to use the plaintext's alphabet for encryption, and inform the user
+            exec("from Cryptography.Decryption import "
+                    + decrypt_cipher)
+            try:
+                restrict = eval(decrypt_cipher                          # Ciphertext alphabet restricted
+                                + ".ciphertext_alphabet_restricted")
+                if restrict == True:                                    # Restrict by using plaintext's alphabet.
+                    alphabet = misc.alphabet_of(plaintext)
+                    char_set = misc.CHAR_SET_TO_SIZE.get(alphabet)
+                    print("The chosen alphabet for encryption is"
+                          + " insufficient for the alphabet that"
+                          + " the plaintext's alphabet is in."
+                          + "\nTherefore, the alphabet for"
+                          + " encryption is switched to: "
+                          + alphabet)
+
+            except Exception:                                           # Ciphertext alphabet not restricted. Do nothing
+                pass
+
+
+
 
             # FOR ALL OF THE PLAINTEXTS TO TEST
             for plaintext in testing_plaintexts:
@@ -410,31 +433,35 @@ def automated_testing():
 
                 # Run the ENCRYPTION, and parse the output (may be a tuple) to get ciphertext and key
                 try:
-                    exec("import Cryptography.Encryption." + encrypt_cipher)
-                    encryption_output = eval("Cryptography.Encryption."  # Run encryption
+                    exec("import Cryptography.Encryption."
+                         + encrypt_cipher)
+                    encryption_output = eval("Cryptography.Encryption."                    # Run encryption
                                              + encrypt_cipher
-                                             + ".encrypt(plaintext, encrypt_key, char_set)")
-                    ciphertext = ""  # Fill this in
-                    decrypt_key = ""  # Fill this in
+                            + ".encrypt(plaintext, encrypt_key, char_set)")
+                    ciphertext = ""                                                             # Fill this in
+                    decrypt_key = ""                                                            # Fill this in
 
                     # Parse the output of the encryption to figure out ciphertext and decrypt_key
-                    if type(encryption_output) is tuple:  # If tuple, then ciphertext is 1st index
+                    if type(encryption_output) is tuple:                    # If tuple, then ciphertext is 1st index
                         ciphertext = encryption_output[0]
 
-                        if len(encryption_output) == 3:  # Len 3 indicates asymmetric keys made
+                        if len(encryption_output) == 3:                     # Len 3 indicates asymmetric keys made
                             public_key = encryption_output[1]
                             private_key = encryption_output[2]
                             decrypt_key = private_key
 
-                        elif len(encryption_output) == 2:  # Len 2 indicates symmetric key generated
+                        elif len(encryption_output) == 2:                   # Len 2 indicates symmetric key generated
                             generated_key = encryption_output[1]
                             decrypt_key = generated_key
-                    else:  # Not tuple, just regular ciphertext
+
+                    else:                                                   # Not tuple, just regular ciphertext
                         ciphertext = encryption_output
                         decrypt_key = encrypt_key
-                except:                                                                # Encryption fail
-                    print("IMPORTANT ENCRYPTION FAILURE: " + encrypt_cipher
-                            + " with " + str(encrypt_key) + " and " + str(char_set))
+                except:                                                     # Encryption fail
+                    print("IMPORTANT ENCRYPTION FAILURE: "
+                            + encrypt_cipher
+                            + " with " + str(encrypt_key) + " and "
+                            + str(char_set))
                     exit(1)
 
 

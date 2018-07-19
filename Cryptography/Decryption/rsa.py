@@ -2,7 +2,7 @@ from Cryptography import misc
 import secrets # to generate random number to figure out the number of characters to read
 
 # Cipher info:
-char_set = misc.binary_to_char_encoding_schemes
+char_set = misc.BINARY_TO_CHAR_ENCODING_SCHEMES
 cipher_type = "asymmetric"
 key_size = "multiple generated characters"
 

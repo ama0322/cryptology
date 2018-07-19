@@ -1,7 +1,7 @@
 from Cryptography import misc
 
 # Cipher info:
-char_set = misc.alphabets
+char_set = misc.ALPHABETS
 cipher_type = "symmetric"
 key_size = "multiple characters"
 
@@ -44,10 +44,10 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
 
 
     # Encryption code
-    encryption_code = misc.general_encryption_code
+    encryption_code = misc.GENERAL_ENCRYPTION_CODE
 
     # Decryption code
-    decryption_code = misc.general_decryption_code
+    decryption_code = misc.GENERAL_DECRYPTION_CODE
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
                                                             plaintext, plaintext_source, encryption_key, alphabet_size,
@@ -96,7 +96,10 @@ def decrypt(ciphertext, key, alphabet_size):
 
         # Read in one block/unit (one char, followed by a number, followed by a space). Then, update ciphertext
         char = ciphertext[0]
-        number = int(ciphertext[1:ciphertext.find(" ")], 10)
+        if ciphertext[1:ciphertext.find(" ")] == "":
+            print(ciphertext)
+            exit
+        number = int(ciphertext[1 :ciphertext.find(" ")], 10)
         ciphertext = ciphertext[ciphertext.find(" ") + 1: ]
 
         #  figure out the unicode value for each of the characters(reverse surrogate adjustment in encryption if needed)

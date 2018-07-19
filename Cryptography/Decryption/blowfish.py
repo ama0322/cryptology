@@ -4,7 +4,7 @@ import copy # Used to deepcopy
 
 
 # Cipher info:
-char_set = misc.binary_to_char_encoding_schemes
+char_set = misc.BINARY_TO_CHAR_ENCODING_SCHEMES
 cipher_type = "symmetric"
 key_size = "multiple generated characters"           # encrypt() generates its own key
 
