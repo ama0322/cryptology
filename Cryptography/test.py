@@ -9,7 +9,7 @@ import os          # for deleting files
 ############################################################################################## MANUAL TESTING ##########
 
 # MODIFY THESE VALUES
-plaintext_source = "Resources/Library/Test.txt"
+plaintext_source = "Resources/Library/Clarissa.txt"
 
 
 

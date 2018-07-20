@@ -1,9 +1,7 @@
 from Cryptography import misc
-from Cryptography import test                                 # for manual/automatic testing
-
-
-import datetime # to be used in fileName
-import os # to delete files in decrypted and encrypted
+from Cryptography import test     # for manual/automatic testing
+import datetime                   # to be used in fileName
+import os                         # to delete files in decrypted and encrypted, handle directory stuff
 
 
 
@@ -19,6 +17,12 @@ last = "" # Store the path to the last created encrypted file
 
 ###################################################################################### START OF MAIN FUNCTION ##########
 def main():
+
+    # Set the current working directory to be the project "Cryptography", two levels above from this file.
+    path_here = os.path.realpath(__file__)
+    one_above = path_here[:path_here.rfind("\\")]
+    two_above = path_here[:one_above.rfind("\\")]
+    os.chdir(two_above)
 
 
     #  Print out info when the program first begins
