@@ -445,20 +445,20 @@ def automated_testing():
                 encryption_output = eval("Cryptography.Encryption."  # Run encryption
                                          + encrypt_cipher
                                          + ".encrypt(plaintext, encrypt_key, char_set)")
-                ciphertext = ""  # Fill this in
-                decrypt_key = ""  # Fill this in
+                ciphertext  = ""    # Fill this in
+                decrypt_key = ""    # Fill this in
 
                 # Parse the output of the encryption to figure out ciphertext and decrypt_key
-                if type(encryption_output) is tuple:  # If tuple, then ciphertext is 1st index
+                if type(encryption_output) is tuple:    # If tuple, then ciphertext is 1st index
                     ciphertext = encryption_output[0]
 
-                    if len(encryption_output) == 3:  # Len 3 indicates asymmetric keys made
+                    if len(encryption_output) == 3:     # Len 3 indicates asymmetric keys made
                         decrypt_key = encryption_output[2]
 
-                    elif len(encryption_output) == 2:  # Len 2 indicates symmetric key generated
+                    elif len(encryption_output) == 2:   # Len 2 indicates symmetric key generated
                         decrypt_key = encryption_output[1]
 
-                else:  # Not tuple, just regular ciphertext
+                else:                                   # Not tuple, just regular ciphertext
                     ciphertext = encryption_output
                     decrypt_key = encrypt_key
 
@@ -466,15 +466,15 @@ def automated_testing():
 
 
                 # Run DECRYPTION, save time and decrypted text
-                try:                                                              # Run decryption
+                try:                                                           # Run decryption
                     decrypted = ""
-                    exec("from Cryptography.Decryption import "                   # Import module for decryption
+                    exec("from Cryptography.Decryption import "                # Import module for decryption
                             + decrypt_cipher)
-                    decryption_output = eval(decrypt_cipher                       # Run the actual decryption
+                    decryption_output = eval(decrypt_cipher                    # Run the actual decryption
                             + ".decrypt(ciphertext, decrypt_key, char_set)")
-                    if type(decryption_output) is tuple:                          # If tuple, then decrypted is 1st index
+                    if type(decryption_output) is tuple:                       # If tuple, then decrypted is 1st index
                         decrypted = decryption_output[0]
-                    else:                                                         # Otherwise, decrypted is the only output
+                    else:                                                      # Otherwise, decrypted is the only output
                         decrypted = decryption_output
 
                     # Check if the decrypted text is same as plaintext and add to graph
