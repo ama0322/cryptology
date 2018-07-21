@@ -32,10 +32,10 @@ def encrypt(plaintext, key, alphabet_size):
     This works the same as regular vigenere, but uses exponents instead of addition. When using unicode_plane0 or
     unicode, adjust to ignore the Surrogates.
 
-    :param plaintext: (string) the data to be encrypted
-    :param key: (string) the key to encrypt with
-    :param alphabet_size: (int) the size of the character set to use
-    :return: (string) the encrypted data
+    :param plaintext:     (string) the data to be encrypted
+    :param key:           (string) the key to encrypt with
+    :param alphabet_size: (int)    the size of the character set to use
+    :return:              (string) the encrypted data
     """
 
 

@@ -9,11 +9,11 @@ import os          # for deleting files
 ############################################################################################## MANUAL TESTING ##########
 
 # MODIFY THESE VALUES
-plaintext_source = "Resources/Library/Clarissa.txt"
+plaintext_source = "Resources/Library/Test10.txt"
 
 
 
-alphabet_size = misc.CHAR_SET_TO_SIZE.get("unicode")
+alphabet_size = misc.CHAR_SET_TO_SIZE.get("ascii")
 key = "This is a key for testing"
 
 
@@ -344,10 +344,18 @@ def _parse_user_input():
 
 # Random characters. Use this for testing.
 plaintext_sample = """
-extremely concerned, my dearest friend, for the disturbances that have happened in your family. I know how it must hurt you to become the subject of the public ﾶ talk: and yet, upon an occasion so generally known, it is impossible but that whatever relates to a young  treatment they gave him when he went ん
-And yet that other, although in unbosoming himself to a select friend, he discovers wickedness enough to entitle him to general detestation, preserves a decency, as well in his images as in his language, which is not always to be found in the works of some of the most celebrated modern writers, whose subjects and characters have less warranted the liberties they have taken.
+extremely concerned, my dearest friend, for the disturbances that have happened in your family. I know how it must hurt
+you to become the subject of the public ﾶ talk: and yet, upon an occasion so generally known, it is impossible but that
+whatever relates to a young  treatment they gave him when he went ん And yet that other, although in unbosoming himself
+to a select friend, he discovers wickedness enough to entitle him to general detestation, preserves a decency, as well
+in his images as in his language, which is not always to be found in the works of some of the most celebrated modern
+writers, whose subjects and characters have less warranted the liberties they have taken.
 
-In the letters of the two ん young ladies, it is presumed, will be found not only the highest exercise of a reasonable and practicable friendship, between minds endowed with the noblest principles of virtue and religion, but occasionally interspersed, such delicacy of sentiments, particularly with regard to the other sex; such instances of impartiality, each freely, as a fundamental principle of their friendship, blaming, praising, and setting right the other, as are strongly to be recommended to the observation of the younger part (more specially) of female readers.
+In the letters of the two ん young ladies, it is presumed, will be found not only the highest exercise of a reasonable
+and practicable friendship, between minds endowed with the noblest principles of virtue and religion, but occasionally
+interspersed, such delicacy of sentiments, particularly with regard to the other sex; such instances of impartiality,
+each freely, as a fundamental principle of their friendship, blaming, praising, and setting right the other, as are
+strongly to be recommended to the observation of the younger part (more specially) of female readers.
 """
 
 
@@ -404,29 +412,7 @@ def automated_testing():
             if char_set in misc.ALPHABETS:
                 char_set = misc.CHAR_SET_TO_SIZE.get(char_set)
 
-            # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext alphabet is
-            # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
-            # So switch to use the plaintext's alphabet for encryption, and inform the user
-            exec("from Cryptography.Decryption import "
-                    + decrypt_cipher)
-            try:
-                restrict = eval(decrypt_cipher                          # Ciphertext alphabet restricted
-                                + ".ciphertext_alphabet_restricted")
-                if restrict == True:                                    # Restrict by using plaintext's alphabet.
-                    alphabet = misc.alphabet_of(plaintext)
-                    char_set = misc.CHAR_SET_TO_SIZE.get(alphabet)
-                    print("The chosen alphabet for encryption is"
-                          + " insufficient for the alphabet that"
-                          + " the plaintext's alphabet is in."
-                          + "\nTherefore, the alphabet for"
-                          + " encryption is switched to: "
-                          + alphabet)
 
-            except Exception:                                           # Ciphertext alphabet not restricted. Do nothing
-                pass
-
-
- 
 
             # FOR ALL OF THE PLAINTEXTS TO TEST
             for plaintext in testing_plaintexts:
@@ -435,7 +421,28 @@ def automated_testing():
                 try:
                     if eval(decrypt_cipher + ".no_short_texts") == True:
                         continue
-                except Exception:                                       # Short texts allowed, do nothing
+                except Exception:                                        # Short texts allowed, do nothing
+                    pass
+
+                # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext
+                # alphabet is smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to
+                # decrypt correctly. So switch to use the plaintext's alphabet for encryption, and inform the user
+                exec("from Cryptography.Decryption import "
+                     + decrypt_cipher)
+                try:
+                    restrict = eval(decrypt_cipher                       # Ciphertext alphabet restricted
+                                    + ".ciphertext_alphabet_restricted")
+                    if restrict == True:                                 # Restrict by using plaintext's alphabet.
+                        alphabet = misc.alphabet_of(plaintext)
+                        char_set = misc.CHAR_SET_TO_SIZE.get(alphabet)
+                        print("The chosen alphabet for encryption is"
+                              + " insufficient for the alphabet that"
+                              + " the plaintext's alphabet is in."
+                              + "\nTherefore, the alphabet for"
+                              + " encryption is switched to: "
+                              + alphabet)
+
+                except Exception:                                       # Ciphertext alphabet not restricted. Do nothing
                     pass
 
 

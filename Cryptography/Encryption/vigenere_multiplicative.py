@@ -71,7 +71,7 @@ def encrypt(plaintext, key, alphabet_size):
         uni_val_encrypted = (uni_val_plain * uni_val_key) % alphabet_size
 
         # Obtain the number of overlaps that come before this one(this uni_val_plain) and NOT including this one
-        overlap_counter = 0;
+        overlap_counter = 0
         for i in range(0, 1114112):
 
             # If it is an overlap character

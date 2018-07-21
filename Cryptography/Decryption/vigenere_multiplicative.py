@@ -4,7 +4,7 @@ from Cryptography import misc
 char_set = misc.ALPHABETS
 cipher_type = "symmetric"
 key_size = "multiple characters"
-ciphertext_alphabet_restricted = True
+
 
 
 
@@ -98,8 +98,8 @@ def decrypt(ciphertext, key, alphabet_size):
 
         # Read in one block/unit (one char, followed by a number, followed by a space). Then, update ciphertext
         char = ciphertext[0]
-        number = int(ciphertext[1 :ciphertext.find(" ")], 10)
-        ciphertext = ciphertext[ciphertext.find(" ") + 1: ]
+        number = int(ciphertext[1 :ciphertext.find(" ", 1)], 10)
+        ciphertext = ciphertext[ciphertext.find(" ", 1) + 1: ]
 
         #  figure out the unicode value for each of the characters(reverse surrogate adjustment in encryption if needed)
         uni_val_cipher = ord(char)
@@ -112,7 +112,7 @@ def decrypt(ciphertext, key, alphabet_size):
         key_index = (key_index + 1) % len(key)
 
 
-        # Find the original plain char by taking all possibilities and raising that to uni_val_key'th power for match
+        # Find the original plain char by taking all possibilities and multiplying with uni_val_key for a match
         count = 0
         plain_char = "\0"
         for i in range(0, 1114112):
