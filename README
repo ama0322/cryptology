@@ -1,84 +1,115 @@
 𝐍𝐎𝐓𝐄: 𝐜𝐫𝐲𝐩𝐭𝐨𝐠𝐫𝐚𝐩𝐡𝐲_𝐫𝐮𝐧𝐧𝐞𝐫.𝐩𝐲 𝐈𝐒 𝐍𝐎𝐓 𝐀𝐒 𝐑𝐄𝐋𝐈𝐀𝐁𝐋𝐄 𝐀𝐒 𝐭𝐞𝐬𝐭.𝐩𝐲
 
+
+
 Needed Modules:
 
 
 
+USAGE OF AVAILABLE COMMANDS
+    User input is unix-like, with: command [optional flag] (argument) <optional argument>
+    File paths with spaces must escape spaces with : "\ "
+    The working directory is the outer Cryptography file. For example, the file path of Clarissa.txt in Resources is
+        Resources/Library/Clarissa.txt
 
-USAGE
+    encrypt (cipher) (plaintext_file_path*)  <output_file_path>
+        This encrypts with "cipher" using the text from "plaintext_file_path" as a plaintext. There will be two files
+        created as a result of this encryption: the encrypted file AND info about the encryption. "output_file_path",
+        if provided, is the location where the encrypted file is created. Otherwise, a default file path will be
+        created. The info about the encryption is stored in a file with the same name as the "output_file_path" but
+        appended with "_(Relevant information)".
 
-To encrypt, type: "-e " + "text*" + encryption_type + name_and_location_of_encrypted_file**
-To decrypt, type: "-d " + "text*" + decryption_type + name_and_location_of_decrypted_file**
+        *the "plaintext_file_path" may be shortened to just the file name and not the whole file path. For example,
+        Resources/Library/Clarissa.txt can be passed in as Clarissa.txt and the command will still work. This will only
+        work for the files in The four folders in the Resources folder.
 
-   *Type out the text in quotation marks or type "-i " followed by the file name and location(not in quotes)
-       * Notes: File names should not contain spaces.
-   **If no name and  location is given for the newly generated file, a default name and location will be given
+    decrypt (cipher) (ciphertext_file_path) <output_file_path>
+        Does the same thing as encrypt, but decrypts. Note that there are more decryption ciphers than encryption ones.
+        This is because some decryption ciphers only decrypt.
 
-To print out the available cipher types, type "help"
-To exit the program, type "exit"
-To clear files in decrypted and encrypted, type "clear"
+    test    OR    test [optional flag]    OR    test (decryption_cipher)
+        1. test
+            Just typing "test" will enter into testing mode, where the word "test" is already provided as the first
+            command and [optional flag] or (decryption_cipher) must be inputted
 
-To enter testing mode, enter "test"
-    In testing mode, type "clear" to clear logs
-    Manually change the code in test.py in order to change options.
+        2. test [optional flag]
+            Flags:
+                -e: exit the testing mode back into regular mode where commands other than "test" can be used
+                -a: automated testing. Tests are run automatically on all decryption ciphers. If this flag is provided
+                    while NOT already in testing mode, then the user is automatically exited out of testing mode upon
+                    completion. Otherwise, if ALREADY IN testing mode, then program will continue in testing mode.
+                -c: will clear all logs in Resources/Files_Logs
 
+        3. test (decryption_cipher)
+            This command will run a test with parameters (such as plaintext, key...) described in Cryptography/test.py.
+            The corresponding encrypt cipher to the user provided "decryption_cipher" will be used to encrypt the
+            plaintext. Then, the ciphertext will be decrypted with the user provided "decryption_cipher". This
+            decryption result will be compared against the plaintext for correctness.
 
-
-
-
-
-EXAMPLES
-
-"-e "qwertyuiop qwertyuiop" vigenere"
-    This will encrypt the word "qwertyuiop qwertyuiop" using a vigenere cipher. A default name and location is provided
-    for the generated file
-
-"-e Resources/Library/plain.txt vigenere" (or "-e plain.txt vigenere")
-    This will encrypt plain.txt, which is located in Resources/Library, using a vigenere cipher. A default name and
-    location is provided for the generated file
-
-
-"-e plain.txt vigenere Resources/Files_Encrypted/vigenere_encrypted_plain.txt"
-    This will encrypt plain.txt, which is located in Library, using a vigenere cipher. In addition, the name and
-    location for the generated file is created.
-
-
-"-d encrypted.txt vigenere"
-    This will decrypt encrypted.txt using a vigenere cipher, with or without a key. Further instructions will be
-    provided.
-
-
+    database [optional flags] (cipher) (new_database_file_name)    OR     database (database_file_name)
+             OR     database [optional flags]
+        1. database [optional flags] (cipher) (new_database_file_name)
+            Flags:
+                -n (cipher) (new_database_file_name): Create a new database with name: "new_database_file_name". The
+                method of encryption is "cipher", which must be a valid encryption cipher. The program will ask for the
+                key for encryption and/or decryption later on if necessary.
 
 
-DOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATIONDOCUMENTATION
+        2. database (database_file_name)
+            Open up the encrypted database named: "database_file_name"
+
+        3. database [optional flags]
+            Flags:
+                -c: Clear all files in the Resources/Database folder. The program will ask the user for a check before
+                the deletion actually occurs.
+
+    help
+        Will print out helpful information
+
+    exit
+        Will exit the program
+
+    clear
+        Clears files in Files_Decrypted and Files_Encrypted
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+############################################################################################### DOCUMENTATION ##########
 
 PROJECT STRUCTURE (Cryptography)
     This project has four main components, as well as four folders for storage.
 
-        The five main components are:
+        The six main components (in Cryptography) are:
             -cryptography_runner.py - this file holds the main runner program that takes in user input, and performs the
                       encryption/decryption.
             -misc.py - this file holds functions and resources useful throughout the project.
             -test.py - this file runs the decryption/encryption functions and tests for correctness and performance
+            -database.py - this file holds everything necessary for handling the encryption/decryption of databases.
             -package Decryption - this package holds all files necessary to perform a decryption
             -package Encryption - this package holds all files necessary to perform an encryption
 
-        The four folders are:
+
+        The five folders are:
             -Resources/Library - this folder stores all text files you want to use with this program
             -Resources/Files_Decrypted - this is where the generated decrypted files go
             -Resources/Files_Encrypted - this is where the generated encrypted files go
             -Resources/Files_Logs - where the logs from testing go
+            -Resources/Databases - holds encrypted databases, along with info files about those databases.
 
-        𝐓𝐇𝐈𝐒 𝐈𝐒 𝐓𝐇𝐄 𝐆𝐄𝐍𝐄𝐑𝐀𝐋 𝐒𝐓𝐑𝐔𝐂𝐓𝐔𝐑𝐄:
-            General use: 𝐜𝐫𝐲𝐩𝐭𝐨𝐠𝐫𝐚𝐩𝐡𝐲_𝐫𝐮𝐧𝐧𝐞𝐫.𝐩𝐲 takes utf-8 plaintext and cipher from the user. It then calls
-                𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐱𝐞𝐜𝐮𝐭𝐞(). That makes calls to various functions in misc that handle
-                user input and other misc aspects. Some of those functions calls 𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐧𝐜𝐫𝐲𝐩𝐭()
-                to use the actual algorithm to encrypt. Decryption works much the same way.
 
-            Testing: 𝐭𝐞𝐬𝐭.𝐩𝐲 takes in parameters for testing and calls 𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐞𝐱𝐞𝐜𝐮𝐭𝐞() to get the
-                ciphertext. Then, 𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐭𝐞𝐬𝐭𝐢𝐧𝐠_𝐞𝐱𝐞𝐜𝐮𝐭𝐞() is called, which makes a call to
-                𝐦𝐢𝐬𝐜𝐞𝐥𝐥𝐚𝐧𝐞𝐨𝐮𝐬.𝐭𝐞𝐬𝐭𝐢𝐧𝐠_𝐠𝐞𝐧𝐞𝐫𝐚𝐥_𝐝𝐞𝐜𝐫𝐲𝐩𝐭_𝐰𝐢𝐭𝐡_𝐤𝐞𝐲(), which calls the 𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐝𝐞𝐜𝐫𝐲𝐩𝐭() to
-                decrypt the ciphertext. Statistics is written in 𝐦𝐢𝐬𝐜𝐞𝐥𝐥𝐚𝐧𝐞𝐨𝐮𝐬.𝐭𝐞𝐬𝐭𝐢𝐧𝐠_𝐠𝐞𝐧𝐞𝐫𝐚𝐥_𝐝𝐞𝐜𝐫𝐲𝐩𝐭_𝐰𝐢𝐭𝐡_𝐤𝐞𝐲()
+
 
 
 
