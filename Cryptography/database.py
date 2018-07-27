@@ -1,5 +1,13 @@
 from Cryptography import misc
 
+import os                             # To open up notepad
+
+
+
+
+
+def run_database_process():
+    pass
 
 
 
@@ -7,4 +15,11 @@ from Cryptography import misc
 
 
 
+
+
+
+
+
+def init_database():
+    pass
 

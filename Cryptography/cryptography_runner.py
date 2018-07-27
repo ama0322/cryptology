@@ -68,13 +68,13 @@ def usage():
 def parse_user_input():
     """
     This function parses user input and returns relevant information.
-    User input is unix-like, with: command [options] (argument) <optional argument>
-        encrypt (cipher) (plaintext_file_path*) <output_file_path>
-        decrypt (cipher) (ciphertext_file_path) <output_file_path>
-        test    [options] <cipher>
+    User input is unix-like, with: command [optional flag] (argument) <optional argument>
+        encrypt (cipher) (plaintext_file_path*)  <output_file_path>
+        decrypt (cipher) (ciphertext_file_path*) <output_file_path>
+        test    [optional flag] <cipher>
         help
         exit
-        database TODO
+        database [options flag] <encrypted_db_file_path*>
 
     * File paths with spaces in the name must be escaped with "\ ".
     So the path:     Resources/Library/Space File.txt
@@ -361,7 +361,10 @@ def parse_user_input():
 
         # Handle command: database
         if command == "database":
-            pass
+
+            statement = statement.split(" ")                    # Split statement into words separated by spaces
+
+
 
 
         # Command not recognized
