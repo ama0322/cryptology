@@ -83,12 +83,12 @@ def manual_testing(given_cipher):
 
 
                     # Check if the user decides to clear logs
-                    if command[0] == "clear":
+                    if command[0] == "-c":
                         # delete files in /Files_Logs
                         for file in os.listdir("Resources/Files_Logs"):
                             os.unlink("Resources/Files_Logs/" + file)
 
-                        statement = input("Logs cleared! Enter a testing mode command: "
+                        statement = input("Testing logs cleared! Enter a testing mode command: "
                                           + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
                         continue
 
@@ -334,12 +334,12 @@ def _parse_user_input():
                     return None
 
                 # Check if the user decides to clear logs
-                if command[0] == "clear":
+                if command[0] == "-c":
 
                     for file in os.listdir("Resources/Files_Logs"):                  # delete files in /Files_Logs
                         os.unlink("Resources/Files_Logs/" + file)
 
-                    statement = input("Logs cleared! Enter a testing mode command: "
+                    statement = input("Testing logs cleared! Enter a testing mode command: "
                                         + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
                     continue
 
