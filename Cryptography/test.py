@@ -1,7 +1,8 @@
 from Cryptography import misc
 
-import datetime    # for labelling the date that files are created
-import os          # for deleting files
+
+import datetime                                  # for labelling the date that files are created
+import os                                        # for deleting files
 
 
 
@@ -9,7 +10,7 @@ import os          # for deleting files
 ############################################################################################## MANUAL TESTING ##########
 
 # MODIFY THESE VALUES
-plaintext_source = "Resources/Library/Test10.txt"
+plaintext_source = "Resources/Library/Clarissa.txt"
 
 
 
@@ -37,7 +38,7 @@ def manual_testing(given_cipher):
 
         # Check that given_cipher is not empty ("")
         if given_cipher == "":
-            return
+            return ""
 
         # Otherwise, run the command
         def get_testing_info_with_command(command):
@@ -53,9 +54,10 @@ def manual_testing(given_cipher):
             # Get the decryption type and the encryption type (same name as decryption but w/o "_nokey")
             def parse_user_input_with_command(command):
                 """
-                This prompts the user and reads user info. The user may choose to change the default ciphertext location by
-                entering "set " followed by the file of the ciphertext. Otherwise, the user specifies a decryption method to
-                test
+                This prompts the user and reads user info. The user may choose to change the default ciphertext location
+                by entering "set " followed by the file of the ciphertext. Otherwise, the user specifies a decryption
+                method to test.
+                Note, this does not handle "-a" because "-a" flag is handled in cryptography_runner.py
 
                 :return: (string) the decryption method to test
                 """
@@ -71,8 +73,14 @@ def manual_testing(given_cipher):
 
                     # If empty, continue
                     if statement == "":
-                        statement = input("No command entered! Enter a testing mode command: ")
+                        statement = input("No command entered! Enter a testing mode command: "
+                                          + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
                         continue
+
+                    # If exit, exit
+                    if statement == "-e":
+                        return None
+
 
                     # Check if the user decides to clear logs
                     if command[0] == "clear":
@@ -80,7 +88,8 @@ def manual_testing(given_cipher):
                         for file in os.listdir("Resources/Files_Logs"):
                             os.unlink("Resources/Files_Logs/" + file)
 
-                        statement = input("Logs cleared. Enter a testing mode command: ")
+                        statement = input("Logs cleared! Enter a testing mode command: "
+                                          + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
                         continue
 
                     # Check that the command is a legitimate decryption type. If so, break out of loop
@@ -88,10 +97,16 @@ def manual_testing(given_cipher):
                         break
 
                     # Prompt the user for a command again
-                    statement = input("Invalid command! Enter a testing mode command: ")
+                    statement = input("Invalid command (" + statement + ")! Enter a testing mode command: "
+                                      + "\u001b[32m" + "test " + "\u001b[0m")                       # test colored green
 
                 return statement
             decryption = parse_user_input_with_command(command)
+
+            # If decryption is None, indicating to exit, then, return None, None, None, None, None, None
+            if decryption is None:
+                return None, None, None, None, None, None,
+
             encryption = decryption if decryption.find("_nokey") == -1 else decryption[0: -6]
 
             # Obtain the plaintext
@@ -149,6 +164,10 @@ def manual_testing(given_cipher):
             return encryption, decryption, plaintext, output_location, encryption_key, char_set
         e, d, p, o_l, e_k, c_s = get_testing_info_with_command(given_cipher)
 
+        # If return was None, None, ... then exit back to cryptography runner
+        if e is None:
+            return None
+
         # Pass this info to decryption's testing_execute
         exec("import Decryption." + d)
         exec("Decryption." + d
@@ -168,7 +187,6 @@ def manual_testing(given_cipher):
         # If _get_testing_info() output is all None's, then exit this function back to Cryptography_runner
         if encryption is None:
             return
-
 
         # Else, proceed regularly. Pass this info to decryption's testing_execute
         else:
@@ -289,7 +307,8 @@ def _parse_user_input():
         """
 
         # Prompt the user for a command
-        statement = input("Enter a testing mode command: ")
+        statement = input("Enter a testing mode command: "
+                          + "\u001b[32m" + "test " + "\u001b[0m")  # test colored green
 
         # Loop until the user enters a legitimate decryption type
         while True:
@@ -299,20 +318,29 @@ def _parse_user_input():
 
                 # If empty, continue
                 if statement == "":
-                    statement = input("No command entered! Enter a testing mode command: ")
+                    statement = input("No command entered! Enter a testing mode command: "
+                                        + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
+                    continue
+
+                # If automated, then run that, and take next command
+                if statement == "-a":
+                    automated_testing()
+                    statement = input("Automated tests done! Enter a testing mode command: "
+                                        + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
                     continue
 
                 # If "exit", then return None:
-                if statement == "exit":
+                if statement == "-e":
                     return None
 
                 # Check if the user decides to clear logs
                 if command[0] == "clear":
-                    # delete files in /Files_Logs
-                    for file in os.listdir("Resources/Files_Logs"):
+
+                    for file in os.listdir("Resources/Files_Logs"):                  # delete files in /Files_Logs
                         os.unlink("Resources/Files_Logs/" + file)
 
-                    statement = input("Logs cleared. Enter a testing mode command: ")
+                    statement = input("Logs cleared! Enter a testing mode command: "
+                                        + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
                     continue
 
 
@@ -322,7 +350,8 @@ def _parse_user_input():
                     break
 
                 # Prompt the user for a command again
-                statement = input("Invalid command! Enter a testing mode command: ")
+                statement = input("Invalid command (" + command[0] + ")! Enter a testing mode command: "
+                                    + "\u001b[32m" + "test " + "\u001b[0m")  # test colored green
 
         return statement
 

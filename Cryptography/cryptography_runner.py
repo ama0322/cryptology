@@ -149,14 +149,17 @@ def parse_user_input():
                 prompt = "Extra argument (" + extra_args + ") given! Enter another statement: "
 
             # If no optional arguments or flags provided, enter testing mode with no cipher provided
-            if len(statement) == 1:
+            elif len(statement) == 1:
                 test.manual_testing("")
                 prompt = "Manual testing done! Enter another statement: "
 
+
+
             # Read for the "-a" flag for automated testing
-            if statement[1] == "-a":
+            elif statement[1] == "-a":
                 test.automated_testing()
                 prompt = "Automated testing done! Enter another statement: "
+
 
             # If a Decryption cipher is provided, enter manual testing and run the test on that cipher
             else:
