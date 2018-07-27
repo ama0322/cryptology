@@ -6,11 +6,11 @@ from Cryptography import misc
 # Cipher info:
 char_set = misc.ALPHABETS
 cipher_type = "symmetric"
-key_size = "calculated characters (multiple characters) "
+key_size = "calculated characters (multiple characters)"
 
 
 
-# NOT DONE
+
 
 
 
