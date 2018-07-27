@@ -431,14 +431,14 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     new_file = open(output_location, "w", encoding="utf-8")
     if decrypted == plaintext:
         new_file.writelines([cipher_name + " on " + plaintext_source + "\nCORRECT \nNotes: "])
-        print(cipher_name + ": 	𝐂𝐎𝐑𝐑𝐄𝐂𝐓\n")
+        print(cipher_name + "\u001b[32m" + ": 𝐂𝐎𝐑𝐑𝐄𝐂𝐓\n" + "\u001b[0m")
     else:
         new_file.writelines([cipher_name + " on " + plaintext_source + "\nINCORRECT \t\t\t\t\t"
                              + "Characters different: " + str(sum(1 for a, b in zip(plaintext, decrypted) if a != b))
                              + "\t Percent different: " + str((sum(1 for a, b in zip(plaintext, decrypted) if a != b) /
                                                              len(plaintext) * 100))
                              + "\nNotes: "])
-        print(cipher_name + ": 𝐈𝐍𝐂𝐎𝐑𝐑𝐄𝐂𝐓\n")
+        print(cipher_name + "\u001b[31m" + ": 𝐈𝐍𝐂𝐎𝐑𝐑𝐄𝐂𝐓\n" + "\u001b[0m")
 
 
     # Write out encryption information/statistics. Then, do the decryption information

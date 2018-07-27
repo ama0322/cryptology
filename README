@@ -1,5 +1,10 @@
 𝐍𝐎𝐓𝐄: 𝐜𝐫𝐲𝐩𝐭𝐨𝐠𝐫𝐚𝐩𝐡𝐲_𝐫𝐮𝐧𝐧𝐞𝐫.𝐩𝐲 𝐈𝐒 𝐍𝐎𝐓 𝐀𝐒 𝐑𝐄𝐋𝐈𝐀𝐁𝐋𝐄 𝐀𝐒 𝐭𝐞𝐬𝐭.𝐩𝐲
 
+Needed Modules:
+
+
+
+
 USAGE
 
 To encrypt, type: "-e " + "text*" + encryption_type + name_and_location_of_encrypted_file**
@@ -75,11 +80,14 @@ PROJECT STRUCTURE (Cryptography)
                 𝐦𝐢𝐬𝐜𝐞𝐥𝐥𝐚𝐧𝐞𝐨𝐮𝐬.𝐭𝐞𝐬𝐭𝐢𝐧𝐠_𝐠𝐞𝐧𝐞𝐫𝐚𝐥_𝐝𝐞𝐜𝐫𝐲𝐩𝐭_𝐰𝐢𝐭𝐡_𝐤𝐞𝐲(), which calls the 𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐢𝐨𝐧/(𝐜𝐢𝐩𝐡𝐞𝐫).𝐝𝐞𝐜𝐫𝐲𝐩𝐭() to
                 decrypt the ciphertext. Statistics is written in 𝐦𝐢𝐬𝐜𝐞𝐥𝐥𝐚𝐧𝐞𝐨𝐮𝐬.𝐭𝐞𝐬𝐭𝐢𝐧𝐠_𝐠𝐞𝐧𝐞𝐫𝐚𝐥_𝐝𝐞𝐜𝐫𝐲𝐩𝐭_𝐰𝐢𝐭𝐡_𝐤𝐞𝐲()
 
+
+
+
 CRYPTOGRAPHY_RUNNER.PY
 
 
 
-misc.PY
+MISC.PY
     This file holds functions and resources useful throughout the project
 
     Structure:
