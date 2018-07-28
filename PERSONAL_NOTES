@@ -7,11 +7,10 @@
 
 
 NEED TO FINISH/FIX:
-    colors for test commands
+    database command
     Whatever was caught by automatic tests
     Update README
     decrypt vigenere_nokey
-    test mode command prompt
     for file paths with spaces, add option to enclose in quotation marks (using escape character right now)
 
 
@@ -20,8 +19,8 @@ NEED TO FINISH/FIX:
 
 NEED TO ADD:
     add cbc for block ciphers
-    ways to combat inaccuracy of get_alphabet_of and get_char_encoding_scheme_of (for short texts)
-    A sort of encrypted "database" system
+
+
 
 
 

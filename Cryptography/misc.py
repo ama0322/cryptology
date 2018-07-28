@@ -112,38 +112,56 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
 
 
     # Figure out the char_set to use, whether it be an alphabet, or an encoding scheme
+    short_text = 300
     if char_set == ALPHABETS:                                                # If cipher uses ALPHABETS
         if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for alphabet
             char_set = CHAR_SET_TO_SIZE.get(_take_alphabet(ALPHABETS))       # char_set becomes the size of alphabet
 
-        elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find alphabet automatically
-            char_set = CHAR_SET_TO_SIZE.get(alphabet_of(data))               # char_set becomes the size of alphabet
+        elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find alphabet
+            if len(data) <= short_text:                                      # Short text, Ask user for alphabet
+                char_set = _take_char_set_of_short_text(len(data),
+                                                        ALPHABETS)
+                char_set = CHAR_SET_TO_SIZE.get(char_set)
+            else:                                                            # Find alphabet size automatically
+                char_set = CHAR_SET_TO_SIZE.get(alphabet_of(data))
 
     elif char_set == BINARY_TO_CHAR_ENCODING_SCHEMES:                        # If cipher uses ENCODING SCHEMES
         if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for scheme
-            char_set = _take_char_encoding_scheme(BINARY_TO_CHAR_ENCODING_SCHEMES)
+            char_set = _take_char_encoding_scheme(
+                       BINARY_TO_CHAR_ENCODING_SCHEMES)
 
-        elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find scheme automatically
-            char_set = char_encoding_scheme_of(data)
+        elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find scheme
+            if len(data) <= short_text:                                      # Short text, ask user for alphabet
+                char_set = _take_char_set_of_short_text(len(data),
+                                          BINARY_TO_CHAR_ENCODING_SCHEMES)
+            else:                                                            # Find alphabet size automatically
+                char_set = char_encoding_scheme_of(data)
 
 
     # FOR ENCRYPTION
     # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext alphabet is
     # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
     # So switch to use the plaintext's alphabet for encryption, and inform the user
-    if encrypt_or_decrypt == "encrypt":
-        try:
+    chosen_alphabet = next(alphabet for alphabet,                       # The selected alphabet. May or may not be
+                           size in CHAR_SET_TO_SIZE.items()             # insufficient
+                           if size == char_set)
+    if encrypt_or_decrypt == "encrypt":                                 # Only "encrypt" mode needs adjusting
+        try:                                                            # Non restricted ciphers fail "try" statement
             restrict = eval(module                                      # Ciphertext alphabet restricted
                         + ".ciphertext_alphabet_restricted")
             if restrict == True:                                        # Restrict by using plaintext's alphabet.
                 alphabet = alphabet_of(data)
-                char_set = CHAR_SET_TO_SIZE.get(alphabet)
-                print("The chosen alphabet for encryption is"
+                if char_set < CHAR_SET_TO_SIZE.get(alphabet):           # If chosen alphabet (char_set) is insufficient
+
+
+                    print("The chosen alphabet for encryption ("
+                        + chosen_alphabet + ") is"
                         + " insufficient for the alphabet that"
-                        + " the plaintext's alphabet is in."
+                        + " the plaintext is in."
                         + "\nTherefore, the alphabet for"
                         + " encryption is switched to: "
                         + alphabet)
+                    char_set = CHAR_SET_TO_SIZE.get(alphabet)
 
         except Exception:                                               # Ciphertext alphabet not restricted. Do nothing
             pass
@@ -359,7 +377,7 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     """
 
 
-    # Relevant info from encryption
+    # RELEVANT INFO FOR ENCRYPTION/DECRYPTION
     ciphertext     = ""                                                # Build ciphertext here
     public_key     = ""                                                # May not be used
     private_key    = ""                                                # May not be used
@@ -367,7 +385,7 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     decryption_key = encryption_key                                    # The key used to decrypt. Symmetric by default
 
 
-    # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext alphabet is
+    # ADJUST THE CHARACTER SET IF NECESSARY. Some ciphers cannot work correctly if the chosen ciphertext alphabet is
     # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
     # So switch to use the plaintext's alphabet for encryption, and inform the user
     exec("from Cryptography.Decryption import " + decryption)
@@ -387,14 +405,14 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     except Exception:                                                  # Ciphertext alphabet not restricted. Do nothing
         pass
 
-    # Execute the encryption, and store the output
+    # EXECUTE THE ENCRYPTION, and store the output
     start_time = time.time()
     exec("from Cryptography.Encryption import " + encryption)          # Import module for encryption
     encryption_output = eval(encryption                                # Run the encryption
                 + ".encrypt(plaintext, encryption_key, char_set)" )
     encryption_time = time.time() - start_time
 
-    # Store the encryption's output
+    # STORE THE ENCRYPTION'S OUTPUT
     if type(encryption_output) is tuple:                               # If tuple, then ciphertext is in 1st index
         ciphertext = encryption_output[0]
 
@@ -411,7 +429,7 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
 
 
 
-    # Run decryption, save time and decrypted text
+    # RUN DECRYPTION, save time and decrypted text
     decrypted = ""
     start_time = time.time()
     exec("from Cryptography.Decryption import " + decryption)          # Import module for decryption
@@ -427,7 +445,7 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
 
 
 
-    # Open file for writing, and set up a space for personal notes
+    # OPEN FILE FOR WRITING, and set up a space for personal notes
     new_file = open(output_location, "w", encoding="utf-8")
     if decrypted == plaintext:
         new_file.writelines([cipher_name + " on " + plaintext_source + "\nCORRECT \nNotes: "])
@@ -709,7 +727,7 @@ def int_to_chars_encoding_scheme(number, encoding):
     return encoded
 
 
-# This function decodes characters into a number using the proper characte endocing scheme
+# This function decodes characters into a number using the proper character encoding scheme
 def chars_to_int_decoding_scheme(string, encoding):
     """
     Does the opposite of int_to_chars_encoding_scheme
@@ -1478,6 +1496,53 @@ def _take_char_encoding_scheme(binary_to_char_encoding_scheme):
     return selection
 
 
+# Returns char set. This helper function asks the user for a char set of a small ciphertext (less than 300)
+def _take_char_set_of_short_text(text_len, char_set):
+    """
+    For shorter texts, the character set cannot be accurately determined automatically. For these cases, then ask the
+    user for the character set. Character sets must be legitimate.
+
+    :param text_len: (int)    the length of the data. (Is short)
+    :param char_set: (string) either the ALPHABETS or BINARY_TO_CHAR_ENCODING_SCHEMES
+    :return:
+    """
+
+    # Determine the character set type (alphabet or encoding scheme)
+    if char_set == ALPHABETS:
+        options = "alphabet"
+    else:
+        options = "encoding scheme"
+
+
+    # Ask for the user input
+    user_choice = input("Ciphertext with " + str(text_len) + " characters is too short to accurately determine its "
+                            + options + ". Manually enter the " + options + ": ")
+
+
+    # While the user's choice is invalid, keep looping. Break when user entry is valid
+    while True:
+
+        # If valid alphabet
+        if char_set == ALPHABETS and user_choice in ALPHABETS:
+            break
+
+        # If valid encoding scheme
+        if char_set == BINARY_TO_CHAR_ENCODING_SCHEMES and user_choice in BINARY_TO_CHAR_ENCODING_SCHEMES:
+            break
+
+        # If not valid alphabet
+        if char_set == ALPHABETS:
+            user_choice = input(user_choice + " is not a valid alphabet! Try again: ")
+            continue
+
+        # If not valid encoding scheme
+        if char_set == BINARY_TO_CHAR_ENCODING_SCHEMES:
+            user_choice = input(user_choice + " is not a valid encoding scheme! Try again: ")
+            continue
+
+    return user_choice
+
+
 
 
 # This helper function obtain a single char key from the user and returns that
@@ -1528,7 +1593,7 @@ def _get_general_key():
     return key
 
 
-# This helper function obtains a private key from the user TODO
+# This helper function obtains a private key from the user
 def _get_private_key():
     """
     This function obtains a key of any length fro the user

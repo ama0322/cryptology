@@ -54,6 +54,8 @@ USAGE OF AVAILABLE COMMANDS
                 method of encryption is "cipher", which must be a valid encryption cipher. The program will ask for the
                 key for encryption and/or decryption later on if necessary.
 
+                -e (cipher) (abs_file_path_to_new_database): The file pointed to by "abs_file_path_to_new_database"
+                will be turned into a new database file with info file. "cipher" will be the encrypting cipher used.
 
         2. database (database_file_name)
             Open up the encrypted database named: "database_file_name"
