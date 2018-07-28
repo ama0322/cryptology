@@ -363,16 +363,16 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     """
     This function runs encryption and decryption and writes statistics about the process
 
-    :param encryption:       (string)        the name of the encryption cipher to use
-    :param decryption:       (string)        the name of the decryption cipher to use
-    :param plaintext:        (string)        the plaintext to perform encryption on
-    :param plaintext_source: (string)        the location where the plaintext is found
-    :param encryption_key:   (string)        the key to encrypt with
-    :param char_set:         (string or int) either the encoding scheme or the size of the alphabet used
-    :param output_location:  (string)        the file to write statistics into this
-    :param cipher_name:      (string)        the formal name of the cipher that is used
-    :param encryption_code:  (string)        the code to run that writes info about encryption
-    :param decryption_code:  (string)        the code to run that writes info about decryption
+    :param   encryption:       (string)        the name of the encryption cipher to use
+    :param   decryption:       (string)        the name of the decryption cipher to use
+    :param   plaintext:        (string)        the plaintext to perform encryption on
+    :param   plaintext_source: (string)        the location where the plaintext is found
+    :param   encryption_key:   (string)        the key to encrypt with
+    :param   char_set:         (string or int) either the encoding scheme or the size of the alphabet used
+    :param   output_location:  (string)        the file to write statistics into this
+    :param   cipher_name:      (string)        the formal name of the cipher that is used
+    :param   encryption_code:  (string)        the code to run that writes info about encryption
+    :param   decryption_code:  (string)        the code to run that writes info about decryption
     :return: None
     """
 
@@ -389,20 +389,26 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
     # So switch to use the plaintext's alphabet for encryption, and inform the user
     exec("from Cryptography.Decryption import " + decryption)
-    try:
-        restrict = eval(decryption                                     # Ciphertext alphabet restricted
+    chosen_alphabet = next(alphabet for alphabet,                       # The selected alphabet. May or may not be
+                           size in CHAR_SET_TO_SIZE.items()             # insufficient
+                           if size == char_set)
+    try:                                                                # Non restricted ciphers fail "try" statement
+        restrict = eval(decryption                                      # Ciphertext alphabet restricted
                         + ".ciphertext_alphabet_restricted")
-        if restrict == True:                                           # Restrict by using plaintext's alphabet.
+        if restrict == True:                                        # Restrict by using plaintext's alphabet.
             alphabet = alphabet_of(plaintext)
-            char_set = CHAR_SET_TO_SIZE.get(alphabet)
-            print("The chosen alphabet for encryption is"
-                    + " insufficient for the alphabet that"
-                    + " the plaintext's alphabet is in."
-                    + "\nTherefore, the alphabet for"
-                    + " encryption is switched to: "
-                    + alphabet)
+            if char_set < CHAR_SET_TO_SIZE.get(alphabet):           # If chosen alphabet (char_set) is insufficient
 
-    except Exception:                                                  # Ciphertext alphabet not restricted. Do nothing
+                print("The chosen alphabet for encryption ("
+                        + chosen_alphabet + ") is"
+                        + " insufficient for the alphabet that"
+                        + " the plaintext is in."
+                        + "\nTherefore, the alphabet for"
+                        + " encryption is switched to: "
+                        + alphabet)
+                char_set = CHAR_SET_TO_SIZE.get(alphabet)
+
+    except Exception:                                               # Ciphertext alphabet not restricted. Do nothing
         pass
 
     # EXECUTE THE ENCRYPTION, and store the output
