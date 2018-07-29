@@ -6,7 +6,7 @@ Needed Modules:
 
 
 
-USAGE OF AVAILABLE COMMANDS
+################################################################################# USAGE OF AVAILABLE COMMANDS ##########
     User input is unix-like, with: command [optional flag] (argument) <optional argument>
     File paths with spaces must escape spaces with : "\ "
     The working directory is the outer Cryptography file. For example, the file path of Clarissa.txt in Resources is
@@ -35,9 +35,13 @@ USAGE OF AVAILABLE COMMANDS
         2. test [optional flag]
             Flags:
                 -e: exit the testing mode back into regular mode where commands other than "test" can be used
-                -a: automated testing. Tests are run automatically on all decryption ciphers. If this flag is provided
+
+                -a: automated testing. Tests are run automatically on all decryption* ciphers. If this flag is provided
                     while NOT already in testing mode, then the user is automatically exited out of testing mode upon
                     completion. Otherwise, if ALREADY IN testing mode, then program will continue in testing mode.
+
+                    * The encryption cipher corresponding to the decryption cipher should never raise an error.
+
                 -c: will clear all logs in Resources/Files_Logs
 
         3. test (decryption_cipher)
@@ -87,28 +91,29 @@ USAGE OF AVAILABLE COMMANDS
 
 
 
-
 ############################################################################################### DOCUMENTATION ##########
 
 PROJECT STRUCTURE (Cryptography)
-    This project has four main components, as well as four folders for storage.
+    This project has six main components, as well as five folders for storage.
 
         The six main components (in Cryptography) are:
             -cryptography_runner.py - this file holds the main runner program that takes in user input, and performs the
-                      encryption/decryption.
-            -misc.py - this file holds functions and resources useful throughout the project.
-            -test.py - this file runs the decryption/encryption functions and tests for correctness and performance
-            -database.py - this file holds everything necessary for handling the encryption/decryption of databases.
-            -package Decryption - this package holds all files necessary to perform a decryption
-            -package Encryption - this package holds all files necessary to perform an encryption
+                                            encryption/decryption.
+            -misc.py                - this file holds functions and resources useful throughout the project.
+            -test.py                - this file runs the decryption/encryption functions and tests for correctness and
+                                            performance
+            -database.py            - this file holds everything necessary for handling the encryption/decryption of
+                                            databases.
+            -package Decryption     - this package holds all files necessary to perform a decryption
+            -package Encryption     - this package holds all files necessary to perform an encryption
 
 
         The five folders are:
-            -Resources/Library - this folder stores all text files you want to use with this program
+            -Resources/Library         - this folder stores all text files you want to use with this program
             -Resources/Files_Decrypted - this is where the generated decrypted files go
             -Resources/Files_Encrypted - this is where the generated encrypted files go
-            -Resources/Files_Logs - where the logs from testing go
-            -Resources/Databases - holds encrypted databases, along with info files about those databases.
+            -Resources/Files_Logs      - where the logs from testing go
+            -Resources/Databases       - holds encrypted databases, along with info files about those databases.
 
 
 
@@ -120,38 +125,44 @@ CRYPTOGRAPHY_RUNNER.PY
 
 
 
+DATABASE.PY
+
+
+
 MISC.PY
     This file holds functions and resources useful throughout the project
 
     Structure:
-        I. Resources - this area hold resources that generally deal with the type of encryptions/decryptions and
-        character sets available. Also, some resources necessary for algorithms in the same file is also stored here.
+        I.   Resources - this area hold resources that generally deal with the type of encryptions/decryptions and
+             character sets available. Also, some resources necessary for algorithms in the same file is also stored
+             here.
 
-        II. User Interfacing and Function Calls - these functions are called from files from Decryption and Encryption
-        when their execute() function is called. It makes calls to Section IV in order to get
-        user data and write down useful information. These functions also return the encrypted/decrypted text back to
-        execute()
+        II.  User Interfacing and Function Calls - these functions are called from files from Decryption and Encryption
+             when their execute() function is called. It makes calls to Section IV in order to get
+             user data and write down useful information. These functions also return the encrypted/decrypted text back
+             to execute()
 
         III. Useful Algorithms - this contains algorithms that are used in encrypt() and decrypt() from files in
-        Encryption and Decryption
+             Encryption and Decryption
 
-        IV. Helper Functions - functions to process user input and write down relevant information. Called from
-        functions in Section II for convenience.
+        IV.  Helper Functions - functions to process user input and write down relevant information. Called from
+             functions in Section II for convenience.
 
 
 TEST.PY
 
 
+
 ENCRYPTION
 
-    GENERAL FILE FORMAT
-        def execute() - this function makes a call to misc's function to encrypt/decrypt in the section:
-        USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input and and writes down
-        relevant information to a file. It also returns the encrypted text for this function(execute) to return
-        back to cryptography_runner.py. This function is called from cryptography_runner.py
+    ### GENERAL FILE FORMAT ###
+        I. def execute() - this function makes a call to misc's function to encrypt/decrypt in the section:
+            USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input and and writes down
+            relevant information to a file. It also returns the encrypted text for this function(execute) to return
+            back to cryptography_runner.py. This function is called from cryptography_runner.py
 
-        def encrypt() - this function contains the actual algorithm to encrypt the plaintext. It is generally called
-        from misc' encrypt/decrypt function. When in testing mode, however, it is called from test.py
+        II. def encrypt() - this function contains the actual algorithm to encrypt the plaintext. It is generally called
+            from misc' encrypt/decrypt function. When in testing mode, however, it is called from test.py
 
     ROTATION.PY
         This shifts the unicode values of the plaintext up (addition) by the amount that the key is in unicode.
@@ -173,30 +184,32 @@ ENCRYPTION
         This vigenere takes the plaintext value to the power of the keyword character value. This
             results in a ciphertext whose characters are even more evenly distributed in unicode.
 
-        The ciphertext is stored in "units," which look like: (encoded+character + num_overlaps + " ") num_overlaps
-            represents the number of unicode values that, when pow(value, key_unicode_val, alphabet_size), give the same
-            result as when pow(plaintext_unicode_val, key_unicode_val, alphabet_size) is calculated. Storing this is
-            necessary for decryption in order to figure out which character was the original plaintext since there are
-            overlaps.
+        The ciphertext is stored in "units," which look like: (encoded_character + num_overlaps + " ") "num_overlaps"
+            represents the number of unicode values that, when pow(value, key_unicode_val, alphabet_size) is calculated,
+            give the same result as when pow(plaintext_unicode_val, key_unicode_val, alphabet_size) is calculated.
+            Storing this is necessary for decryption in order to figure out which character was the original plaintext
+            since there are overlaps.
 
-        Note: Decryption assumes that the plaintext uses only ascii characters(for performance)
+        Note: Decryption assumes that the plaintext uses only ascii characters(for performance).
 
-        Note: Only use characters in the extended_ascii set for the plaintext
+        Note: Only use characters in the extended_ascii set for the plaintext.
 
         Note*: Unicode has certain characters called surrogates. These are unprintable. As a result, I had to adjust my
             numbers so that any values that would match surrogates are pushed into the corresponding character. This
             corresponding character is as far away from the end of the surrogates as the "before" value is from the
-            start of the surrogates
+            start of the surrogates. Basically, just add 2048 (the number of surrogates) to all unicode values
+            after and including the beginning surrogate (55296). To reverse this during decryption, subtract 2048 from
+            all unicode values that come after the ending surrogate (57343)
 
 
     VIGENERE_MULTIPLICATIVE.PY
-        This vigenere multiplies the character values instead of add. I added this to access
-            more of the characters in unicode.* For ascii, and extended_ascii, the characters are displayed as numbers
-            instead of in real characters, due to limitations.
+        This vigenere multiplies the character values instead of add. I added this to access more of the characters in
+        unicode.* The formatting of the ciphertext is similar to what is done with VIGENERE_EXPONENTIAL.PY, due to
+        possible overlaps.
 
-        Note: Stored ciphertext in same sort of format in VIGENERE_EXPONENTIAL
+        Note: Stored ciphertext in same sort of format in VIGENERE_EXPONENTIAL (units).
 
-        Note: See note on unicode in VIGENERE_EXPONENTIAL
+        Note*: See note on unicode in VIGENERE_EXPONENTIAL.
 
 
 
@@ -209,16 +222,42 @@ ENCRYPTION
 
 DECRYPTION
 
-    GENERAL FILE FORMAT
-        def execute() - this function makes a call to misc's function to encrypt/decrypt in the section:
-        USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input if necessary and and writes
-        down relevant information to a file. It also returns the decrypted text for this function(execute) to return
-        back to cryptography_runner.py. This function is called from cryptography_runner.py
+    ### GENERAL FILE FORMAT ###
 
-        def testing_execute() - this function is called from test.py. It is the testing form of execute, which means
-        that file are not generated in Files_Encrypted or Files_Decrypted. Instead, it writes statistics and
-        plain and ciphertext to a file in Files_Logs. This function either calls a general one from misc, or it
-        writes specialized statistics itself directly from this function.
+        I. CIPHER INFO (some files) - Where variables about the cipher are stored.
+            (1) char_set - the type of character set used, either misc.ALPHABETS or
+                       misc.BINARY_TO_CHAR_ENCODING_SCHEMES
+            (2) cipher_type - symmetric or asymmetric
 
-        def decrypt() - this function contains the actual algorithm to decrypt the ciphertext. It is generally called
-        from misc' encrypt/decrypt function. When in testing mode, however, it is called from testing_execute()
+            (3) key_size = the size/type of the key used for encrypting/decryption
+                i.   "zero characters" is an encrypting cipher that doesn't need a key input
+                ii.  "calculated characters" is a decrypting cipher that finds the key automatically
+                iii. "single character" is a symmetric encrypting/decrypting cipher that uses a single user-entered
+                              character
+                iv.  "multiple characters" is an symmetric encrypting/decrypting cipher that uses user-entered
+                              multiple characters
+                v.   "multiple generated characters" is a symmetric encrypting/decrypting cipher that uses randomly
+                              generated keys
+
+            (4) ciphertext_alphabet_restricted - Applies only to ciphers that use alphabets. "Restricted" means that
+                    the alphabet to use during encryption (same as the alphabet of the resulting ciphertext) must
+                    be the same as, or bigger than, the alphabet that the plaintext is in.
+
+            (5) no_short_texts - This decryption cipher cannot be used on short texts (mostly because the cipher
+                    relies on detecting English).
+
+        II. CIPHER SETTINGS (some files) - Where settings for the cipher are stored. For example, rsa has a setting for
+            the number of bits to use for the key.
+
+        III. def execute() - this function makes a call to misc's function to encrypt/decrypt in the section:
+            USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input if necessary and and writes
+            down relevant information to a file. It also returns the decrypted text for this function(execute) to return
+            back to cryptography_runner.py. This function is called from cryptography_runner.py
+
+        IV. def testing_execute() - this function is called from test.py. It is the testing form of execute, which means
+            that file are not generated in Files_Encrypted or Files_Decrypted. Instead, it writes statistics and
+            plain and ciphertext to a file in Files_Logs. This function either calls a general one from misc, or it
+            writes specialized statistics itself directly from this function.
+
+        V. def decrypt() - this function contains the actual algorithm to decrypt the ciphertext. It is generally called
+            from misc' encrypt/decrypt function. When in testing mode, however, it is called from testing_execute()
