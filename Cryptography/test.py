@@ -440,8 +440,9 @@ def automated_testing():
             # If char_set uses alphabet_size, then calculate that
             if char_set in misc.ALPHABETS:
                 char_set = misc.CHAR_SET_TO_SIZE.get(char_set)
-
-
+                chosen_alphabet = next(alphabet for alphabet, size           # The selected alphabet. May or may not be
+                                       in misc.CHAR_SET_TO_SIZE.items()      # insufficient. Will check later
+                                       if size == char_set)
 
             # FOR ALL OF THE PLAINTEXTS TO TEST
             for plaintext in testing_plaintexts:
@@ -450,7 +451,7 @@ def automated_testing():
                 try:
                     if eval(decrypt_cipher + ".no_short_texts") == True:
                         continue
-                except Exception:                                        # Short texts allowed, do nothing
+                except Exception:                                            # Short texts allowed, do nothing
                     pass
 
                 # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext
@@ -458,20 +459,24 @@ def automated_testing():
                 # decrypt correctly. So switch to use the plaintext's alphabet for encryption, and inform the user
                 exec("from Cryptography.Decryption import "
                      + decrypt_cipher)
-                try:
-                    restrict = eval(decrypt_cipher                       # Ciphertext alphabet restricted
+                try:  # Non restricted ciphers fail "try" statement
+                    restrict = eval(decrypt_cipher                           # Ciphertext alphabet restricted
                                     + ".ciphertext_alphabet_restricted")
-                    if restrict == True:                                 # Restrict by using plaintext's alphabet.
+                    if restrict == True:                                     # Restrict by using plaintext's alphabet.
                         alphabet = misc.alphabet_of(plaintext)
-                        char_set = misc.CHAR_SET_TO_SIZE.get(alphabet)
-                        print("The chosen alphabet for encryption is"
-                              + " insufficient for the alphabet that"
-                              + " the plaintext's alphabet is in."
-                              + "\nTherefore, the alphabet for"
-                              + " encryption is switched to: "
-                              + alphabet)
+                        if char_set < misc.CHAR_SET_TO_SIZE.get(alphabet):   # If chosen alphabet (char_set) is
+                            # insufficient
 
-                except Exception:                                       # Ciphertext alphabet not restricted. Do nothing
+                            print("The chosen alphabet for encryption ("
+                                  + chosen_alphabet + ") is"
+                                  + " insufficient for the alphabet that"
+                                  + " the plaintext is in."
+                                  + "\nTherefore, the alphabet for"
+                                  + " encryption is switched to: "
+                                  + alphabet)
+                            char_set = misc.CHAR_SET_TO_SIZE.get(alphabet)
+
+                except Exception:  # Ciphertext alphabet not restricted. Do nothing
                     pass
 
 
@@ -525,8 +530,12 @@ def automated_testing():
 
     # Print out incorrect ciphers (may be duplicates)
     incorrect_ciphers.sort()
+    print()
+    print("An (F) indicates that the decryption failed to run correctly (some error raised during decryption).")
+    print("An (I) indicates that the decryption produced an incorrect result (not the original plaintext)")
     print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢 ", end="")
     print(*incorrect_ciphers, sep=", ")
+    print()
 
 
 

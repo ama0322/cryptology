@@ -142,8 +142,8 @@ def execute_encryption_or_decryption(data, output_location, package, module, enc
     # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext alphabet is
     # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
     # So switch to use the plaintext's alphabet for encryption, and inform the user
-    chosen_alphabet = next(alphabet for alphabet,                       # The selected alphabet. May or may not be
-                           size in CHAR_SET_TO_SIZE.items()             # insufficient
+    chosen_alphabet = next(alphabet for alphabet, size                  # The selected alphabet. May or may not be
+                           in CHAR_SET_TO_SIZE.items()                  # insufficient
                            if size == char_set)
     if encrypt_or_decrypt == "encrypt":                                 # Only "encrypt" mode needs adjusting
         try:                                                            # Non restricted ciphers fail "try" statement
@@ -389,8 +389,8 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
     # So switch to use the plaintext's alphabet for encryption, and inform the user
     exec("from Cryptography.Decryption import " + decryption)
-    chosen_alphabet = next(alphabet for alphabet,                       # The selected alphabet. May or may not be
-                           size in CHAR_SET_TO_SIZE.items()             # insufficient
+    chosen_alphabet = next(alphabet for alphabet, size                  # The selected alphabet. May or may not be
+                           in CHAR_SET_TO_SIZE.items()                  # insufficient
                            if size == char_set)
     try:                                                                # Non restricted ciphers fail "try" statement
         restrict = eval(decryption                                      # Ciphertext alphabet restricted

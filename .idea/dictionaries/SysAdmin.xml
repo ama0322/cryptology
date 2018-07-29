@@ -7,13 +7,16 @@
       <w>bytearray</w>
       <w>ciphertext</w>
       <w>compositeness</w>
+      <w>decryptions</w>
       <w>elif</w>
+      <w>encryptions</w>
       <w>filepath</w>
       <w>ngram</w>
       <w>nokey</w>
       <w>openable</w>
       <w>plaintexts</w>
       <w>primality</w>
+      <w>straighforward</w>
       <w>vigenere</w>
     </words>
   </dictionary>
