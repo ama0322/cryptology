@@ -11,7 +11,7 @@ import time    # To time functions
 
 
 
-
+########################################################################################## STANDARD FUNCTIONS ##########
 
 # Encrypt using user-entered info. Write relevant information and return encrypted text for cryptography_runner
 def execute(data, output_location):
@@ -62,11 +62,15 @@ def encrypt(plaintext, key, encoding_scheme):
     # digits each (64-bits each). Then, turn those hex blocks into int blocks.
     plaintext = plaintext.encode("utf-8").hex()            # Convert to hex. Remove leading "0x"
 
-
+    original_plaintext_len = len(plaintext)
     while plaintext != "":                                  # While there is still plaintext to process
         block = plaintext[-16:]                             # 64 bits is equal to 16 hex digits (read from end)
         plaintext_blocks.insert(0, (int(block, 16)))        # Save int value into plaintext_blocks
         plaintext = plaintext[:-16]                         # Cut out the portion that was just read
+        print("To encryption blocks: "
+                + str((len(plaintext_blocks) * 16
+                       / original_plaintext_len) * 100)
+                + "%")
 
 
 
@@ -84,8 +88,8 @@ def encrypt(plaintext, key, encoding_scheme):
     for i in range(len(plaintext_blocks)):
         ciphertext_blocks.append(blowfish_on_64_bits(plaintext_blocks[i],   # Run blowfish on each plaintext block
                                                       p_array, s_boxes))
-        #print("Encrypting: " + str((i / len(plaintext_blocks)) * 100)      # Print updates
-        #        + "%")
+        print("Encrypting: " + str((i / len(plaintext_blocks)) * 100)      # Print updates
+                + "%")
 
 
 
@@ -108,7 +112,7 @@ def encrypt(plaintext, key, encoding_scheme):
 
 
 
-
+############################################################################################# EXTRA FUNCTIONS ##########
 
 
 # Returns: key, p_array, s_boxes. Key schedule setup for the algorithm.

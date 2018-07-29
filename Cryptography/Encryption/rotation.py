@@ -6,7 +6,7 @@ from Cryptography import misc
 
 
 
-
+########################################################################################## STANDARD FUNCTIONS ##########
 
 # Encrypt using user-entered info. Write relevant information and return encrypted text for cryptography_runner
 def execute(data, output_location):

@@ -3,6 +3,18 @@ import time                                      # To measure the amount of time
 from Cryptography.Decryption import rsa          # RSA cipher info and read_rsa_key()
 
 
+
+
+
+
+
+
+
+
+
+########################################################################################## STANDARD FUNCTIONS ##########
+
+
 # Encrypt using user-entered info. Write relevant information and return encrypted text for cryptography_runner
 def execute(data, output_location):
     """
@@ -109,7 +121,7 @@ def encrypt(plaintext, given_key, encoding_scheme):
 
 
 
-
+############################################################################################# EXTRA FUNCTIONS ##########
 
 def _calculate_public_and_private_key(prime_one, prime_two, encoding_scheme):
     """

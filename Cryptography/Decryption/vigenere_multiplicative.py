@@ -8,7 +8,7 @@ key_size = "multiple characters"
 
 
 
-
+########################################################################################## STANDARD FUNCTIONS ##########
 
 # Call the proper functions to decrypt. Return decrypted text back to cryptography_runner.py
 def execute(data, output_location):

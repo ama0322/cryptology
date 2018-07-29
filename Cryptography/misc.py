@@ -1,11 +1,11 @@
-
-
 import time # for timing the encryption/decryption processes
 import csv # to convert ngram csv to a dictionary
 import base64 # for several character encoding schemes
 import random # to generate random numbers
 import secrets # to generate cryptographically secure numbers
 import codecs # For hex string to utf-8 encoding
+
+
 
 
 ################################################################################################### RESOURCES ##########
@@ -389,9 +389,10 @@ def testing_execute_encryption_and_decryption(encryption, decryption,
     # smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to decrypt correctly.
     # So switch to use the plaintext's alphabet for encryption, and inform the user
     exec("from Cryptography.Decryption import " + decryption)
-    chosen_alphabet = next(alphabet for alphabet, size                  # The selected alphabet. May or may not be
-                           in CHAR_SET_TO_SIZE.items()                  # insufficient
-                           if size == char_set)
+    if type(char_set) is int:
+        chosen_alphabet = next(alphabet for alphabet, size                  # The selected alphabet. May or may not be
+                               in CHAR_SET_TO_SIZE.items()                  # insufficient
+                               if size == char_set)
     try:                                                                # Non restricted ciphers fail "try" statement
         restrict = eval(decryption                                      # Ciphertext alphabet restricted
                         + ".ciphertext_alphabet_restricted")

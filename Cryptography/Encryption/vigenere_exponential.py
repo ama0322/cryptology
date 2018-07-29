@@ -5,6 +5,7 @@ from Cryptography import misc
 
 
 
+########################################################################################## STANDARD FUNCTIONS ##########
 
 
 def execute(data, output_location):

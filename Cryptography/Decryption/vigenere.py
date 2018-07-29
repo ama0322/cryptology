@@ -12,7 +12,7 @@ ciphertext_alphabet_restricted = True
 
 
 
-
+########################################################################################## STANDARD FUNCTIONS ##########
 
 
 # Call the proper functions to decrypt. Return decrypted text back to cryptography_runner.py

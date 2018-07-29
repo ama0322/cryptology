@@ -11,7 +11,7 @@ ciphertext_alphabet_restricted = True
 
 
 
-
+########################################################################################## STANDARD FUNCTIONS ##########
 
 
 # Decrypt using user-entered info. Write relevant information and return decrypted text for cryptography_runner

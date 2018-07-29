@@ -11,7 +11,7 @@ no_short_texts = True
 
 
 
-
+########################################################################################## STANDARD FUNCTIONS ##########
 
 
 # Decrypt without a key. Write relevant information and return decrypted text for cryptography_runner

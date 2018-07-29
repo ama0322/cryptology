@@ -16,7 +16,7 @@ key_bits = 1024
 
 
 
-
+########################################################################################## STANDARD FUNCTIONS ##########
 
 
 # Call the proper functions to decrypt. Return decrypted text bac to cryptography_runner.py
@@ -182,7 +182,7 @@ def decrypt(ciphertext, private_key, encoding_scheme):
 
 
 
-
+############################################################################################# EXTRA FUNCTIONS ##########
 
 
 

@@ -1,4 +1,6 @@
 from Cryptography import misc
+from Cryptography.Encryption import blowfish  # import Encryption's blowfish for run_key_schedule() and
+                                              # blowfish_on_64_bits()
 
 import copy # Used to deepcopy
 
@@ -293,6 +295,9 @@ s_boxes = [
 
 
 
+
+########################################################################################## STANDARD FUNCTIONS ##########
+
 # Decrypt using user-entered info. Write relevant information and return decrypted text for cryptography_runner
 def execute(data, output_location):
     """
@@ -404,16 +409,23 @@ def decrypt(ciphertext, key, encoding):
 
     # Divide the ciphertext into 64-bit int blocks.
     sample_64_bits = misc.int_to_chars_encoding_scheme(0xFFFFFFFF00000000, encoding)  # Turn 64 bits to chars w/ encode
-    chars_to_read = len(sample_64_bits)                                               # Save how many chars to read
+    chars_in_bloc = len(sample_64_bits)                                               # Save how many chars to read
+    original_ciphertext_len = len(ciphertext)
     while ciphertext != "":                                                           # Read ciphertext until done
-        ciphertext_blocks.append(ciphertext[0 : chars_to_read])                       # Save block
-        ciphertext = ciphertext[ chars_to_read : ]                                    # Cut out what was just read
+        ciphertext_blocks.append(ciphertext[0 : chars_in_bloc])                       # Save block
+        ciphertext = ciphertext[ chars_in_bloc : ]                                    # Cut out what was just read
+        print("To decryption blocks: "
+			  + str((len(ciphertext_blocks) * chars_in_bloc
+					 / original_ciphertext_len) * 100)
+			  + "%")
     ciphertext_blocks = [misc.chars_to_int_decoding_scheme(block, encoding)           # Turn chars to int
                          for block in ciphertext_blocks]
 
 
+
+
+
     # Conduct the key schedule. Exactly the same as was done in Encryption
-    from Cryptography.Encryption import blowfish                            # import Encryption's blowfish for schedule
     global p_array                                                          # Get original p_array
     p_array_schedule = copy.deepcopy(p_array)
     global s_boxes
@@ -424,9 +436,18 @@ def decrypt(ciphertext, key, encoding):
 
 
     # Decrypt the text (on each 64-bit block)
-    p_array_schedule.reverse()                          # Reverse p_array (because decryption uses p_array reversed)
-    plaintext_blocks = [blowfish.blowfish_on_64_bits(block, p_array_schedule, s_boxes_schedule)
-                        for block in ciphertext_blocks]
+    p_array_schedule.reverse()                                          # Reverse p_array for decryption
+
+
+
+
+    for i in range(len(ciphertext_blocks)):
+        plaintext_blocks.append(blowfish.blowfish_on_64_bits(ciphertext_blocks[i],          # Decrypt
+                                         p_array_schedule, s_boxes_schedule))
+        print("Decrypting: " + str((i / len(ciphertext_blocks)) * 100)                      # Print updates
+              	+ "%")
+
+
 
 
     # Convert the decrypted int blocks into utf-8 text
