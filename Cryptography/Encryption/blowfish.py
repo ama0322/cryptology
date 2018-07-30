@@ -3,9 +3,8 @@ from Cryptography import misc
 
 
 
-
-import copy    # To deepcopy
-import time    # To time functions
+import copy    # To deepcopy p_array and s_boxes from Decryption's blowfish
+import time    # To time functions (for testing_execute())
 
 
 
@@ -15,8 +14,8 @@ import time    # To time functions
 
 ########################################################################################## STANDARD FUNCTIONS ##########
 
-# Encrypt using user-entered info. Write relevant information and return encrypted text for cryptography_runner
-def execute(data, output_location):
+# Encrypt using user-entered info. Write relevant information and the encrypted text
+def execute(data:str, output_location:str) -> None:
     """
     This function calls the appropriate functions in misc.py. Those functions will use the encrypt() function
     located below as the algorithm to actually encrypt the text. Then, the ciphertext will be returned back to
@@ -24,7 +23,7 @@ def execute(data, output_location):
 
     :param data: (string) the data to be encrypted
     :param output_location: (string) the location to print out the information
-    :return: (string) the encrypted data
+    :return: None
     """
 
     # Decrypt the ciphertext. Write the plaintext and info to a file
@@ -36,7 +35,7 @@ def execute(data, output_location):
 
 
 # Returns: ciphertext, generated_key. This function contains the algorithm to encrypt using blowfish cipher
-def encrypt(plaintext, key, encoding_scheme):
+def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
     """
     This function contains the actual algorithm to encrypt with a blowfish cipher. The key is randomly generated,
     and is used during the key schedule when it is xor'ed with the p_array in a certain fashion. Because blowfish is
@@ -46,10 +45,11 @@ def encrypt(plaintext, key, encoding_scheme):
     integers during the encryption process because of xor operations.
 
 
-    :param plaintext:       (string) the text to be encrypted
+    :param plaintext:       (str)    the text to be encrypted
     :param key:             NOT USED
-    :param encoding_scheme: (string) The type of encoding scheme to use
-    :return:                (string) the encrypted text
+    :param encoding_scheme: (str)    The type of encoding scheme to use
+    :return:                (str)    the encrypted text
+    :return:                (str)    the character encoded key
     """
 
 
