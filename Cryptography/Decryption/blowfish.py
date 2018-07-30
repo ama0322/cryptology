@@ -18,15 +18,18 @@ key_bits = 448                                       # 32-448 bits long
 
 # Cipher resources:
 p_array = [
-			0x243F6A88, 0x85A308D3, 0x13198A2E, 0x03707344,
+    # region p_array
+    0x243F6A88, 0x85A308D3, 0x13198A2E, 0x03707344,
 			0xA4093822, 0x299F31D0, 0x082EFA98, 0xEC4E6C89,
 			0x452821E6, 0x38D01377, 0xBE5466CF, 0x34E90C6C,
 			0xC0AC29B7, 0xC97C50DD, 0x3F84D5B5, 0xB5470917,
 			0x9216D5D9, 0x8979FB1B
+    # endregion
 		  ]
 
 s_boxes = [
-			[
+    # region s_boxes
+    [
 				0xD1310BA6, 0x98DFB5AC, 0x2FFD72DB, 0xD01ADFB7,
 				0xB8E1AFED, 0x6A267E96, 0xBA7C9045, 0xF12C7F99,
 				0x24A19947, 0xB3916CF7, 0x0801F2E2, 0x858EFC16,
@@ -290,7 +293,8 @@ s_boxes = [
 				0x90D4F869, 0xA65CDEA0, 0x3F09252D, 0xC208E69F,
 				0xB74E6132, 0xCE77E25B, 0x578FDFE3, 0x3AC372E6
 			]
-		]
+    # endregion
+		  ]
 
 
 
@@ -298,14 +302,14 @@ s_boxes = [
 
 ########################################################################################## STANDARD FUNCTIONS ##########
 
-# Decrypt using user-entered info. Write relevant information and return decrypted text for cryptography_runner
-def execute(data, output_location):
+# Decrypt using user-entered info. Write relevant information and the decrypted text
+def execute(data:str, output_location:str) -> None:
     """
     This function decrypts data using a user-provided key.
 
     :param data: (string) the data to be decrypted
     :param output_location: (string) the location to write out relevant info and statistics
-    :return: (string) the decrypted data
+    :return: None
     """
 
 
@@ -316,8 +320,8 @@ def execute(data, output_location):
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
-def testing_execute(encryption, decryption, plaintext, plaintext_source, encryption_key, alphabet_size,
-                    output_location):
+def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_source:str, encryption_key:str,
+					alphabet_size:int, output_location:str) -> None:
     """
     Conducts a rotation decryption in testing mode
 
@@ -387,8 +391,8 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
 
 
 
-# Returns string. This is the actual algorithm to decrypt
-def decrypt(ciphertext, key, encoding):
+# This is the actual algorithm to decrypt
+def decrypt(ciphertext:str, key:str, encoding:str) -> str:
     """
     This function decrypts using blowfish cipher. Process is almost exactly the same, but the p_array is used in reverse
     order
@@ -463,15 +467,16 @@ def decrypt(ciphertext, key, encoding):
 
 
 
-############################################################################################# EXTRA FUNCTIONS ##########
+
+######################################################################################### ANCILLARY FUNCTIONS ##########
 
 
 # Returns: key, p_array, s_boxes. Key schedule setup for the algorithm.
-def run_key_schedule(key, p_array, s_boxes):
+def run_key_schedule(key:str or int, p_array:list, s_boxes:list) -> (str, list, list):
     """
     Key setup for blowfish
 
-    :param: key     (string) the key to use (during decryption mode)
+    :param: key     (int or str) the int key to use during decryption mode. Is empty str during encryption mode
     :param: p_array (list) the p array
     :param: s_boxes (2-d list) the s boxes
     :return:        (string) the generated key (in encoded form)
@@ -530,7 +535,7 @@ def run_key_schedule(key, p_array, s_boxes):
 
 
 # Returns: encrypted_block. The actual algorithm run on a 64-bit integer input.
-def blowfish_on_64_bits(input, p_array, s_boxes):
+def blowfish_on_64_bits(input:int, p_array:list, s_boxes:list) -> int:
     """
     This is algorithm that runs on the 64-bit integer blocks
 
