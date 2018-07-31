@@ -82,8 +82,9 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
     p_array = copy.deepcopy(blowfish.p_array)
     s_boxes = copy.deepcopy(blowfish.s_boxes)
     start_time = time.time()
-    key, p_array, s_boxes = blowfish.run_key_schedule(0, p_array, s_boxes)         # Run the key schedule
-    blowfish.testing_execute.time_for_key_schedule = time.time() - start_time       # Save time in Decryption's blowfish
+    key, p_array, s_boxes = blowfish.run_key_schedule(0, p_array, s_boxes)            # Run the key schedule
+    blowfish_cbc.testing_execute.time_for_key_schedule = time.time() - start_time     # Save time in Decryption's b-fish
+
 
 
 
