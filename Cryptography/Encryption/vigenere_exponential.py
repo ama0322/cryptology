@@ -8,14 +8,15 @@ from Cryptography import misc
 ########################################################################################## STANDARD FUNCTIONS ##########
 
 
-def execute(data, output_location):
+def execute(data:str, output_location:str) -> None:
     """
     This function calls the appropriate functions in misc.py. Those functions will use the encrypt() function
     located below as the algorithm to actually encrypt the text. Then, the ciphertext will be returned back to
     cryptography_runner.py
 
-    :param data: the data to be encrypted
-    :return: the encrypted data
+    :param data:            (str) the data to be encrypted
+    :param output_location: (str) the file path to store the output
+    :return:                None  the encrypted data
     """
 
     # Encrypt the plaintext. Print out the ciphertext and relevant information
@@ -28,15 +29,15 @@ def execute(data, output_location):
 
 
 # The actual algorithm to encrypt using a vigenere cipher(exponents instead of addition)
-def encrypt(plaintext, key, alphabet_size):
+def encrypt(plaintext:str, key:str, alphabet_size:int) -> str:
     """
     This works the same as regular vigenere, but uses exponents instead of addition. When using unicode_plane0 or
     unicode, adjust to ignore the Surrogates.
 
-    :param plaintext:     (string) the data to be encrypted
-    :param key:           (string) the key to encrypt with
-    :param alphabet_size: (int)    the size of the character set to use
-    :return:              (string) the encrypted data
+    :param plaintext:     (str) the data to be encrypted
+    :param key:           (str) the key to encrypt with
+    :param alphabet_size: (int) the size of the character set to use
+    :return:              (str) the encrypted data
     """
 
 
@@ -72,7 +73,7 @@ def encrypt(plaintext, key, alphabet_size):
         uni_val_encrypted = pow(uni_val_plain, uni_val_key, alphabet_size)
 
         # Obtain the number of overlaps that come before this one(this uni_val_plain) and NOT including this one
-        overlap_counter = 0;
+        overlap_counter = 0
         for i in range(0, 1114112):
             # If it is an overlap character
             if pow(i, uni_val_key, alphabet_size) == uni_val_encrypted and i != uni_val_plain:
