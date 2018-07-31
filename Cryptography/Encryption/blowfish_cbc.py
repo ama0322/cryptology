@@ -86,6 +86,14 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
     blowfish.testing_execute.time_for_key_schedule = time.time() - start_time       # Save time in Decryption's blowfish
 
 
+
+
+    # Run cbc
+    iv, key = _generate_key_w_iv(key, encoding_scheme)              # Get iv and the new key
+    plaintext_blocks = _conduct_cbc(plaintext_blocks, iv)           # Run the cbc
+
+
+
     # Encrypt the text (and save block information)
     for i in range(len(plaintext_blocks)):
         ciphertext_blocks.append(blowfish.blowfish_on_64_bits(plaintext_blocks[i],  # Run blowfish on each plaintext
@@ -94,9 +102,7 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
                 + "%")
 
 
-    # Run cbc
-    iv, key = _generate_key_w_iv(key, encoding_scheme)              # Get iv and the new key
-    ciphertext_blocks = _conduct_cbc(ciphertext_blocks, iv)         # Run the cbc
+
 
 
 
@@ -157,7 +163,7 @@ def _conduct_cbc(blocks:list, iv:int) -> list:
     """
     Conduct cbc on the blowfish-encrypted blocks with the given IV
 
-    :param blocks: (list) list of integers. The blowfish encrypted blocks.
+    :param blocks: (list) list of integer blocks to conduct cbc.
     :param iv:     (int)  the iv to start cbc with
     :return:
     """
