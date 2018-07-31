@@ -418,7 +418,7 @@ def testing_execute_encryption_and_decryption(encryption:str, decryption:str,
     encryption_output = eval(encryption + ".encrypt(plaintext, "       # Run the encryption
                                                  + "encryption_key, "
                                                  + "char_set)")
-    encryption_time = time.time() - start_time
+    encryption_time =  (time.time() - start_time) + 0.0000000000000001 # Prevent encryption_time from being 0.0
 
     # STORE THE ENCRYPTION'S OUTPUT
     if type(encryption_output) is tuple:                               # If tuple, then ciphertext is in 1st index
@@ -446,7 +446,7 @@ def testing_execute_encryption_and_decryption(encryption:str, decryption:str,
     decryption_output = eval(decryption + ".decrypt(ciphertext, "      # Run the actual decryption
                                                 + "decryption_key, "
                                                 + "char_set)")
-    decryption_time = time.time() - start_time
+    decryption_time = time.time() - start_time + 0.0000000000000001    # Prevent encryption_time from being 0.0
 
     # Store the decryption's output
     if type(decryption_output) is tuple:                               # If tuple, then decrypted is in the first index
