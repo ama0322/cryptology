@@ -1,5 +1,5 @@
 from Cryptography.Decryption import blowfish          # To get access to blowfish cipher auxiliary functions
-from Cryptography import misc
+from Cryptography import misc                         # For miscellaneous functions
 
 
 
@@ -81,7 +81,7 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
     p_array = copy.deepcopy(blowfish.p_array)
     s_boxes = copy.deepcopy(blowfish.s_boxes)
     start_time = time.time()
-    key, p_array, s_boxes = blowfish.run_key_schedule("", p_array, s_boxes)         # Run the key schedule
+    key, p_array, s_boxes = blowfish.run_key_schedule(0, p_array, s_boxes)          # Run the key schedule
     blowfish.testing_execute.time_for_key_schedule = time.time() - start_time       # Save time in Decryption's blowfish
 
 
@@ -105,8 +105,10 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
 
 
 
+
     # Return the ciphertext and the generated key
-    return ciphertext, misc.int_to_chars_encoding_scheme(key, encoding_scheme)
+    key = misc.int_to_chars_encoding_scheme(key, encoding_scheme)
+    return ciphertext, key
 
 
 

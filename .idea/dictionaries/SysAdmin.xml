@@ -1,22 +1,27 @@
 <component name="ProjectDictionaryState">
   <dictionary name="SysAdmin">
     <words>
+      <w>asym</w>
       <w>asymm</w>
       <w>bitsize</w>
       <w>blowfish</w>
       <w>bytearray</w>
       <w>ciphertext</w>
+      <w>ciphertexts</w>
       <w>compositeness</w>
       <w>decryptions</w>
       <w>elif</w>
       <w>encryptions</w>
       <w>filepath</w>
+      <w>keysize</w>
       <w>ngram</w>
+      <w>ngrams</w>
       <w>nokey</w>
       <w>openable</w>
       <w>plaintexts</w>
       <w>primality</w>
       <w>straighforward</w>
+      <w>symm</w>
       <w>vigenere</w>
     </words>
   </dictionary>

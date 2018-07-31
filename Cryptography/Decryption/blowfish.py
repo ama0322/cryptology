@@ -321,17 +321,17 @@ def execute(data:str, output_location:str) -> None:
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
 def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_source:str, encryption_key:str,
-					alphabet_size:int, output_location:str) -> None:
+					encoding:str, output_location:str) -> None:
     """
     Conducts a rotation decryption in testing mode
 
-    :param encryption: (string) the name of the encryption cipher to use
-    :param decryption: (string) the name of the decryption cipher to use (this)
-    :param plaintext_source: (string) the location where the plaintext is found
-    :param plaintext: (string) the plaintext to encrypt
-    :param encryption_key: (string) the key to use to encrypt
-    :param alphabet_size: (int) the size of the character set to use
-    :param output_location: (string) the name of the file to write statistics in
+    :param encryption:       (str) the name of the encryption cipher to use
+    :param decryption:       (str) the name of the decryption cipher to use (this module)
+    :param plaintext_source: (str) the location where the plaintext is found
+    :param plaintext:        (str) the plaintext to encrypt
+    :param encryption_key:   (str) the key to use to encrypt
+    :param encoding:         (str) the size of the character set to use
+    :param output_location:  (str) the name of the file to write statistics in
     :return: None
     """
 
@@ -382,7 +382,7 @@ def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_sou
         """
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
-                                                            plaintext, plaintext_source, encryption_key, alphabet_size,
+                                                            plaintext, plaintext_source, encryption_key, encoding,
                                                             output_location,
                                                             "Blowfish",
                                                             encryption_code, decryption_code)
@@ -397,10 +397,10 @@ def decrypt(ciphertext:str, key:str, encoding:str) -> str:
     This function decrypts using blowfish cipher. Process is almost exactly the same, but the p_array is used in reverse
     order
 
-    :param ciphertext: (string) the text to be encrypted
-    :param key:        (string) the key with which the encryption is done
-    :param encoding:   (string) Name of the binary-to-char encoding scheme
-    :return:           (string) the encrypted text
+    :param ciphertext: (str) the text to be decrypted
+    :param key:        (str) the key with which the encryption/decryption is done (in character encoded form)
+    :param encoding:   (str) name of the binary-to-char encoding scheme
+    :return:           (str) the encrypted text
     """
 
 
@@ -472,25 +472,25 @@ def decrypt(ciphertext:str, key:str, encoding:str) -> str:
 
 
 # Returns: key, p_array, s_boxes. Key schedule setup for the algorithm.
-def run_key_schedule(key:str or int, p_array:list, s_boxes:list) -> (str, list, list):
+def run_key_schedule(key:int, p_array:list, s_boxes:list) -> (int, list, list):
     """
     Key setup for blowfish
 
-    :param: key     (int or str) the int key to use during decryption mode. Is empty str during encryption mode
-    :param: p_array (list) the p array
-    :param: s_boxes (2-d list) the s boxes
-    :return:        (string) the generated key (in encoded form)
-    :return:        (list) p_array to be used in encryption
-    :return:        (list) s_boxes to be used in encryption
+    :param: key     (int) the int key to use during decryption mode. Is 0 during encryption mode
+    :param: p_array (list)       the p array
+    :param: s_boxes (2-d list)   the s boxes
+    :return:        (int)        the generated key in integer form
+    :return:        (list)       p_array to be used in encryption
+    :return:        (list)       s_boxes to be used in encryption
     """
 
 
 
-    if key == "":                                                        # If key not given, generate a key
+    if key == 0:                                                # If key not given, generate a key
         return_key = secrets.randbits(key_bits)                 # Generate num with right bitsize (rand bits)
         key = return_key.to_bytes((key_bits + 7) // 8, "big")   # Turn to bytearray (round up to nearest byte)
 
-    else:                                                                # Else key is given. Use that
+    else:                                                       # Else key is given. Use that
         return_key = key
         key = key.to_bytes((key_bits + 7) // 8, "big")          # Turn to bytearray (round up to nearest byte)
 
@@ -525,6 +525,7 @@ def run_key_schedule(key:str or int, p_array:list, s_boxes:list) -> (str, list, 
             ciphertext = blowfish_on_64_bits(ciphertext, p_array, s_boxes)
             s_boxes[i][j    ] = ciphertext & 0xFFFFFFFF00000000 >> 32
             s_boxes[i][j + 1] = ciphertext & 0x00000000FFFFFFFF
+
 
 
 

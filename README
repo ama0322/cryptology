@@ -50,7 +50,7 @@ Needed Modules:
             plaintext. Then, the ciphertext will be decrypted with the user provided "decryption_cipher". This
             decryption result will be compared against the plaintext for correctness.
 
-    database [optional flags] (cipher) (new_database_file_name)    OR     database (database_file_name)
+    database [optional flags] (cipher) (new_database_file_name)    OR     database [optional flags] (database_file_name)
              OR     database [optional flags]
         1. database [optional flags] (cipher) (new_database_file_name)
             Flags:
@@ -61,13 +61,16 @@ Needed Modules:
                 -e (cipher) (abs_file_path_to_new_database): The file pointed to by "abs_file_path_to_new_database"
                 will be turned into a new database file with info file. "cipher" will be the encrypting cipher used.
 
-        2. database (database_file_name)
-            Open up the encrypted database named: "database_file_name"
+        2. database [optional flags] (database_file_name)
+            Flags:
+                -o (database_file_name): Open up the encrypted database named: "database_file_name"
 
         3. database [optional flags]
             Flags:
                 -c: Clear all files in the Resources/Database folder. The program will ask the user for a check before
                 the deletion actually occurs.
+
+                -i: Print out the usage of database.
 
     help
         Will print out helpful information

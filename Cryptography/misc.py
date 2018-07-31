@@ -1,9 +1,9 @@
-import time # for timing the encryption/decryption processes
-import csv # to convert ngram csv to a dictionary
-import base64 # for several character encoding schemes
-import random # to generate random numbers
+import time    # for timing the encryption/decryption processes
+import csv     # to convert ngram csv to a dictionary
+import base64  # for several character encoding schemes
+import random  # to generate random numbers
 import secrets # to generate cryptographically secure numbers
-import codecs # For hex string to utf-8 encoding
+import codecs  # For hex string to utf-8 encoding
 
 
 
@@ -11,7 +11,7 @@ import codecs # For hex string to utf-8 encoding
 ################################################################################################### RESOURCES ##########
 
 # Sets containing available options for encryption/decryption. Add to this.
-ENCRYPTION_SET = {"blowfish", "blowfish_cbc", "rotation", "rsa", "vigenere", "vigenere_exponential",
+ENCRYPTION_SET = {"blowfish", "rotation", "rsa", "vigenere", "vigenere_exponential",
                   "vigenere_multiplicative"}
 
 DECRYPTION_SET = {"blowfish", "rotation", "rotation_nokey", "rsa", "vigenere", "vigenere_exponential",
@@ -213,8 +213,9 @@ def execute_encryption_or_decryption(data:str, output_location:str, package:str,
     elapsed_time = time.time() - start_time
 
 
-    # Open a new file to store the relevant information
+    # Open a new file to store the relevant information.
     info_file = open(output_location + "_(Relevant information)", "w", encoding="utf-8")
+    exec("from Cryptography.Decryption" + " import " + module)            # Open up Decryption's cipher for cipher info
 
 
     # Print out relevant information for the encryption/decryption. At this point, output may be a tuple.
@@ -259,7 +260,7 @@ def execute_encryption_or_decryption(data:str, output_location:str, package:str,
                 info_file.writelines([
                     "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                     "\n--------------- key "
-                        + str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                        + str(eval( module + ".key_bits")) + "-bit ---------------\n"
                         + output[1]
                         + "\n------------------------------------------------------------------------------------",
                     "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(output[0]),
@@ -284,7 +285,7 @@ def execute_encryption_or_decryption(data:str, output_location:str, package:str,
                 info_file.writelines([
                     "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                     "\n--------------- key " + str(
-                        eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                        eval( module + ".key_bits")) + "-bit ---------------\n"
                         + output[1]
                         + "\n------------------------------------------------------------------------------------",
                     "\n𝐓𝐡𝐞 𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭'𝐬 𝐜𝐡𝐚𝐫𝐚𝐜𝐭𝐞𝐫 𝐬𝐞𝐭 𝐢𝐬: " + alphabet_of(output[0]),
@@ -301,11 +302,11 @@ def execute_encryption_or_decryption(data:str, output_location:str, package:str,
                 info_file.writelines([
                     "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                     "\n--------------- public key " +
-                    str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                    str(eval( module + ".key_bits")) + "-bit ---------------\n"
                         + output[1]
                         + "\n------------------------------------------------------------------------------------",
                     "\n--------------- private key "
-                        + str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                        + str(eval( module + ".key_bits")) + "-bit ---------------\n"
                         + output[2]
                         + "\n------------------------------------------------------------------------------------",
                     "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐞𝐧𝐜𝐨𝐝𝐢𝐧𝐠 𝐬𝐜𝐡𝐞𝐦𝐞 𝐢𝐬: " + char_encoding_scheme_of(output[0]),
@@ -316,7 +317,7 @@ def execute_encryption_or_decryption(data:str, output_location:str, package:str,
                 info_file.writelines([
                     "\n\n\n𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                     "\n--------------- public key "
-                        + str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                        + str(eval( module + ".key_bits")) + "-bit ---------------\n"
                         + output[1]
                         + "\n------------------------------------------------------------------------------------",
                     "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐞𝐧𝐜𝐨𝐝𝐢𝐧𝐠 𝐬𝐜𝐡𝐞𝐦𝐞 𝐢𝐬: " + char_encoding_scheme_of(output[0]),
@@ -327,7 +328,7 @@ def execute_encryption_or_decryption(data:str, output_location:str, package:str,
             info_file.writelines([
                 "\n\n\n𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍",
                 "\n--------------- private key "
-                    + str(eval("Decryption." + module + ".key_bits")) + "-bit ---------------\n"
+                    + str(eval( module + ".key_bits")) + "-bit ---------------\n"
                     + output[2]
                     + "\n------------------------------------------------------------------------------------",
                 "\n𝐓𝐡𝐞 𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭'𝐬 𝐞𝐧𝐜𝐨𝐝𝐢𝐧𝐠 𝐬𝐜𝐡𝐞𝐦𝐞 𝐢𝐬: " + char_encoding_scheme_of(output[0]),
@@ -414,8 +415,9 @@ def testing_execute_encryption_and_decryption(encryption:str, decryption:str,
     # EXECUTE THE ENCRYPTION, and store the output
     start_time = time.time()
     exec("from Cryptography.Encryption import " + encryption)          # Import module for encryption
-    encryption_output = eval(encryption                                # Run the encryption
-                + ".encrypt(plaintext, encryption_key, char_set)" )
+    encryption_output = eval(encryption + ".encrypt(plaintext, "       # Run the encryption
+                                                 + "encryption_key, "
+                                                 + "char_set)")
     encryption_time = time.time() - start_time
 
     # STORE THE ENCRYPTION'S OUTPUT
@@ -439,8 +441,9 @@ def testing_execute_encryption_and_decryption(encryption:str, decryption:str,
     decrypted = ""
     start_time = time.time()
     exec("from Cryptography.Decryption import " + decryption)          # Import module for decryption
-    decryption_output = eval(decryption                                # Run the actual decryption
-                 + ".decrypt(ciphertext, decryption_key, char_set)" )
+    decryption_output = eval(decryption + ".decrypt(ciphertext, "      # Run the actual decryption
+                                                + "decryption_key, "
+                                                + "char_set)")
     decryption_time = time.time() - start_time
 
     # Store the decryption's output
@@ -470,9 +473,9 @@ def testing_execute_encryption_and_decryption(encryption:str, decryption:str,
     exec(decryption_code)
 
     # Print out the ciphertext, decrypted text, and then the plaintext. Then, close fil
-    new_file.writelines(["\n\n\nCiphertext: \n" + ciphertext])
+    new_file.writelines(["\n\n\nCiphertext: \n"     + ciphertext])
     new_file.writelines(["\n\n\nDecrypted text: \n" + decrypted])
-    new_file.writelines(["\n\n\nPlaintext: \n" + plaintext])
+    new_file.writelines(["\n\n\nPlaintext: \n"      + plaintext])
     new_file.close()
 
 
@@ -759,7 +762,7 @@ def chars_to_int_decoding_scheme(string:str, encoding:str) -> int:
         decoded = base64.b32decode(string)
         decoded = int.from_bytes(decoded, byteorder="big")
 
-    # elif base64, use base64 module fuction. THen, turn bytes into an integer
+    # elif base64, use base64 module function. THen, turn bytes into an integer
     elif encoding == "base64":
         string = string.encode()
         decoded = base64.b64decode(string)
