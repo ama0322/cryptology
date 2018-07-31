@@ -61,6 +61,8 @@ def testing_execute(encryption, decryption, plaintext, plaintext_source, encrypt
 
 
 
+
+
 # Returns string. This is the actual algorithm to decrypt
 def decrypt(ciphertext, key, alphabet_size):
     """
@@ -77,7 +79,97 @@ def decrypt(ciphertext, key, alphabet_size):
     plaintext = ""
     key_index = 0
     char_counter = 0
-    num_chars = ciphertext.count(" ")
+    num_chars = len(ciphertext)
+    ciphertext_index = 0                            # Use this to parse through ciphertext
+
+    # Adjust the alphabet size to exclude surrogates (if necessary)
+    if alphabet_size > 256:
+        alphabet_size -= misc.SURROGATE_BOUND_LENGTH
+
+
+
+
+    # While not finished processing ciphertext
+    while ciphertext_index < len(ciphertext):
+
+
+        # Print updates (every 1000 characters)
+        if char_counter % 100 == 0:
+            print("DECRYPTION\tPercent of text done: " + str((char_counter / num_chars) * 100))
+        next_space_index = ciphertext.find(" ", ciphertext_index + 1)
+        char_counter += len(ciphertext[ciphertext_index: next_space_index]) + 1        # size of one block
+
+
+        # Read in one block/unit (one char, followed by a number, followed by a space). Then, update ciphertext
+        char = ciphertext[ciphertext_index]
+        number = int(ciphertext[ciphertext_index + 1 : next_space_index], 10)
+        ciphertext_index = next_space_index + 1
+
+
+
+
+
+        #  figure out the unicode value for each of the characters(reverse surrogate adjustment in encryption if needed)
+        uni_val_cipher = ord(char)
+        if uni_val_cipher >= misc.SURROGATE_LOWER_BOUND:
+            uni_val_cipher = uni_val_cipher - misc.SURROGATE_BOUND_LENGTH
+
+
+        #  figure out the unicode value for the right character in the key, then update for next iteration
+        uni_val_key = ord(key[key_index])
+        key_index = (key_index + 1) % len(key)
+
+
+        # Find the original plain char by taking all possibilities and multiplying with uni_val_key for a match
+        count = 0
+        plain_char = "\0"
+        for i in range(0, 1114112):
+
+            # If overlap(count has not yet reached number)
+            if (i * uni_val_key) % alphabet_size == uni_val_cipher and count != number:
+                count += 1
+                continue
+            # ELIF no more overlaps(overlap matches number)
+            elif (i * uni_val_key) % alphabet_size == uni_val_cipher and count == number:
+                plain_char = chr(i)
+                break
+
+
+        # Add plain char to plaintext
+        plaintext += plain_char
+
+
+
+
+
+
+
+    return plaintext
+
+
+
+
+
+
+
+
+# Returns string. This is the actual algorithm to decrypt
+def decrypt_old(ciphertext, key, alphabet_size):
+    """
+    This function decrypts with vigenere. Instead of multiplying, divide. Read as numbers if alphabet_size <=256.
+    Otherwise, read as characters
+
+    :param ciphertext: (string) the ciphertext to decrypt
+    :param key: (string) the string to decrypt with
+    :param alphabet_size: (int) the size of the character set used
+    :return: (string) the deciphered text
+    """
+
+
+    plaintext = ""
+    key_index = 0
+    char_counter = 0
+    num_chars = len(ciphertext)
 
     # Adjust the alphabet size to exclude surrogates (if necessary)
     if alphabet_size > 256:
@@ -93,13 +185,14 @@ def decrypt(ciphertext, key, alphabet_size):
         # Print updates (every 1000 characters)
         if char_counter % 100 == 0:
             print("DECRYPTION\tPercent of text done: " + str((char_counter / num_chars) * 100))
-        char_counter += 1
+        char_counter += len(ciphertext[0: ciphertext.find(" ", 1)]) + 1     # The length of one block
 
 
         # Read in one block/unit (one char, followed by a number, followed by a space). Then, update ciphertext
         char = ciphertext[0]
         number = int(ciphertext[1 :ciphertext.find(" ", 1)], 10)
         ciphertext = ciphertext[ciphertext.find(" ", 1) + 1: ]
+
 
         #  figure out the unicode value for each of the characters(reverse surrogate adjustment in encryption if needed)
         uni_val_cipher = ord(char)
