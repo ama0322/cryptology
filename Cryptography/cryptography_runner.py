@@ -109,16 +109,19 @@ def parse_user_input():
         else:
             command = statement                                            # Else, statement is the word
 
-        # Handle command: help
-        if command == "help":
 
+
+        if command == "help":
+            # region Handle command: help
             usage()                                                     # Print helpful info
             statement = input("Enter statement: ")                      # Obtain user input for next iteration
             continue                                                    # Jump to next iteration
+            # endregion
 
-        # Handle command: clear
+
+
         if command == "clear":
-
+            # region Handle command: clear
             # delete files in /Files_Decrypted
             for file in os.listdir("Resources/Files_Decrypted"):
                     os.unlink("Resources/Files_Decrypted/" + file)
@@ -128,14 +131,20 @@ def parse_user_input():
             # Obtain next command
             statement = input("Files deleted. Enter statement: ")        # obtain user input
             continue
+            # endregion
 
-        # Handle command: exit
+
+
         if command == "exit":
+            # region Handle command: exit
             print("Exiting program...")
             exit(0)
+            # endregion
 
-        # Handle command: test <cipher>
+
+
         if command == "test":
+            # region Handle command: test
 
             prompt = ""                                                 # The prompt to return
             statement = statement.split(" ")                            # Split statement into words separated by spaces
@@ -168,11 +177,13 @@ def parse_user_input():
 
             statement = input(prompt)                                   # Obtain user input for next iteration
             continue                                                    # Jump to the next iteration
+            # endregion
 
 
-        # Handle command: encrypt or decrypt (cipher) (plaintext_file_path*) <output_file_path>
+
+
         if command == "encrypt" or command == "decrypt":
-
+            # region Handle command: encrypt or decrypt
 
             # Set encrypt_mode based on command encrypt/decrypt
             if command == "decrypt": encrypt_mode = False
@@ -234,7 +245,7 @@ def parse_user_input():
             # Read the FIRST argument (index 1), and check that it is a legitimate encrypt/decrypt cipher. If not a
             # legitimate cipher, then print error and get the user to enter another command.
             cipher = statement_list[1]
-            if not ((command == "encrypt" and cipher in misc.ENCRYPTION_SET) \
+            if not ((command == "encrypt" and cipher in misc.ENCRYPTION_SET)
                        or (command == "decrypt" and cipher in misc.DECRYPTION_SET)):     # If not legitimate cipher
                 statement = input("Cipher (" + cipher + ") not recognized as "
                                   + ("an" if command == "encrypt" else "a")
@@ -323,7 +334,7 @@ def parse_user_input():
                                       + "Otherwise, to overwrite, press \"Enter.\" Proceed: ")
                     if not statement == "":                                            # New statement
                         continue
-                    elif statement == "":                                              # User wants to overwrit, proceed
+                    elif statement == "":                                              # User wants to overwrite, skip
                         pass
 
                 # See if the file is openable
@@ -352,26 +363,55 @@ def parse_user_input():
 
             # Return all relevant variables
             return cipher, encrypt_mode, data, output_location
+            # endregion
 
 
 
 
-            # The command has not been found. Tell the user to enter another legitimate command
-
-
-        # Handle command: database
         if command == "database":
+            # region Handle command: database
 
-            statement = statement.split(" ")                    # Split statement into words separated by spaces
+            statement = statement.split(" ")                            # Split statement into words separated by spaces
+            prompt = ""
+
+            # If no flags, then print error and ask the user for another statement
+            if len(statement) < 2:
+                prompt = "The command \"database\" used without" \
+                            + "any flags! Enter another statement: "
+
+            # Handle flags that take no arguments
+            elif statement[1] == "-c":                                 # Handle clear flag
+                user_check = input("All files will be deleted from "
+                                   + "Resources/Databases. To conf"
+                                     "irm, type \"y\": ")
+                if user_check == "y":
+                    for file in os.listdir("Resources/Databases"):     # delete files in /Files_Decrypted
+                        os.unlink("Resources/Databases/" + file)
+                    prompt = "Database files deleted. Enter " \
+                             + "another statement: "
+                else:
+                    prompt = "Database deletion aborted. Enter" \
+                             + " another statement: "
+
+            elif statement[1] == "-i":
+                pass
+
+
+            statement = input(prompt)                                  # Obtain user input for next iteration
+            continue                                                   # Jump to next iteration
+            # endregion
 
 
 
 
         # Command not recognized
         else:
+
             # Print out prompt
             statement = input("Command (" + command + ") not recognized! Enter another statement: ")
             continue
+
+
 
 
 

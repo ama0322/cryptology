@@ -5,7 +5,7 @@ char_set = misc.ALPHABETS
 cipher_type = "symmetric"
 key_size = "calculated characters (single character)"
 ciphertext_alphabet_restricted = True
-no_short_texts = True
+needs_english = True
 
 
 

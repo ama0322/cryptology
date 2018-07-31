@@ -41,7 +41,7 @@ def execute(data:str, output_location:str) -> None:
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
 def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_source:str, encryption_key:str,
-                    alphabet_size:int, output_location:str) -> None:
+                    encoding:int, output_location:str) -> None:
     """
     Conducts a rotation decryption in testing mode
 
@@ -50,7 +50,7 @@ def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_sou
     :param plaintext_source: (string) the location where the plaintext is found
     :param plaintext: (string) the plaintext to encrypt
     :param encryption_key: (string) the key to use to encrypt
-    :param alphabet_size: (int) the size of the character set to use
+    :param encoding: (int) the size of the character set to use
     :param output_location: (string) the name of the file to write statistics in
     :return: None
     """
@@ -106,7 +106,7 @@ def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_sou
         """
 
     misc.testing_execute_encryption_and_decryption(encryption, decryption,
-                                                            plaintext, plaintext_source, encryption_key, alphabet_size,
+                                                            plaintext, plaintext_source, encryption_key, encoding,
                                                             output_location,
                                                             "Blowfish with Cipher Block Chaining",
                                                             encryption_code, decryption_code)

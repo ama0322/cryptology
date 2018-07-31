@@ -42,18 +42,18 @@ def encrypt(plaintext, given_key, encoding_scheme):
     """
     This encrypts using an rsa encryption. Random primes for the key are generated.
 
-    :param plaintext: (string) the data to be encrypted
-    :param given_key: (string) the public key used for encryption (not a requirement)
-    :param key: (string) NOT USED
-    :param encoding_scheme: (string) the name of the encoding scheme to use
-    :return: (string) the encrypted text
-    :return: (string) the generated public key for this in string form
-    :return: (string) the generated private key for this in string form
+    :param plaintext:       (str) the data to be encrypted
+    :param given_key:       (str) the public key used for encryption (not a requirement)
+    :param key:             (str) NOT USED
+    :param encoding_scheme: (str) the name of the encoding scheme to use
+    :return:                (str) the encrypted text
+    :return:                (str) the generated public key for this in string form
+    :return:                (str) the generated private key for this in string form
     """
 
     key_size = rsa.key_bits      # the bit size of the key (needs to be divisible by 8)
     ciphertext = ""              # the string to build up the encrypted text
-    prime_num_one = 0            # one of the randoly generated prime numbers
+    prime_num_one = 0            # one of the randomly generated prime numbers
     prime_num_two = 0            # the other randomly generated prime numbers
     public_key = ""              # Store public key here
     private_key = ""             # Store private key here
@@ -104,7 +104,7 @@ def encrypt(plaintext, given_key, encoding_scheme):
     # chosen character scheme
     ciphertext_blocks = [ pow(block, e, n) for block in plaintext_blocks ]
     ciphertext_blocks = [ misc.int_to_chars_encoding_scheme_pad(block, encoding_scheme, key_size)
-                          for block in ciphertext_blocks] ;
+                          for block in ciphertext_blocks]
     rsa.testing_execute.block_size = (len(ciphertext_blocks[0]))
 
 
@@ -121,7 +121,8 @@ def encrypt(plaintext, given_key, encoding_scheme):
 
 
 
-############################################################################################# EXTRA FUNCTIONS ##########
+
+######################################################################################### ANCILLARY FUNCTIONS ##########
 
 def _calculate_public_and_private_key(prime_one, prime_two, encoding_scheme):
     """

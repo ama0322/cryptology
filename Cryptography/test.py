@@ -7,18 +7,19 @@ import os                                        # for deleting files
 
 
 
-############################################################################################## MANUAL TESTING ##########
+########################################################################################### PRIMARY FUNCTIONS ##########
 
 # MODIFY THESE VALUES
-plaintext_source = "Resources/Library/Clarissa.txt"
+plaintext_source = "Resources/Library/Test10.txt"
 
 
-
-alphabet_size = misc.CHAR_SET_TO_SIZE.get("ascii")
 key = "This is a key for testing"
 
 
-encoding_scheme = "base64"
+encoding_scheme = "base16"
+alphabet_size = misc.CHAR_SET_TO_SIZE.get("ascii")
+
+block_cipher_modes = -1 # TODO
 
 
 
@@ -198,8 +199,299 @@ def manual_testing(given_cipher):
 
 
 
+# This function automatically checks all the ciphers (may take some time). Needs to be as optimized as possible
+def automated_testing():
+    """
+    This will test all of the Decryption ciphers by calling their testing_execute() functions
+
+    Run tests with all Decryption ciphers, ALPHABETS/encoding_schemes, and different* plaintext lengths (for blocks),
+    and also plaintexts of different character sets. For block ciphers, run modes of encryption too.
+    While testing is conducted, print out the results.
+    *In general, use short text so that the test doesn't take too long.
+
+    :return: None
+    """
 
 
+    # Random characters. Use this for testing.
+    plaintext_sample = \
+    """I AM come of a race noted for vigor of fancy and ardor of passion. Men have called me mad; but the question is not yet settled, whether madness is or is not the loftiest intelligence—whether much that is glorious—whether all that is profound—does not spring from disease of thought—from moods of mind exalted at the expense of the general intellect. They who dream by day are cognizant of many things which escape those who dream only by night. In their gray visions they obtain glimpses of eternity, and thrill, in awakening, to find that they have been upon the verge of the great secret. In snatches, they learn something of the wisdom which is of good, and more of the mere knowledge which is of evil. They penetrate, however, rudderless or compassless into the vast ocean of the “light ineffable,” and again, like the adventures of the Nubian geographer, “agressi sunt mare tenebrarum, quid in eo esset exploraturi.” We will say, then, that I am mad. I grant, at least, that there are two distinct conditions of my mental existence—the condition of a lucid reason, not to be disputed, and belonging to the memory of events forming the first epoch of my life—and a condition of shadow and doubt, appertaining to the present, and to the recollection of what constitutes the second great era of my being. Therefore, what I shall tell of the earlier period, believe; and to what I may relate of the later time, give only such credit as may seem due, or doubt it altogether, or, if doubt it ye cannot, then play unto its riddle the Oedipus. """
+
+    # ADD HERE. Use smaller key sizes on ciphers to save time (use exec to prevent conflict with same name in Encrypt)
+    exec("from Cryptography.Decryption import rsa")
+    exec("rsa_original = rsa.key_bits; rsa.key_bits = 512")
+
+
+
+    # Build up plaintext. Need different lengths and character sets
+    testing_plaintexts = [plaintext_sample[:10], plaintext_sample[:100], plaintext_sample[:1000]]
+
+    # Store incorrect ciphers here.
+    incorrect_ciphers = []
+
+    # FOR ALL DECRYPTION CIPHERS, test them
+    for decrypt_cipher in misc.DECRYPTION_SET:
+
+        # Figure out which encrypting cipher to use (same name, but without "_nokey" if that suffix exists)
+        encrypt_cipher = decrypt_cipher if decrypt_cipher.find("_nokey") == -1 else decrypt_cipher[0: -6]
+
+        # Figure out the encrypting key to use
+        encrypt_key = _obtain_encryption_key(decrypt_cipher)
+
+        # Figure out whether to use alphabet or character encoding scheme
+        exec("from Cryptography.Decryption import " + decrypt_cipher)
+        character_sets = eval(decrypt_cipher + ".char_set")
+
+
+        # Test the different char sets and different plaintexts
+        for char_set, plaintext in [(x, y) for x in character_sets for y in testing_plaintexts]:
+
+            # The name of the character set (to print out during errors)
+            char_set_name = char_set
+
+            # If char_set is an alphabet, then change value to size of the alphabet
+            if char_set in misc.ALPHABETS:
+                char_set = misc.CHAR_SET_TO_SIZE.get(char_set)
+
+
+            # If needs english, then don't test
+            try:                                                      # ciphers that don't need english raise exception
+                if eval(decrypt_cipher + ".needs_english") == True:
+                    continue
+            except:                                                   # Does not require english, pass
+                pass
+
+
+            # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext
+            # alphabet is smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to
+            # decrypt correctly. So switch to use the plaintext's alphabet for encryption, and inform the user
+            exec("from Cryptography.Decryption import " + decrypt_cipher)
+            try:                                                           # Non restricted ciphers fail "try" statement
+                restrict = eval(decrypt_cipher                             # Ciphertext alphabet restricted
+                                           + ".ciphertext_alphabet_restricted")
+                if restrict == True:                                       # Restrict by using plaintext's alphabet.
+                    chosen_alphabet = char_set_name
+                    true_alphabet = misc.alphabet_of(plaintext)
+                    if char_set < misc.CHAR_SET_TO_SIZE.get(true_alphabet):
+                        print("The chosen alphabet for encryption ({}) is insufficient for the alphabet that the"
+                              + "plaintext is in. \nTherefore, the alphabet for encryption is switched to: {}."
+                              .format(chosen_alphabet, true_alphabet))
+                        char_set = misc.CHAR_SET_TO_SIZE.get(true_alphabet)
+            except Exception:                                              # Ciphertext alphabet not restricted. Pass
+                pass
+
+
+
+
+            # Call decryption_cipher's testing_execute()
+            try:
+                exec(decrypt_cipher + ".testing_execute(encrypt_cipher, decrypt_cipher, "
+                                                   "plaintext, \"Doesn't matter\", "
+                                                   "encrypt_key, char_set, \"Resources/Temp\")")
+            except:
+                incorrect_ciphers.append(decrypt_cipher + " (F) " + char_set_name + " " + str(len(plaintext)) )
+
+
+
+            # Open up Resources/Temp to determine if the encryption and decryption worked (on second line)
+            try:
+                my_file = open("Resources/Temp", "r", encoding="utf-8")
+                first_line = my_file.readline()
+                second_line = my_file.readline()
+                if second_line == "INCORRECT":
+                    incorrect_ciphers.append(decrypt_cipher + " (I) " + char_set_name + " " + str(len(plaintext)))
+                my_file.close()
+
+                # Delete the file
+                os.remove("Resources/Temp")
+            except:
+                continue
+
+
+
+
+    # Print out incorrect ciphers (may be duplicates)
+    incorrect_ciphers.sort()
+    print()
+    print(
+        "An (F) indicates that the decryption failed to run correctly (some error raised during decryption).")
+    print("An (I) indicates that the decryption produced an incorrect result (not the original plaintext)")
+    print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢:\n", end="")
+    if len(incorrect_ciphers) == 0: incorrect_ciphers.append("NONE")
+    print(*incorrect_ciphers, sep="\n")
+    print()
+
+    # ADD HERE. Undo the temporary key size changes
+    exec("rsa.key_bits = rsa_original")
+
+
+
+
+# This function automatically checks all the ciphers (may take some time) Needs to be as optimized as possible
+def automated_testing2():
+    """
+    This will test all of the Decryption ciphers by:
+        1: Encrypt with the corresponding encryption cipher
+        2: Decrypt with the Decryption cipher
+        3: Checking the decrypted text against the original plaintext
+
+    Run tests with all Decryption ciphers, ALPHABETS/encoding_schemes, and different* plaintext lengths (for blocks),
+    and also plaintexts of different character sets.
+    While testing is conducted, print out the results.
+    *In general, use short text so that the test doesn't take too long.
+
+    :return: None
+    """
+
+    # Random characters. Use this for testing.
+    plaintext_sample = """
+    extremely concerned, my dearest friend, for the disturbances that have happened in your family. I know how it must hurt
+    you to become the subject of the public ﾶ talk: and yet, upon an occasion so generally known, it is impossible but that
+    whatever relates to a young  treatment they gave him when he went ん And yet that other, although in unbosoming himself
+    to a select friend, he discovers wickedness enough to entitle him to general detestation, preserves a decency, as well
+    in his images as in his language, which is not always to be found in the works of some of the most celebrated modern
+    writers, whose subjects and characters have less warranted the liberties they have taken.
+
+    In the letters of the two ん young ladies, it is presumed, will be found not only the highest exercise of a reasonable
+    and practicable friendship, between minds endowed with the noblest principles of virtue and religion, but occasionally
+    interspersed, such delicacy of sentiments, particularly with regard to the other sex; such instances of impartiality,
+    each freely, as a fundamental principle of their friendship, blaming, praising, and setting right the other, as are
+    strongly to be recommended to the observation of the younger part (more specially) of female readers.
+    """
+
+    # ADD HERE. Use smaller key sizes on ciphers to save time (use exec to prevent conflict with same name in Encrypt)
+    exec("from Cryptography.Decryption import rsa")
+    exec("rsa_original = rsa.key_bits; rsa.key_bits = 512")
+
+
+
+    # Build up plaintext. Need different lengths and character sets
+    testing_plaintexts = [plaintext_sample[:10], plaintext_sample[:100], plaintext_sample[:1000]]
+
+    # Store incorrect ciphers here.
+    incorrect_ciphers = []
+
+    # FOR ALL DECRYPTION CIPHERS, test them
+    for decrypt_cipher in misc.DECRYPTION_SET:
+
+        # Figure out which encrypting cipher to use (same name, but without "_nokey" if that suffix exists)
+        encrypt_cipher = decrypt_cipher if decrypt_cipher.find("_nokey") == -1 else decrypt_cipher[0: -6]
+
+        # Figure out the encrypting key to use
+        encrypt_key = _obtain_encryption_key(decrypt_cipher)
+
+        # Figure out whether to use alphabet or character encoding scheme
+        exec("from Cryptography.Decryption import " + decrypt_cipher)
+        character_sets = eval(decrypt_cipher + ".char_set")
+
+        # FOR ALL THE ALPHABETS/CHARACTER_ENCODING_SCHEMES (depending on the decrypt_cipher)
+        for char_set in character_sets:
+
+            # If char_set uses alphabets, then calculate the alphabet_size
+            chosen_alphabet = ""
+            if char_set in misc.ALPHABETS:
+                chosen_alphabet = char_set
+                char_set = misc.CHAR_SET_TO_SIZE.get(chosen_alphabet)  # Get size of the alphabet
+
+            # FOR ALL OF THE PLAINTEXTS TO TEST
+            for plaintext in testing_plaintexts:
+
+                # If decrypt_cipher does not allow short texts, then skip the short texts
+                try:
+                    if eval(decrypt_cipher + ".needs_english") == True:
+                        continue
+                except Exception:                                       # Short texts allowed, do nothing
+                    pass
+
+                # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext
+                # alphabet is smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to
+                # decrypt correctly. So switch to use the plaintext's alphabet for encryption, and inform the user
+                exec("from Cryptography.Decryption import " + decrypt_cipher)
+                try:                                                       # Non restricted ciphers fail "try" statement
+                    restrict = eval(decrypt_cipher                         # Ciphertext alphabet restricted
+                                    + ".ciphertext_alphabet_restricted")
+                    if restrict == True:                                   # Restrict by using plaintext's alphabet.
+                        alphabet = misc.alphabet_of(plaintext)
+                        if char_set < misc.CHAR_SET_TO_SIZE.get(alphabet): # If chosen alphabet (char_set) is not enough
+
+                            print("The chosen alphabet for encryption ({}) is insufficient for the alphabet that the"
+                                  + "plaintext is in. \nTherefore, the alphabet for encryption is switched to: {}."
+                                  .format(chosen_alphabet, alphabet))
+                            char_set = misc.CHAR_SET_TO_SIZE.get(alphabet)
+                except Exception:                                          # Ciphertext alphabet not restricted. Pass
+                    pass
+
+
+
+
+                # Run the ENCRYPTION, and parse the output (may be a tuple) to get ciphertext and key
+                ciphertext  = ""     # Fill this in
+                decrypt_key = ""     # Fill this in
+                exec("from Cryptography.Encryption import " + encrypt_cipher)
+                encryption_output = eval(encrypt_cipher + ".encrypt(plaintext, encrypt_key, char_set)")   # encrypt
+
+
+                # PARSE the output of the encryption to figure out ciphertext and decrypt_key
+                if type(encryption_output) is tuple:            # If tuple, then ciphertext is 1st index
+                    ciphertext = encryption_output[0]
+
+                    if len(encryption_output) == 3:             # Len 3 indicates asym keys. Decrypt key is index 2
+                        decrypt_key = encryption_output[2]
+
+                    elif len(encryption_output) == 2:           # Len 2 indicates symm. key generated. Key is index 1
+                        decrypt_key = encryption_output[1]
+
+                else:  # Not tuple, just regular ciphertext
+                    ciphertext  = encryption_output
+                    decrypt_key = encrypt_key
+
+
+
+
+                # Run DECRYPTION, save time and decrypted text
+                try:                                                        # Run decryption
+                    decrypted = ""
+                    exec("from Cryptography.Decryption import " + decrypt_cipher)
+                    decryption_output = eval(decrypt_cipher + ".decrypt(ciphertext, decrypt_key, char_set)")
+
+                    if type(decryption_output) is tuple:                    # If tuple, then decrypted is 1st index
+                        decrypted = decryption_output[0]
+                    else:                                                   # Otherwise, decrypted is the only output
+                        decrypted = decryption_output
+
+                    # Check if the decrypted text is same as plaintext and add to graph
+                    if decrypted != plaintext:                              # When decrypt produces wrong result
+                        incorrect_ciphers.append(decrypt_cipher + " (I)")
+                except:                                                     # When decrypt not working at all
+                    incorrect_ciphers.append(decrypt_cipher + " (F)")
+                    continue
+
+
+
+    # Print out incorrect ciphers (may be duplicates)
+    incorrect_ciphers.sort()
+    print()
+    print("An (F) indicates that the decryption failed to run correctly (some error raised during decryption).")
+    print("An (I) indicates that the decryption produced an incorrect result (not the original plaintext)")
+    print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢: ", end="")
+    if len(incorrect_ciphers) == 0: incorrect_ciphers.append("NONE")
+    print(*incorrect_ciphers, sep=", ")
+    print()
+
+    # ADD HERE. Undo the temporary key size changes
+    exec("rsa.key_bits = rsa_original")
+
+
+
+
+
+
+
+
+
+
+
+######################################################################################### ANCILLARY FUNCTIONS ##########
 
 # Obtain information necessary to conduct encryption and decryption
 def _get_testing_info():
@@ -360,185 +652,3 @@ def _parse_user_input():
 
 
 
-
-
-
-
-
-
-
-
-########################################################################################### AUTOMATED TESTING ##########
-
-
-# Random characters. Use this for testing.
-plaintext_sample = """
-extremely concerned, my dearest friend, for the disturbances that have happened in your family. I know how it must hurt
-you to become the subject of the public ﾶ talk: and yet, upon an occasion so generally known, it is impossible but that
-whatever relates to a young  treatment they gave him when he went ん And yet that other, although in unbosoming himself
-to a select friend, he discovers wickedness enough to entitle him to general detestation, preserves a decency, as well
-in his images as in his language, which is not always to be found in the works of some of the most celebrated modern
-writers, whose subjects and characters have less warranted the liberties they have taken.
-
-In the letters of the two ん young ladies, it is presumed, will be found not only the highest exercise of a reasonable
-and practicable friendship, between minds endowed with the noblest principles of virtue and religion, but occasionally
-interspersed, such delicacy of sentiments, particularly with regard to the other sex; such instances of impartiality,
-each freely, as a fundamental principle of their friendship, blaming, praising, and setting right the other, as are
-strongly to be recommended to the observation of the younger part (more specially) of female readers.
-"""
-
-
-
-# This function automatically checks all the ciphers (may take some time) Needs to be as optimized as possible
-def automated_testing():
-    """
-    This will test all of the Decryption ciphers by:
-        1: Encrypt with the corresponding encryption cipher
-        2: Decrypt with the Decryption cipher
-        3: Checking the decrypted text against the original plaintext
-
-    Run tests with all Decryption ciphers, ALPHABETS/encoding_schemes, and different* plaintext lengths (for blocks),
-    and also plaintexts of different character sets.
-    While testing is conducted, print out the results.
-    *In general, use short text so that the test doesn't take too long.
-
-    :return: None
-    """
-
-
-    # ADD HERE. Use smaller key sizes on ciphers to save time
-    from Cryptography.Decryption import rsa
-    rsa_original = rsa.key_bits; rsa.key_bits = 512
-
-
-    # Build up plaintext. Need different lengths and character sets
-    testing_plaintexts = [plaintext_sample[:10], plaintext_sample[:100], plaintext_sample[:1000]]
-
-
-    # Store incorrect ciphers here.
-    incorrect_ciphers = []
-
-
-    # FOR ALL DECRYPTION CIPHERS, test them
-    for decrypt_cipher in misc.DECRYPTION_SET:
-
-        # Figure out which encrypting cipher to use (same name, but without "_nokey" if it exists)
-        encrypt_cipher = decrypt_cipher if decrypt_cipher.find("_nokey") == -1 else decrypt_cipher[0: -6]
-
-        # Figure out the encrypting key to use
-        encrypt_key = _obtain_encryption_key(decrypt_cipher)
-
-        # Figure out whether to use alphabet or character encoding scheme
-        exec("from Cryptography.Decryption import " + decrypt_cipher)
-        character_sets = eval(decrypt_cipher + ".char_set")
-
-
-        # FOR ALL THE ALPHABETS/CHARACTER_ENCODING_SCHEMES
-        for char_set in character_sets:
-
-
-            # If char_set uses alphabet_size, then calculate that
-            if char_set in misc.ALPHABETS:
-                char_set = misc.CHAR_SET_TO_SIZE.get(char_set)
-                chosen_alphabet = next(alphabet for alphabet, size           # The selected alphabet. May or may not be
-                                       in misc.CHAR_SET_TO_SIZE.items()      # insufficient. Will check later
-                                       if size == char_set)
-
-            # FOR ALL OF THE PLAINTEXTS TO TEST
-            for plaintext in testing_plaintexts:
-
-                # If decrypt_cipher does not allow short texts, then skip the short texts
-                try:
-                    if eval(decrypt_cipher + ".no_short_texts") == True:
-                        continue
-                except Exception:                                            # Short texts allowed, do nothing
-                    pass
-
-                # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext
-                # alphabet is smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to
-                # decrypt correctly. So switch to use the plaintext's alphabet for encryption, and inform the user
-                exec("from Cryptography.Decryption import "
-                     + decrypt_cipher)
-                try:  # Non restricted ciphers fail "try" statement
-                    restrict = eval(decrypt_cipher                           # Ciphertext alphabet restricted
-                                    + ".ciphertext_alphabet_restricted")
-                    if restrict == True:                                     # Restrict by using plaintext's alphabet.
-                        alphabet = misc.alphabet_of(plaintext)
-                        if char_set < misc.CHAR_SET_TO_SIZE.get(alphabet):   # If chosen alphabet (char_set) is
-                            # insufficient
-
-                            print("The chosen alphabet for encryption ("
-                                  + chosen_alphabet + ") is"
-                                  + " insufficient for the alphabet that"
-                                  + " the plaintext is in."
-                                  + "\nTherefore, the alphabet for"
-                                  + " encryption is switched to: "
-                                  + alphabet)
-                            char_set = misc.CHAR_SET_TO_SIZE.get(alphabet)
-
-                except Exception:  # Ciphertext alphabet not restricted. Do nothing
-                    pass
-
-
-                # Run the ENCRYPTION, and parse the output (may be a tuple) to get ciphertext and key
-                exec("import Cryptography.Encryption."
-                     + encrypt_cipher)
-                encryption_output = eval("Cryptography.Encryption."  # Run encryption
-                                         + encrypt_cipher
-                                         + ".encrypt(plaintext, encrypt_key, char_set)")
-                ciphertext  = ""    # Fill this in
-                decrypt_key = ""    # Fill this in
-
-                # Parse the output of the encryption to figure out ciphertext and decrypt_key
-                if type(encryption_output) is tuple:    # If tuple, then ciphertext is 1st index
-                    ciphertext = encryption_output[0]
-
-                    if len(encryption_output) == 3:     # Len 3 indicates asymmetric keys made
-                        decrypt_key = encryption_output[2]
-
-                    elif len(encryption_output) == 2:   # Len 2 indicates symmetric key generated
-                        decrypt_key = encryption_output[1]
-
-                else:                                   # Not tuple, just regular ciphertext
-                    ciphertext = encryption_output
-                    decrypt_key = encrypt_key
-
-
-
-
-                # Run DECRYPTION, save time and decrypted text
-                try:                                                           # Run decryption
-                    decrypted = ""
-                    exec("from Cryptography.Decryption import "                # Import module for decryption
-                            + decrypt_cipher)
-                    decryption_output = eval(decrypt_cipher                    # Run the actual decryption
-                            + ".decrypt(ciphertext, decrypt_key, char_set)")
-                    if type(decryption_output) is tuple:                       # If tuple, then decrypted is 1st index
-                        decrypted = decryption_output[0]
-                    else:                                                      # Otherwise, decrypted is the only output
-                        decrypted = decryption_output
-
-                    # Check if the decrypted text is same as plaintext and add to graph
-                    if decrypted != plaintext:
-                        incorrect_ciphers.append(decrypt_cipher + " (I)")
-                except:                                                   # Catch all exceptions, because decrypt wrong
-                    incorrect_ciphers.append(decrypt_cipher + " (F)")
-                    continue
-
-
-
-
-    # Print out incorrect ciphers (may be duplicates)
-    incorrect_ciphers.sort()
-    print()
-    print("An (F) indicates that the decryption failed to run correctly (some error raised during decryption).")
-    print("An (I) indicates that the decryption produced an incorrect result (not the original plaintext)")
-    print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢 ", end="")
-    print(*incorrect_ciphers, sep=", ")
-    print()
-
-
-
-
-    # ADD HERE. Undo the temporary key size changes
-    rsa.key_bits = rsa_original
