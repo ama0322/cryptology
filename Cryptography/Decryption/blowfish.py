@@ -12,12 +12,15 @@ key_size = "multiple generated characters"           # encrypt() generates its o
 
 
 # Cipher settings:
-key_bits = 448                                       # 32-448 bits long
+mode = "ecb"                                  # ECB is just default. Set in calls before encrypt()/decrypt() is called
+key_bits = 448                                # 32-448 bits long
+
+
 
 
 
 # Cipher resources:
-p_array = [
+p_array_original = [                # Random digits of pi. Used as a framework for the p_array_working
     # region p_array
     0x243F6A88, 0x85A308D3, 0x13198A2E, 0x03707344,
 			0xA4093822, 0x299F31D0, 0x082EFA98, 0xEC4E6C89,
@@ -25,9 +28,9 @@ p_array = [
 			0xC0AC29B7, 0xC97C50DD, 0x3F84D5B5, 0xB5470917,
 			0x9216D5D9, 0x8979FB1B
     # endregion
-		  ]
+		           ]
 
-s_boxes = [
+s_boxes_original = [                # Random digits of pi. Used as a framework for the s_boxes_working
     # region s_boxes
     [
 				0xD1310BA6, 0x98DFB5AC, 0x2FFD72DB, 0xD01ADFB7,
@@ -294,8 +297,11 @@ s_boxes = [
 				0xB74E6132, 0xCE77E25B, 0x578FDFE3, 0x3AC372E6
 			]
     # endregion
-		  ]
+		           ]
 
+
+p_array_working = None              # Set during key_schedule(). Used to encrypt/decrypt
+s_boxes_working = None              # Set during key_schedule(). used to encrypt/decrypt
 
 
 
@@ -307,9 +313,9 @@ def execute(data:str, output_location:str) -> None:
     """
     This function decrypts data using a user-provided key.
 
-    :param data: (string) the data to be decrypted
-    :param output_location: (string) the location to write out relevant info and statistics
-    :return: None
+    :param data:            (str)	  the data to be decrypted
+    :param output_location: (str) 	  the location to write out relevant info and statistics
+    :return:                (NoneType)
     """
 
 
@@ -325,14 +331,14 @@ def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_sou
     """
     Conducts a rotation decryption in testing mode
 
-    :param encryption:       (str) the name of the encryption cipher to use
-    :param decryption:       (str) the name of the decryption cipher to use (this module)
-    :param plaintext_source: (str) the location where the plaintext is found
-    :param plaintext:        (str) the plaintext to encrypt
-    :param encryption_key:   (str) the key to use to encrypt
-    :param encoding:         (str) the size of the character set to use
-    :param output_location:  (str) the name of the file to write statistics in
-    :return: None
+    :param encryption:       (str) 		the name of the encryption cipher to use
+    :param decryption:       (str)      the name of the decryption cipher to use (this module)
+    :param plaintext_source: (str)      the location where the plaintext is found
+    :param plaintext:        (str)      the plaintext to encrypt
+    :param encryption_key:   (str)      the key to use to encrypt
+    :param encoding:         (str)      the size of the character set to use
+    :param output_location:  (str)      the name of the file to write statistics in
+    :return:                 (NoneType)
     """
 
 
@@ -430,20 +436,16 @@ def decrypt(ciphertext:str, key:str, encoding:str) -> str:
 
 
     # Conduct the key schedule. Exactly the same as was done in Encryption
-    global p_array                                                          # Get original p_array
-    p_array_schedule = copy.deepcopy(p_array)
-    global s_boxes
-    s_boxes_schedule = copy.deepcopy(s_boxes)                               # Get original s boxes
     key = misc.chars_to_int_decoding_scheme(key, encoding)                  # Decode the char key to int
-    key, p_array_schedule, s_boxes_schedule = run_key_schedule(key, p_array_schedule, s_boxes_schedule)
+    key = run_key_schedule(key)
+
 
 
 
     # Decrypt the text (on each 64-bit block)
-    p_array_schedule.reverse()                                          # Reverse p_array for decryption
+    p_array_working.reverse()                                               # Reverse p_array for decryption
     for i in range(len(ciphertext_blocks)):
-        plaintext_blocks.append(blowfish_on_64_bits(ciphertext_blocks[i],          # Decrypt
-                                p_array_schedule, s_boxes_schedule))
+        plaintext_blocks.append(blowfish_on_64_bits(ciphertext_blocks[i]))                  # Decrypt
         print("Decrypting: " + str((i / len(ciphertext_blocks)) * 100)                      # Print updates
               	+ "%")
 
@@ -472,17 +474,22 @@ def decrypt(ciphertext:str, key:str, encoding:str) -> str:
 
 
 # Returns: key, p_array, s_boxes. Key schedule setup for the algorithm.
-def run_key_schedule(key:int, p_array:list, s_boxes:list) -> (int, list, list):
+def run_key_schedule(key:int) -> int:
     """
     Key setup for blowfish
 
     :param: key     (int) the int key to use during decryption mode. Is 0 during encryption mode
-    :param: p_array (list)       the p array
-    :param: s_boxes (2-d list)   the s boxes
-    :return:        (int)        the generated key in integer form
-    :return:        (list)       p_array to be used in encryption
-    :return:        (list)       s_boxes to be used in encryption
+    :return:        (int) the generated key in integer form
     """
+
+
+    # Obtain the p_array_working and s_boxes_working static variables. Set them to original values first
+    global p_array_working                                      # We want the actual static variables
+    p_array_working = copy.deepcopy(p_array_original)
+    global s_boxes_working
+    s_boxes_working = copy.deepcopy(s_boxes_original)
+
+
 
 
 
@@ -498,14 +505,15 @@ def run_key_schedule(key:int, p_array:list, s_boxes:list) -> (int, list, list):
 
     # Each entry in p_array is XOR'ed with key, in groups of 4 bytes (32 bits), and cycling the key.
     key_index = 0                                                            # Start with first four bytes of key
-    for p_index in range(0, len(p_array)):
+    for p_index in range(0, len(p_array_working)):
         val_to_xor        =   (key[ key_index      % len(key)] << 24)  \
                             + (key[(key_index + 1) % len(key)] << 16)  \
                             + (key[(key_index + 2) % len(key)] <<  8)  \
                             + (key[(key_index + 3) % len(key)]      )
 
-        p_array[p_index] ^= val_to_xor                                        # XOR bytes with p_array element
+        p_array_working[p_index] ^= val_to_xor                                # XOR bytes with p_array element
         key_index += 4                                                        # Move key index up 4 bytes
+
 
 
 
@@ -514,37 +522,41 @@ def run_key_schedule(key:int, p_array:list, s_boxes:list) -> (int, list, list):
     # resulting in a new ciphertext that will replace p_array[2] and p_array[3]. This same process continues until
     # all of p_array and all of s_boxes have been replaced
     ciphertext = 0                                                         # Encryption process starts with all 0 block
-    for i in range(0, len(p_array), 2):                                    # Start replacing p_array
-        ciphertext = blowfish_on_64_bits(ciphertext, p_array, s_boxes)     # Encryption processes uses last ciphertext
-        p_array[i    ] = ciphertext & 0xFFFFFFFF00000000 >> 32             # Left half of ciphertext replaces curr entry
-        p_array[i + 1] = ciphertext & 0x00000000FFFFFFFF                   # Right half replaces the entry right after
+    for i in range(0, len(p_array_working), 2):                            # Start replacing p_array
+        ciphertext = blowfish_on_64_bits(ciphertext)                       # Encryption processes uses last ciphertext
+        p_array_working[i    ] = ciphertext & 0xFFFFFFFF00000000 >> 32     # Left half of ciphertext replaces curr entry
+        p_array_working[i + 1] = ciphertext & 0x00000000FFFFFFFF           # Right half replaces the entry right after
 
 
-    for i in range(len(s_boxes)):                                          # s_boxes: Iterate through outer 4 objects
-        for j in range(0, len(s_boxes[i]), 2):                             # For each group in s_boxes, replace in twos
-            ciphertext = blowfish_on_64_bits(ciphertext, p_array, s_boxes)
-            s_boxes[i][j    ] = ciphertext & 0xFFFFFFFF00000000 >> 32
-            s_boxes[i][j + 1] = ciphertext & 0x00000000FFFFFFFF
+    for i in range(len(s_boxes_working)):                                  # s_boxes: Iterate through outer 4 objects
+        for j in range(0, len(s_boxes_working[i]), 2):                     # For each group in s_boxes, replace in twos
+            ciphertext = blowfish_on_64_bits(ciphertext)
+            s_boxes_working[i][j    ] = ciphertext & 0xFFFFFFFF00000000 >> 32
+            s_boxes_working[i][j + 1] = ciphertext & 0x00000000FFFFFFFF
 
 
 
 
-    return return_key, p_array, s_boxes
+    return return_key
 
 
 
 
 
 # Returns: encrypted_block. The actual algorithm run on a 64-bit integer input.
-def blowfish_on_64_bits(input:int, p_array:list, s_boxes:list) -> int:
+def blowfish_on_64_bits(input:int) -> int:
     """
     This is algorithm that runs on the 64-bit integer blocks
 
     :param input:   (int) the 64-bit block of plaintext to encrypt
-    :param p_array: (list) the p array
-    :param s_boxes: (2-d list) the s boxes
     :return:        (int) the encrypted result
     """
+
+    # Copy over the key_schedule modified p_array_current and s_boxes_current in blowfish
+    global p_array_working; p_array = p_array_working
+    global s_boxes_working; s_boxes = s_boxes_working
+
+
 
     # F-function to be used during encryption
     def f_function(input):
@@ -563,7 +575,7 @@ def blowfish_on_64_bits(input:int, p_array:list, s_boxes:list) -> int:
         far_right    = (input & 0x000000FF)
 
         # Perform the +, ^, + operations on the mappings from s_boxes (s_boxes elements are 32 bits)
-        output =          s_boxes[0][far_left    ]
+        output =           s_boxes[0][far_left    ]
         output = (output + s_boxes[1][center_left ]) % 4294967296  # Obtain the modular result with 2^32
         output = (output ^ s_boxes[2][center_right])
         output = (output + s_boxes[3][far_right   ]) % 4294967296  # Obtain the modular result with 2^32
@@ -603,4 +615,6 @@ def blowfish_on_64_bits(input:int, p_array:list, s_boxes:list) -> int:
 
     # Combine the left and right and return the 64 bits
     return (left << 32) + right
+
+
 

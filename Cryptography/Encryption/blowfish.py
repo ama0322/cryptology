@@ -62,7 +62,7 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
 
     # Blowfish encrypts text in 64-bit int blocks. Turn the plaintext into a hex string. Then, divide the string into 16
     # digits each (64-bits each). Then, turn those hex blocks into int blocks.
-    plaintext = plaintext.encode("utf-8").hex()            # Convert to hex. Remove leading "0x"
+    plaintext = plaintext.encode("utf-8").hex()             # Convert to hex. Remove leading "0x"
 
     original_plaintext_len = len(plaintext)
     while plaintext != "":                                  # While there is still plaintext to process
@@ -78,17 +78,15 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
 
 
     # Conduct the key schedule (and time it)
-    p_array = copy.deepcopy(blowfish.p_array)
-    s_boxes = copy.deepcopy(blowfish.s_boxes)
     start_time = time.time()
-    key, p_array, s_boxes = blowfish.run_key_schedule(0, p_array, s_boxes)          # Run the key schedule
+    key = blowfish.run_key_schedule(0)                                              # "0" indicates generate key
     blowfish.testing_execute.time_for_key_schedule = time.time() - start_time       # Save time in Decryption's blowfish
+
 
 
     # Encrypt the text (and save block information)
     for i in range(len(plaintext_blocks)):
-        ciphertext_blocks.append(blowfish.blowfish_on_64_bits(plaintext_blocks[i],  # Run blowfish on each plaintext
-                                                              p_array, s_boxes))    # block
+        ciphertext_blocks.append(blowfish.blowfish_on_64_bits(plaintext_blocks[i])) # Run blowfish on each plain block
         print("Encrypting: " + str((i / len(plaintext_blocks)) * 100)               # Print updates
                 + "%")
 
