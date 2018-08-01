@@ -16,15 +16,15 @@ from Cryptography.Decryption import rsa          # RSA cipher info and read_rsa_
 
 
 # Encrypt using user-entered info. Write relevant information and return encrypted text for cryptography_runner
-def execute(data, output_location):
+def execute(data:str, output_location:str) -> None:
     """
     This function calls the appropriate functions in misc.py. Those functions will use the encrypt() function
     located below as the algorithm to actually encrypt the text. Then, the ciphertext will be returned back to
     cryptography_runner.py
 
-    :param data: (string) the data to be encrypted
-    :param output_location: (string) the location to print out the information
-    :return: (string) the encrypted data
+    :param data:            (str) the data to be encrypted
+    :param output_location: (str) the location to print out the information
+    :return:                None
     """
 
     # Encrypt the plaintext. Print out the ciphertext and relevant information
@@ -38,13 +38,12 @@ def execute(data, output_location):
 
 
 # The actual algorithm to encrypt using rsa encryption
-def encrypt(plaintext, given_key, encoding_scheme):
+def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str):
     """
     This encrypts using an rsa encryption. Random primes for the key are generated.
 
     :param plaintext:       (str) the data to be encrypted
-    :param given_key:       (str) the public key used for encryption (not a requirement)
-    :param key:             (str) NOT USED
+    :param given_key:       (str) the public key used for encryption (if empty string, then generate own key pair)
     :param encoding_scheme: (str) the name of the encoding scheme to use
     :return:                (str) the encrypted text
     :return:                (str) the generated public key for this in string form
@@ -53,8 +52,6 @@ def encrypt(plaintext, given_key, encoding_scheme):
 
     key_size = rsa.key_bits      # the bit size of the key (needs to be divisible by 8)
     ciphertext = ""              # the string to build up the encrypted text
-    prime_num_one = 0            # one of the randomly generated prime numbers
-    prime_num_two = 0            # the other randomly generated prime numbers
     public_key = ""              # Store public key here
     private_key = ""             # Store private key here
     e = 0                        # the public encryption key (the actual number)
@@ -85,7 +82,7 @@ def encrypt(plaintext, given_key, encoding_scheme):
 
     # Convert the plaintext into a long string of hex digits (through utf-8 interpretation). Divide the hex digits
     # into blocks of key_size // 8 bytes (the maximum that rsa can encrypt). Turn each of those hex blocks into
-    # integers, and encrypt them each. Lastly, transform each of those ints into characters thorugh a character
+    # integers, and encrypt them each. Lastly, transform each of those ints into characters thorough a character
     # encoding scheme, and concatenate the results together to get the ciphertext
     plaintext = plaintext.encode("utf-8").hex()
 
@@ -124,19 +121,18 @@ def encrypt(plaintext, given_key, encoding_scheme):
 
 ######################################################################################### ANCILLARY FUNCTIONS ##########
 
-def _calculate_public_and_private_key(prime_one, prime_two, encoding_scheme):
+def _calculate_public_and_private_key(prime_one:int, prime_two:int, encoding_scheme:str) ->(int, int, int, str, str):
     """
     Given two primes, calculate the private and public key
 
-    :param prime_one: (int) a prime
-    :param prime_two: (int) another prime
-    :param encoding_scheme: (string) tells us which character set to use to render the public/private
-    keys as text
-    :return: (int) encryption number e
-    :return: (int) decryption number d
-    :return: (int) modulus number n
-    :return: (string) public key in format "e = ..., n = ..."
-    :return:(string) private key in format "d = ..., n = ..."
+    :param prime_one:       (int) a prime
+    :param prime_two:       (int) another prime
+    :param encoding_scheme: (str) tells us which encoding to use to render the public/private keys as text
+    :return:                (int) encryption number e
+    :return:                (int) decryption number d
+    :return:                (int) modulus number n
+    :return:                (str) public key in format "e = ..., n = ..."
+    :return:                (str) private key in format "d = ..., n = ..."
     """
     two_bytes = 16
     modulus = prime_one * prime_two  # Calculate hte modulus by multiplying the two primes together
@@ -146,7 +142,7 @@ def _calculate_public_and_private_key(prime_one, prime_two, encoding_scheme):
     e = 65537  # Commonly used as e for low hamming weight, among other reasons
 
     # Calculate d (modular multiplicative inverse of (e mod n). Compute with extended euclidean algorithm
-    def inverse(x, modulus):
+    def inverse(x:int, modulus:int) -> int:
 
         # Extended euclidean algorithm
         a, b, u = 0, modulus, 1
