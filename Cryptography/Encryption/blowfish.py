@@ -80,7 +80,7 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
     # Conduct the key schedule (and time it)
     start_time = time.time()
     key = secrets.randbits(blowfish.key_bits)                                       # Generate key with right size
-    _copy_run_key_schedule(key)                                                     # Run key schedule
+    _copy_prep_run_key_schedule(key)                                                # Run key schedule
     key = misc.int_to_chars_encoding_scheme(key, encoding_scheme)                   # Turn key to str
     blowfish.testing_execute.time_for_key_schedule = time.time() - start_time       # Save time in Decryption's blowfish
 
@@ -88,7 +88,7 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
 
     # Encrypt the text using the proper mode of encryption
     ciphertext_blocks, key = eval("misc.encrypt_" + blowfish.mode_of_operation + "(plaintext_blocks, "
-                                                                               + "_copy_blowfish_on_64_bits, "
+                                                                               + "_copy_blowfish_on_block, "
                                                                                + " blowfish.key_bits, key, "
                                                                                + "encoding_scheme)")
 
@@ -119,13 +119,15 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
 
 
 # The actual algorithm to use on each block
-def _copy_blowfish_on_64_bits(input:int) -> int:
-    return blowfish._blowfish_on_64_bits(input)
+def _copy_blowfish_on_block(input:int) -> int:
+    return blowfish._blowfish_on_block(input)
 
 
 
 
 # The key schedule to run before any encryption/decryption
-def _copy_run_key_schedule(key:int):
-    return blowfish._run_key_schedule(key)
+def _copy_prep_run_key_schedule(key:int):
+    return blowfish._prep_run_key_schedule(key)
+
+
 

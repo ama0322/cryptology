@@ -436,16 +436,16 @@ def decrypt(ciphertext:str, key:str, encoding:str) -> str:
 
     # Conduct the key schedule. Exactly the same as was done in Encryption
     key = misc.chars_to_int_decoding_scheme(key, encoding)                  # Decode the char key to int
-    _run_key_schedule(key)
+    _prep_run_key_schedule(key)
 
 
 
 
 
     # Decrypt the text using the proper mode of encryption
-    _blowfish_on_64_bits.p_array.reverse()                     # Reverse p_array for decryption
+    _blowfish_on_block.p_array.reverse()                     # Reverse p_array for decryption
     plaintext_blocks, key = eval("misc.decrypt_" + mode_of_operation + "(ciphertext_blocks, "
-                                                                     + "_blowfish_on_64_bits, "
+                                                                     + "_blowfish_on_block, "
                                                                      + "64, key, "
                                                                      + "encoding)")
 
@@ -476,7 +476,7 @@ def decrypt(ciphertext:str, key:str, encoding:str) -> str:
 
 # Returns: encrypted_block. The actual algorithm run on a 64-bit integer input.
 @misc.static_vars(p_array=[], s_boxes=[])                        # Set by _key_schedule()
-def _blowfish_on_64_bits(input:int) -> int:
+def _blowfish_on_block(input:int) -> int:
     """
     This is algorithm that runs on the 64-bit integer blocks
 
@@ -503,10 +503,10 @@ def _blowfish_on_64_bits(input:int) -> int:
         far_right    = (input & 0x000000FF)
 
         # Perform the +, ^, + operations on the mappings from s_boxes (s_boxes elements are 32 bits)
-        output =           _blowfish_on_64_bits.s_boxes[0][far_left    ]
-        output = (output + _blowfish_on_64_bits.s_boxes[1][center_left ]) % 4294967296  # Mod with 2^32
-        output = (output ^ _blowfish_on_64_bits.s_boxes[2][center_right])
-        output = (output + _blowfish_on_64_bits.s_boxes[3][far_right   ]) % 4294967296  # Mod with 2^32
+        output =           _blowfish_on_block.s_boxes[0][far_left    ]
+        output = (output + _blowfish_on_block.s_boxes[1][center_left ]) % 4294967296  # Mod with 2^32
+        output = (output ^ _blowfish_on_block.s_boxes[2][center_right])
+        output = (output + _blowfish_on_block.s_boxes[3][far_right   ]) % 4294967296  # Mod with 2^32
 
 
         return output
@@ -523,7 +523,7 @@ def _blowfish_on_64_bits(input:int) -> int:
     for i in range(16):
 
         # Round operations:
-        left     ^= _blowfish_on_64_bits.p_array[i] # update left with (left xor p_array_element) (is 32 bits)
+        left     ^= _blowfish_on_block.p_array[i]   # update left with (left xor p_array_element) (is 32 bits)
         f_result  = f_function(left)                # apply the f_function to the xor_result
         right    ^= f_result                        # update right with xor result of the right with the f_result
 
@@ -535,8 +535,8 @@ def _blowfish_on_64_bits(input:int) -> int:
     left, right = right, left
 
     # Whiten the output
-    right = right ^ _blowfish_on_64_bits.p_array[16]                      # Second to last index
-    left  = left  ^ _blowfish_on_64_bits.p_array[17]                      # Last index
+    right = right ^ _blowfish_on_block.p_array[16]                        # Second to last index
+    left  = left  ^ _blowfish_on_block.p_array[17]                        # Last index
 
 
 
@@ -548,7 +548,7 @@ def _blowfish_on_64_bits(input:int) -> int:
 
 
 # Returns: key, p_array, s_boxes. Key schedule setup for the algorithm.
-def _run_key_schedule(key:int) -> None:
+def _prep_run_key_schedule(key:int) -> None:
     """
     Key setup for blowfish
 
@@ -559,11 +559,11 @@ def _run_key_schedule(key:int) -> None:
 
 
     # Set the actual p_array and s_boxes for encryption by copying over the originals
-    _blowfish_on_64_bits.p_array = copy.deepcopy(p_array_original)
-    _blowfish_on_64_bits.s_boxes = copy.deepcopy(s_boxes_original)
+    _blowfish_on_block.p_array = copy.deepcopy(p_array_original)
+    _blowfish_on_block.s_boxes = copy.deepcopy(s_boxes_original)
     # For convenience's sake, give a short-hand name for these values
-    p_array_working = _blowfish_on_64_bits.p_array
-    s_boxes_working = _blowfish_on_64_bits.s_boxes
+    p_array_working = _blowfish_on_block.p_array
+    s_boxes_working = _blowfish_on_block.s_boxes
 
 
 
@@ -593,14 +593,14 @@ def _run_key_schedule(key:int) -> None:
     # all of p_array and all of s_boxes have been replaced
     ciphertext = 0                                                         # Encryption process starts with all 0 block
     for i in range(0, len(p_array_working), 2):                            # Start replacing p_array
-        ciphertext = _blowfish_on_64_bits(ciphertext)                       # Encryption processes uses last ciphertext
+        ciphertext = _blowfish_on_block(ciphertext)                        # Encryption processes uses last ciphertext
         p_array_working[i    ] = ciphertext & 0xFFFFFFFF00000000 >> 32     # Left half of ciphertext replaces curr entry
         p_array_working[i + 1] = ciphertext & 0x00000000FFFFFFFF           # Right half replaces the entry right after
 
 
     for i in range(len(s_boxes_working)):                                  # s_boxes: Iterate through outer 4 objects
         for j in range(0, len(s_boxes_working[i]), 2):                     # For each group in s_boxes, replace in twos
-            ciphertext = _blowfish_on_64_bits(ciphertext)
+            ciphertext = _blowfish_on_block(ciphertext)
             s_boxes_working[i][j    ] = ciphertext & 0xFFFFFFFF00000000 >> 32
             s_boxes_working[i][j + 1] = ciphertext & 0x00000000FFFFFFFF
 
