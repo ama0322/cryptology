@@ -55,9 +55,7 @@ def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str)
     ciphertext  = ""             # the string to build up the encrypted text
     public_key  = ""             # Store public key here
     private_key = ""             # Store private key here
-    e = 0                        # the public encryption key (the actual number)
-    d = 0                        # the private encryption key (the actual number)
-    n = 0                        # the modulus for the encryption  (the number)
+
 
 
     # If the public key (given_key) not given, then generate public and private keys
@@ -71,12 +69,11 @@ def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str)
 
 
         # Calculate the public key and the private key
-        e, d, n, public_key, private_key = _calculate_public_and_private_key(prime_one, prime_two, encoding_scheme)
-
+        public_key, private_key = _generate_public_and_private_key(prime_one, prime_two, encoding_scheme)
 
     # Else, parse public_key to figure out e and n.
     else:
-        _read_rsa_key(given_key)
+        _copy_read_rsa_key(given_key)
         public_key = given_key
 
 
@@ -102,12 +99,9 @@ def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str)
 
 
 
-
-
-
     # Encrypt the text using the proper mode of encryption
     ciphertext_blocks, private_key = eval("misc.encrypt_" + rsa.mode_of_operation + "(plaintext_blocks, "
-                                                                                  + "_rsa_on_block, "
+                                                                                  + "_copy_rsa_on_block, "
                                                                                   + "rsa.key_bits, private_key, "
                                                                                   + "encoding_scheme)")
 
@@ -136,28 +130,25 @@ def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str)
 ######################################################################################### ANCILLARY FUNCTIONS ##########
 
 # Actual algorithm on single integer block
-def _rsa_on_block(block:int) -> int:
+def _copy_rsa_on_block(block:int) -> int:
     return rsa._rsa_on_block(block)                            # call real function
 
 
 
 # Read the rsa key and set static vars in Decryption.rsa._rsa_on_block() to be used for encryption
-def _read_rsa_key(key:str) -> None:
+def _copy_read_rsa_key(key:str) -> None:
     return rsa._read_rsa_key(key)
 
 
 
-
-def _calculate_public_and_private_key(prime_one:int, prime_two:int, encoding_scheme:str) ->(int, int, int, str, str):
+# Generates a public and private key. Sets static vars in Decryption.rsa._rsa_on_block() to be used for encryption
+def _generate_public_and_private_key(prime_one:int, prime_two:int, encoding_scheme:str) ->(str, str):
     """
     Given two primes, calculate the private and public key
 
     :param prime_one:       (int) a prime
     :param prime_two:       (int) another prime
     :param encoding_scheme: (str) tells us which encoding to use to render the public/private keys as text
-    :return:                (int) encryption number e
-    :return:                (int) decryption number d
-    :return:                (int) modulus number n
     :return:                (str) public key in format "e = ..., n = ..."
     :return:                (str) private key in format "d = ..., n = ..."
     """
@@ -185,10 +176,9 @@ def _calculate_public_and_private_key(prime_one:int, prime_two:int, encoding_sch
             return a % modulus
     d = inverse(e, modulus_totient)
 
-    # Save integer values of e, d, and modulus for return
-    e_num = e
-    d_num = d
-    modulus_num = modulus
+    # Set the exponent and modulus in (Decryption).rsa._rsa_on_block()
+    rsa._rsa_on_block.encrypt_or_decrypt_exponent = e
+    rsa._rsa_on_block.modulus = modulus
 
     # Convert d  and e, and modulus from numbers to encoded character version. Also do e and d's lengths
     e = misc.int_to_chars_encoding_scheme(e, encoding_scheme)
@@ -205,13 +195,10 @@ def _calculate_public_and_private_key(prime_one:int, prime_two:int, encoding_sch
 
 
 
-    # Set the exponent and modulus in (Decryption).rsa._rsa_on_block()
-    rsa._rsa_on_block.encrypt_or_decrypt_exponent = e_num
-    rsa._rsa_on_block.modulus = modulus_num
 
 
     # Return the public and private keys
-    return e_num, d_num, modulus_num, public_key, private_key
+    return public_key, private_key
 
 
 

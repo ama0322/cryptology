@@ -3,9 +3,9 @@ from Cryptography import misc                         # For miscellaneous functi
 
 
 
-import copy    # To deepcopy p_array and s_boxes from Decryption's blowfish
-import time    # To time functions (for testing_execute())
 
+import time    # To time functions (for testing_execute())
+import secrets # To generate a random key
 
 
 
@@ -79,16 +79,19 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
 
     # Conduct the key schedule (and time it)
     start_time = time.time()
-    key = blowfish.run_key_schedule(0)                                              # "0" indicates generate key
+    key = secrets.randbits(blowfish.key_bits)                                       # Generate key with right size
+    _copy_run_key_schedule(key)                                                     # Run key schedule
+    key = misc.int_to_chars_encoding_scheme(key, encoding_scheme)                   # Turn key to str
     blowfish.testing_execute.time_for_key_schedule = time.time() - start_time       # Save time in Decryption's blowfish
 
 
 
-    # Encrypt the text (and save block information)
-    for i in range(len(plaintext_blocks)):
-        ciphertext_blocks.append(blowfish.blowfish_on_64_bits(plaintext_blocks[i])) # Run blowfish on each plain block
-        print("Encrypting: " + str((i / len(plaintext_blocks)) * 100)               # Print updates
-                + "%")
+    # Encrypt the text using the proper mode of encryption
+    ciphertext_blocks, key = eval("misc.encrypt_" + blowfish.mode_of_operation + "(plaintext_blocks, "
+                                                                               + "_copy_blowfish_on_64_bits, "
+                                                                               + " blowfish.key_bits, key, "
+                                                                               + "encoding_scheme)")
+
 
 
 
@@ -105,7 +108,6 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
 
 
     # Return the ciphertext and the generated key
-    key = misc.int_to_chars_encoding_scheme(key, encoding_scheme)
     return ciphertext, key
 
 
@@ -113,15 +115,17 @@ def encrypt(plaintext:str, key:str, encoding_scheme:str) -> (str, str):
 
 
 
+######################################################################################### ANCILLARY FUNCTIONS ##########
+
+
+# The actual algorithm to use on each block
+def _copy_blowfish_on_64_bits(input:int) -> int:
+    return blowfish._blowfish_on_64_bits(input)
 
 
 
 
-
-
-
-
-
-
-
+# The key schedule to run before any encryption/decryption
+def _copy_run_key_schedule(key:int):
+    return blowfish._run_key_schedule(key)
 

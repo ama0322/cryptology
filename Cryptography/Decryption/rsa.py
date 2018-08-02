@@ -2,9 +2,9 @@ from Cryptography import misc
 import secrets # to generate random number to figure out the number of characters to read
 
 # Cipher info:
-char_set = misc.BINARY_TO_CHAR_ENCODING_SCHEMES
+char_set    = misc.BINARY_TO_CHAR_ENCODING_SCHEMES
 cipher_type = "asymmetric"
-key_size = "multiple generated characters"
+key_size    = "multiple generated characters"
 
 
 
@@ -12,7 +12,7 @@ key_size = "multiple generated characters"
 
 
 # Cipher settings:
-key_bits = 2048
+key_bits          = 1024
 mode_of_operation = "ecb"
 
 
@@ -165,14 +165,9 @@ def decrypt(ciphertext:str, private_key:str, encoding_scheme:str) -> str:
 
 
 
-    """
-    # Apply the rsa cipher on each integer to get the plaintext integer. Turn the number into byte
-    for block in ciphertext_blocks:
-        plaintext_blocks.append(pow(block, d, n))
-        print("Decryption percent done: " + str((len(plaintext_blocks) / len(ciphertext_blocks)) * 100))
-    """
 
-    # Encrypt the text using the proper mode of encryption
+
+    # Decrypt the text using the proper mode of encryption
     plaintext_blocks, private_key = eval("misc.decrypt_" + mode_of_operation + "(ciphertext_blocks, "
                                                                              + "_rsa_on_block, "
                                                                              + "key_bits, private_key, "
@@ -210,7 +205,7 @@ def _rsa_on_block(block:int) -> int:
 
 
 
-# Reads an rsa key and returns the public/private key and modulus
+# Reads an rsa key and sets static vars in _rsa_on_block in preparation for encryption/decryption
 def _read_rsa_key(key:str) -> None:
     """
     This reads the rsa key which is in the format of "RSA (character length of e or d) (e or d) n"
