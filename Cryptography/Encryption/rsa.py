@@ -37,7 +37,7 @@ def execute(data:str, output_location:str) -> None:
 
 
 
-# The actual algorithm to encrypt using rsa encryption
+# The actual algorithm to encrypt the plaintext using rsa encryption
 def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str):
     """
     This encrypts using an rsa encryption. Random primes for the key are generated.
@@ -50,9 +50,10 @@ def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str)
     :return:                (str) the generated private key for this in string form
     """
 
-    key_size = rsa.key_bits      # the bit size of the key (needs to be divisible by 8)
-    ciphertext = ""              # the string to build up the encrypted text
-    public_key = ""              # Store public key here
+    key_size    = rsa.key_bits   # the bit size of the key (needs to be divisible by 8)
+    ciphertext_blocks = []       # the list of ciphertext in blocks
+    ciphertext  = ""             # the string to build up the encrypted text
+    public_key  = ""             # Store public key here
     private_key = ""             # Store private key here
     e = 0                        # the public encryption key (the actual number)
     d = 0                        # the private encryption key (the actual number)
@@ -65,16 +66,17 @@ def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str)
         # Generate two prime numbers that when multiplied together results in n with bit_length() of key_size. Two
         # prime numbers of size prime_bit_length may not necessarily result in a key_size of the 2 * prime_bit_length
         start_time = time.time()
-        prime_one, prime_two = misc.get_prime_pair(key_size); rsa.testing_execute.time_to_generate_keys = \
-                                                                                               time.time() - start_time
+        prime_one, prime_two = misc.get_prime_pair(key_size)
+        rsa.testing_execute.time_to_generate_keys = time.time() - start_time
 
 
         # Calculate the public key and the private key
         e, d, n, public_key, private_key = _calculate_public_and_private_key(prime_one, prime_two, encoding_scheme)
 
+
     # Else, parse public_key to figure out e and n.
     else:
-        e, n = rsa.read_rsa_key(given_key)
+        _read_rsa_key(given_key)
         public_key = given_key
 
 
@@ -87,26 +89,38 @@ def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str)
     plaintext = plaintext.encode("utf-8").hex()
 
 
-    # Divide the hexadecimal digits of plaintext into key_size//8 blocks. Store blocks in a list. Store num of blocks
+    # Turn plaintext into block of ints. Divide the hexadecimal digits of plaintext into key_size//8 blocks. Store
+    # blocks in a list. Store num of blocks
     plaintext_blocks = []
     while plaintext != "":
         plaintext_blocks.append( plaintext[0: key_size // 8] )
         plaintext = plaintext[key_size // 8:]
     rsa.testing_execute.num_blocks = len(plaintext_blocks)
+    plaintext_blocks = [int(block, 16) for block in plaintext_blocks]       # Hex block to int blocks
 
-    # Turn each plaintext block from a string of hex digits into an integer
-    plaintext_blocks = [int(block, 16) for block in plaintext_blocks]
 
-    # For each block, run encryption with public key e. Then, turn the ciphertext number into characters with the
-    # chosen character scheme
-    ciphertext_blocks = [ pow(block, e, n) for block in plaintext_blocks ]
+
+
+
+
+
+
+    # Encrypt the text using the proper mode of encryption
+    ciphertext_blocks, private_key = eval("misc.encrypt_" + rsa.mode_of_operation + "(plaintext_blocks, "
+                                                                                  + "_rsa_on_block, "
+                                                                                  + "rsa.key_bits, private_key, "
+                                                                                  + "encoding_scheme)")
+
+
+
+
+
+
+    # Turn the int blocks in to string ciphertext. First, turn the int blocks to char blocks. Then concatenate
     ciphertext_blocks = [ misc.int_to_chars_encoding_scheme_pad(block, encoding_scheme, key_size)
-                          for block in ciphertext_blocks]
-    rsa.testing_execute.block_size = (len(ciphertext_blocks[0]))
-
-
-    # Concatenate all of the blocks to form the ciphertext
-    for block in ciphertext_blocks:
+                          for block in ciphertext_blocks]                      # int blocks to char blocks
+    rsa.testing_execute.block_size = (len(ciphertext_blocks[0]))               # Set block-size in Decryption's rsa
+    for block in ciphertext_blocks:                                            # Concatenate all of the blocks
         ciphertext += block
 
 
@@ -120,6 +134,19 @@ def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str)
 
 
 ######################################################################################### ANCILLARY FUNCTIONS ##########
+
+# Actual algorithm on single integer block
+def _rsa_on_block(block:int) -> int:
+    return rsa._rsa_on_block(block)                            # call real function
+
+
+
+# Read the rsa key and set static vars in Decryption.rsa._rsa_on_block() to be used for encryption
+def _read_rsa_key(key:str) -> None:
+    return rsa._read_rsa_key(key)
+
+
+
 
 def _calculate_public_and_private_key(prime_one:int, prime_two:int, encoding_scheme:str) ->(int, int, int, str, str):
     """
@@ -175,6 +202,13 @@ def _calculate_public_and_private_key(prime_one:int, prime_two:int, encoding_sch
     private_key = "RSA: " + str(d_len) + " " + d + modulus
     public_key = misc.chars_to_chars_encoding_scheme(public_key, encoding_scheme)
     private_key = misc.chars_to_chars_encoding_scheme(private_key, encoding_scheme)
+
+
+
+    # Set the exponent and modulus in (Decryption).rsa._rsa_on_block()
+    rsa._rsa_on_block.encrypt_or_decrypt_exponent = e_num
+    rsa._rsa_on_block.modulus = modulus_num
+
 
     # Return the public and private keys
     return e_num, d_num, modulus_num, public_key, private_key

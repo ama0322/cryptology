@@ -13,6 +13,7 @@ key_size = "multiple generated characters"
 
 # Cipher settings:
 key_bits = 2048
+mode_of_operation = "ecb"
 
 
 
@@ -136,16 +137,16 @@ def decrypt(ciphertext:str, private_key:str, encoding_scheme:str) -> str:
 
 
 
-    # Figure out d and n from the private key
-    d, n = read_rsa_key(private_key)
+    # Set the static vars in _rsa_on_block() in preparation for the decryption
+    _read_rsa_key(private_key)
 
 
 
-    # Figure out the number of characters to read (same as modulus' bit length). Generate a random integer that has
-    # n.bit_length(), encode that, and count the length of the result
-    randint = secrets.randbits(n.bit_length())
+    # Figure out the number of characters to read in a block (same as modulus' bit length). Generate a random integer
+    # that has _rsa_on_block.modulus.bit_length(), encode that, and count the length of the result
+    randint = secrets.randbits(_rsa_on_block.modulus.bit_length())
     block_size_len = len(misc.int_to_chars_encoding_scheme_pad(randint, encoding_scheme,
-                                                                        n.bit_length()))
+                                                               _rsa_on_block.modulus.bit_length()))
 
 
 
@@ -157,15 +158,28 @@ def decrypt(ciphertext:str, private_key:str, encoding_scheme:str) -> str:
     while ciphertext != "":
         ciphertext_blocks.append(ciphertext[0: block_size_len])
         ciphertext = ciphertext[block_size_len:]
-
     # Turn each block into an integer
     ciphertext_blocks = [ misc.chars_to_int_decoding_scheme(block, encoding_scheme)
                                                                                      for block in ciphertext_blocks]
 
+
+
+
+    """
     # Apply the rsa cipher on each integer to get the plaintext integer. Turn the number into byte
     for block in ciphertext_blocks:
         plaintext_blocks.append(pow(block, d, n))
         print("Decryption percent done: " + str((len(plaintext_blocks) / len(ciphertext_blocks)) * 100))
+    """
+
+    # Encrypt the text using the proper mode of encryption
+    plaintext_blocks, private_key = eval("misc.decrypt_" + mode_of_operation + "(ciphertext_blocks, "
+                                                                             + "_rsa_on_block, "
+                                                                             + "key_bits, private_key, "
+                                                                             + "encoding_scheme)")
+
+
+
 
 
     # Turn each block number into hexadecimal string. Then, concatenate in one large string and then decode to utf-8
@@ -186,9 +200,18 @@ def decrypt(ciphertext:str, private_key:str, encoding_scheme:str) -> str:
 
 
 
+# Actual algorithm on single integer block
+@misc.static_vars(encrypt_or_decrypt_exponent=0, modulus=0)     # These have to be set in _read_rsa_key() before using
+def _rsa_on_block(block:int) -> int:
+
+    return pow(block, _rsa_on_block.encrypt_or_decrypt_exponent, _rsa_on_block.modulus)
+
+
+
+
 
 # Reads an rsa key and returns the public/private key and modulus
-def read_rsa_key(key:str) -> (int, int):
+def _read_rsa_key(key:str) -> None:
     """
     This reads the rsa key which is in the format of "RSA (character length of e or d) (e or d) n"
 
@@ -215,6 +238,12 @@ def read_rsa_key(key:str) -> (int, int):
     exponent = misc.chars_to_int_decoding_scheme(exponent, scheme)
     n = misc.chars_to_int_decoding_scheme(n, scheme)
 
-    # Return the exponent and the modulus
-    return exponent, n
+
+
+    # Set the exponent and modulus in _rsa_on_block()
+    _rsa_on_block.encrypt_or_decrypt_exponent = exponent
+    _rsa_on_block.modulus = n
+
+
+    return None
 

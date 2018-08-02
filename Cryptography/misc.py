@@ -1,9 +1,11 @@
-import time    # for timing the encryption/decryption processes
-import csv     # to convert ngram csv to a dictionary
-import base64  # for several character encoding schemes
-import random  # to generate random numbers
-import secrets # to generate cryptographically secure numbers
-import codecs  # For hex string to utf-8 encoding
+from typing import Callable # for callable type hints
+
+import time                 # for timing the encryption/decryption processes
+import csv                  # to convert ngram csv to a dictionary
+import base64               # for several character encoding schemes
+import random               # to generate random numbers
+import secrets              # to generate cryptographically secure numbers
+import codecs               # For hex string to utf-8 encoding
 
 
 
@@ -39,7 +41,7 @@ CHAR_SET_TO_SIZE = {
     "extended_ascii": 256,
     "base4096": 4096,
     "unicode": 1114112,
-    "unicode_plane0": 65536
+    "unicode_plane0": 65536                # 2^16, not adjusted for surrogates
 }
 
 # Unprintable characters in unicode
@@ -47,6 +49,11 @@ SURROGATE_LOWER_BOUND  = 55296              # inclusive
 SURROGATE_UPPER_BOUND  = 57343              # inclusive
 SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
 
+
+
+
+# Modes of encryptions
+MODES_OF_ENCRYPTION = ["ecb"]
 
 
 
@@ -116,7 +123,7 @@ def execute_encryption_or_decryption(data:str, output_location:str, package:str,
     short_text = 300
     if char_set == ALPHABETS:                                                # If cipher uses ALPHABETS
         if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for alphabet
-            char_set = CHAR_SET_TO_SIZE.get(_take_alphabet(ALPHABETS))       # char_set becomes the size of alphabet
+            char_set = CHAR_SET_TO_SIZE.get(_take_alphabet())                # char_set becomes the size of alphabet
 
         elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find alphabet
             if len(data) <= short_text:                                      # Short text, Ask user for alphabet
@@ -128,8 +135,7 @@ def execute_encryption_or_decryption(data:str, output_location:str, package:str,
 
     elif char_set == BINARY_TO_CHAR_ENCODING_SCHEMES:                        # If cipher uses ENCODING SCHEMES
         if encrypt_or_decrypt ==   "encrypt":                                # If encrypt mode, ask for scheme
-            char_set = _take_char_encoding_scheme(
-                       BINARY_TO_CHAR_ENCODING_SCHEMES)
+            char_set = _take_char_encoding_scheme()
 
         elif encrypt_or_decrypt == "decrypt":                                # Else decrypt, find scheme
             if len(data) <= short_text:                                      # Short text, ask user for alphabet
@@ -166,6 +172,11 @@ def execute_encryption_or_decryption(data:str, output_location:str, package:str,
         except Exception:                                               # Ciphertext alphabet not restricted. Do nothing
             pass
 
+
+
+    # If using a block cipher, ask the user for the mode of operation to use. Set this in Decryption/...
+    mode_of_operation = _take_mode_of_operation()
+    exec(module + ".mode_of_operation = mode_of_operation")
 
 
 
@@ -492,6 +503,19 @@ def testing_execute_encryption_and_decryption(encryption:str, decryption:str,
 
 
 ########################################################################################### USEFUL ALGORITHMS ##########
+
+########## MISCELLANEOUS ##########
+# region Miscellaneous
+# This decorator gives static variables (**kwargs) to the decorated function.
+# Parameters are passed in as such: (static_var_one=1, static_var_two=2, ...)
+def static_vars(**kwargs):
+    def decorate(function):
+        for k in kwargs:
+            setattr(function, k, kwargs[k])
+        return function
+    return decorate
+# endregion
+
 
 ########## CHARACTER SET DETERMINATION ##########
 # This function figures out what character set the encrypted data is in. More reliable on longer texts
@@ -934,10 +958,74 @@ def chars_to_chars_decoding_scheme(string:str, encoding:str) -> str:
 
 
 
+
+########## MODES OF ENCRYPTION ##########
+
+# ECB mode. Just a straightforward encryption on each separate block. Nothing special
+def encrypt_ecb(plaintext_blocks:list, algorithm:Callable[[int], int], block_size:int,
+                key: str, encoding: str) -> (list, str):
+    """
+    Conducts ecb with a symmetric block cipher.
+
+    :param plaintext_blocks: (list)     list of int blocks. This is the plaintext to encrypt
+    :param algorithm:        (Callable) the encrypt block cipher algorithm to use
+    :param block_size:       (int)      NOT USED
+    :param key:              (str)      the regular key
+    :param encoding:         (str)      NOT USED
+    :return:                 (list)     list of encrypted int blocks
+    :return:                 (str)      the new key generated (same as regular key because ecb)
+    """
+
+    ciphertext_blocks = []               # Build the ciphertext blocks here
+
+
+    # Apply the block algorithm on each plaintext block to get the ciphertext block
+    for block in plaintext_blocks:
+        ciphertext_blocks.append(algorithm(block))
+        print("Encryption percent done: " + str((len(ciphertext_blocks) / len(plaintext_blocks)) * 100))
+
+
+    return ciphertext_blocks, key
+
+
+
+
+# ECB mode. Straightforward decryption on each separate block. Nothing special
+def decrypt_ecb(ciphertext_blocks:list, algorithm:Callable[[int], int], block_size:int,
+                key: str, encoding: str) -> (list, str):
+    """
+    Conducts ecb decryption on integer ciphertext_blocks
+
+    :param ciphertext_blocks: (list)     the list of integer blocks to decrypt
+    :param algorithm:         (Callable) the function used to decrypt
+    :param block_size:        NOT USED
+    :param key:               (str)      the key used to decrypt
+    :param encoding:          NOT USED
+    :return:                  (list)     the decrypted integer blocks
+    :return:                  (str)      the key used to decrypt
+    """
+
+
+
+    plaintext_blocks = []                # Build up the plaintext blocks here
+
+
+
+
+    # Apply the block algorithm on each ciphertext block to get the plaintext block
+    for block in ciphertext_blocks:
+        plaintext_blocks.append(algorithm(block))
+        print("Decryption percent done: " + str((len(plaintext_blocks) / len(ciphertext_blocks)) * 100))
+
+    return plaintext_blocks, key
+
+
+
+
 ########## PRIME NUMBERS ##########
 
-
 # This function returns a pair of primes whose product is of size key_bits
+@static_vars(primes_found=0)
 def get_prime_pair(key_bits:int) -> (int, int):
     """
     Figures out a pair of primes whose product is of size key_bits. When a prime is found, it is multiplied against
@@ -949,10 +1037,10 @@ def get_prime_pair(key_bits:int) -> (int, int):
     :return:         (int) Another prime number that is the factor of the key
     """
 
-    # Create a static variable that counts the number of primes found
-    get_prime_pair.primes_found = 0
+
 
     # the function to generate large primes. Pass in bit_length for the desired size of the generated prime
+    @static_vars(numbers_tested=0)
     def generate_prime(bit_length):
         """
         This function returns a large prime number of bit_length size. This works by producing a random number
@@ -1127,8 +1215,7 @@ def get_prime_pair(key_bits:int) -> (int, int):
             if rabin_miller_primality_test(num_to_test, 64):
                 return num_to_test
 
-    # Tell generate_primes() to reset its numbers tested counter
-    generate_prime.numbers_tested = 0
+
 
     # Create the list with one prime number is in it(primes are about half the size of key_bits)
     primes_list = [generate_prime(key_bits // 2)]; get_prime_pair.primes_found += 1
@@ -1161,8 +1248,8 @@ def get_prime_pair(key_bits:int) -> (int, int):
 
 
 
-########## DETERMINE LANGUAGE ##########
 
+########## DETERMINE LANGUAGE ##########
 
 # This function figures out whether the data is in English. Adjust threshold as necessary. Also return percent english
 def is_english_bag_of_words(data:str) -> (bool, float):
@@ -1179,7 +1266,7 @@ def is_english_bag_of_words(data:str) -> (bool, float):
     # Create inner static variable of set of english words. Load into this the first time this function is called
     if not hasattr(is_english_bag_of_words, "english_words"):
         is_english_bag_of_words.english_words = set(line.strip()
-                                                    for line in open("Resources/Library/English_Words.txt"))
+                                                    for line in open("Resources/Algorithm_Resources/English_Words.txt"))
 
 
 
@@ -1240,8 +1327,6 @@ def is_english_bag_of_words(data:str) -> (bool, float):
 
     # Else, return False and also the percent english
     return False, (english_word_counter / total_words)
-
-
 
 
 
@@ -1408,107 +1493,136 @@ def is_english_n_grams(data:str) ->(bool, float):
 
 
 
-
 ############################################################################################ HELPER FUNCTIONS ##########
 
-#  Returns alphabet. This helper function asks the user for a character set.
-def _take_alphabet(alphabets:list) -> str:
+# Returns the user-selected alphabet. Default: "unicode_plane0"
+def _take_alphabet() -> str:
     """
     This functions asks the user to input a selection(a alphabet). THis selection is compared against ALPHABETS
     in order to make sure that it is a valid selection
 
-    :param alphabets: (list) the list of all character sets
-    :return: (string) the user-entered character set
+    :return:          (str)  the name of the user-entered alphabets
     """
 
 
-    previous_entry_invalid = False
-    #  TAKE AN INPUT FOR THE CHARACTER SET
+
+    # Print ouf the prompt for the user
+    selection = input("Enter the alphabet to be used for ciphertext (To use the default alphabet, \"unicode_plane0\", "
+                      + "leave empty): ")
+
+
+    # Loop while the user gives an invalid alphabet
     while True:
 
-        #  Print out the prompt for the user. If the previous entry was invalid, say so
-        if not previous_entry_invalid:
-            selection = input("Enter the character set to be used (for ciphertext): ")
-        else:
-            selection = input("Character set invalid! Enter a new character set (for ciphertext): ")
-            previous_entry_invalid = False
-
-        # Print out the available character sets, then continue
         if selection[0:4] == "info":
             print("The available character sets are: ")
-            for x in range(0, len(alphabets)):
-                print("                                  " + alphabets[x])
+            for x in range(0, len(ALPHABETS)):
+                print("                                  " + ALPHABETS[x])
+            selection = input(
+                "\nEnter the alphabet to be used for ciphertext (To use the default alphabet, \"unicode_plane0\", "
+                + "leave empty): ")
             continue
 
-        # Test that the user entry is a valid character set. If so, exit out of the forever loop
-        broken = False
-        for x in range(0, len(alphabets)):
-            if selection.rstrip() == alphabets[x]:
-                broken = True
-                break
-        if broken == True:
+        elif selection == "":
+            selection = "unicode_plane0"
             break
 
-        # If here, that means the entry was invalid. Loop again
-        previous_entry_invalid = True
-    # END OF FOREVER LOOP TO TAKE A CHARACTER SET
+        elif selection.rstrip() not in ALPHABETS:
+            selection = input("Invalid alphabet (%s)! Try again: " % selection.rstrip())
+            continue
 
-
-
-    # figure out the end_char of the character set
-    end_char = CHAR_SET_TO_SIZE.get(selection)
+        # If here, then all clear
+        else:
+            break
 
     return selection
 
 
-#  Returns char_encoding_scheme. This helper function asks the user for a character encoding scheme.
-def _take_char_encoding_scheme(binary_to_char_encoding_scheme:list) -> str:
+
+# Returns the user-selected encoding scheme. Default: "base64"
+def _take_char_encoding_scheme() -> str:
     """
     This functions asks the user to input a selection(a char encoding scheme. The selection is compared against hte
     given list to ensure that it is a legitimate selection
 
-    :param binary_to_char_encoding_scheme: (list) the list of all character encoding schemes
-    :return:                               (str) the user-entered character set
+    :return:               (str) the user-entered character set
     """
 
 
-    previous_entry_invalid = False
-    #  TAKE AN INPUT FOR THE CHARACTER SET
+
+    # Print ouf the prompt for the user
+    selection = input("Enter the encoding scheme to be used for ciphertext (To use the default scheme, "
+                      + "\"base64\", leave empty): ")
+
+
+    # Loop while the user gives an invalid alphabet
     while True:
 
-        #  Print out the prompt for the user. If the previous entry was invalid, say so
-        if not previous_entry_invalid:
-            selection = input("Enter the character encoding scheme to be used (for ciphertext): ")
-        else:
-            selection = input("Character encoding scheme invalid! Enter a new scheme (for ciphertext): ")
-            previous_entry_invalid = False
-
-        # Print out the available character sets, then continue
         if selection[0:4] == "info":
-            print("The available character encoding schemes are: ")
-            for x in range(0, len(binary_to_char_encoding_scheme)):
-                print("                                  " + binary_to_char_encoding_scheme[x])
+            print("The available encoding schemes are: ")
+            for x in range(0, len(BINARY_TO_CHAR_ENCODING_SCHEMES)):
+                print("                                  " + BINARY_TO_CHAR_ENCODING_SCHEMES[x])
+            selection = input("Enter the encoding scheme to be used for ciphertext (To use the default scheme, "
+                      + "\"base64\", leave empty): ")
             continue
 
-        # Test that the user entry is a valid character set. If so, exit out of the forever loop
-        broken = False
-        for x in range(0, len(binary_to_char_encoding_scheme)):
-            if selection.rstrip() == binary_to_char_encoding_scheme[x]:
-                broken = True
-                break
-        if broken:
+        elif selection == "":
+            selection = "base64"
             break
 
-        # If here, that means the entry was invalid. Loop again
-        previous_entry_invalid = True
-    # END OF FOREVER LOOP TO TAKE A CHARACTER SET
 
+        elif selection.rstrip() not in BINARY_TO_CHAR_ENCODING_SCHEMES:
+            selection = input("Invalid encoding scheme (%s)! Try again: " % selection.rstrip())
+            continue
 
-
-    # figure out the end_char of the character encoding scheme
-    end_char = CHAR_SET_TO_SIZE.get(selection)
+        # If here, then all clear
+        else:
+            break
 
     return selection
+
+
+
+# Returns the user-selected mode of operation. Default: "ecb"
+def _take_mode_of_operation() -> str:
+    """
+    This function asks the user for a mode of operation. If the user enters nothing, then the default is "ecb".
+
+    :return:     (str)  the selected mode of operation (3 letter abbreviation)
+    """
+
+
+    # Print ouf the prompt for the user
+    selection = input("Enter the mode of operation to be used for ciphertext (To use the default scheme, "
+                      + "\"ecb\", leave empty): ")
+
+
+    # Loop while the user gives an invalid alphabet
+    while True:
+
+        if selection[0:4] == "info":
+            print("The available modes of encryption are: ")
+            for x in range(0, len(MODES_OF_ENCRYPTION)):
+                print("                                  " + MODES_OF_ENCRYPTION[x])
+            selection = input("Enter the mode of encryption to be used for ciphertext (To use the default scheme, "
+                      + "\"ecb\", leave empty): ")
+            continue
+
+        elif selection == "":
+            selection = "ecb"
+            break
+
+
+        elif selection.rstrip() not in MODES_OF_ENCRYPTION:
+            selection = input("Invalid encoding scheme (%s)! Try again: " % selection.rstrip())
+            continue
+
+        # If here, then all clear
+        else:
+            break
+
+    return selection
+
 
 
 # This helper function asks the user for a char set of a small ciphertext (less than 300)
