@@ -430,7 +430,8 @@ def testing_execute_encryption_and_decryption(encryption:str, decryption:str,
 
 
     # Set the mode of operation
-    exec(decryption + ".mode_of_operation = cipher_settings.mode_of_operation")
+    mode_of_operation = cipher_settings.mode_of_operation
+    exec(decryption + ".mode_of_operation = mode_of_operation")
 
 
 
