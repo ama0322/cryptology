@@ -434,9 +434,9 @@ def decrypt(ciphertext:str, key:str, encoding:str) -> str:
 
 
 
-    # Conduct the key schedule. Exactly the same as was done in Encryption
-    key = misc.chars_to_int_decoding_scheme(key, encoding)                  # Decode the char key to int
-    _prep_run_key_schedule(key)
+    # Read key and Conduct the key schedule. Exactly the same as was done in Encryption
+    _prep_read_blowfish_key_and_run_key_schedule(key, encoding)
+
 
 
 
@@ -547,63 +547,84 @@ def _blowfish_on_block(input:int) -> int:
 
 
 
-# Returns: key, p_array, s_boxes. Key schedule setup for the algorithm.
-def _prep_run_key_schedule(key:int) -> None:
+# Reads key (accounts for mode of operation). Also runs the key schedule setup for the algorithm, which sets the static
+# variables in _blowfish_on_block()
+def _prep_read_blowfish_key_and_run_key_schedule(key:str, encoding_scheme:str) -> None:
     """
-    Key setup for blowfish
+	Reads the key. Skips over IV portion of the key, if it exists. Then, it runs the key schedule
 
-    :param: key     (int) the int key to use during decryption mode.
-    :return:        (int) the generated key in integer form
-    """
+	:param key:             (str) the complete key in string form
+	:param encoding_scheme: (str) The encoding scheme used to create the key
+	:return:                NONE
+	"""
 
+    # Key schedule setup for the algorithm. Sets static variables in _blowfish_on_block
+    def run_key_schedule(key: int) -> None:
+        """
+        Key setup for blowfish
 
+        :param: key     (int) the int key to use during encryption/decryption mode.
+        :return:        (int) the generated key in integer form
+        """
 
-    # Set the actual p_array and s_boxes for encryption by copying over the originals
-    _blowfish_on_block.p_array = copy.deepcopy(p_array_original)
-    _blowfish_on_block.s_boxes = copy.deepcopy(s_boxes_original)
-    # For convenience's sake, give a short-hand name for these values
-    p_array_working = _blowfish_on_block.p_array
-    s_boxes_working = _blowfish_on_block.s_boxes
+        # Set the actual p_array and s_boxes for encryption by copying over the originals
+        _blowfish_on_block.p_array = copy.deepcopy(p_array_original)
+        _blowfish_on_block.s_boxes = copy.deepcopy(s_boxes_original)
+        # For convenience's sake, give a short-hand name for these values
+        p_array_working = _blowfish_on_block.p_array
+        s_boxes_working = _blowfish_on_block.s_boxes
 
+        key = key.to_bytes((key_bits + 7) // 8, "big")  # Turn to bytearray (round up to nearest byte)
 
+        # Each entry in p_array is XOR'ed with key, in groups of 4 bytes (32 bits), and cycling the key.
+        key_index = 0  # Start with first four bytes of key
+        for p_index in range(0, len(p_array_working)):
+            val_to_xor = (key[key_index % len(key)] << 24) \
+						 + (key[(key_index + 1) % len(key)] << 16) \
+						 + (key[(key_index + 2) % len(key)] << 8) \
+						 + (key[(key_index + 3) % len(key)])
 
-
-
-    key = key.to_bytes((key_bits + 7) // 8, "big")          # Turn to bytearray (round up to nearest byte)
-
-
-
-    # Each entry in p_array is XOR'ed with key, in groups of 4 bytes (32 bits), and cycling the key.
-    key_index = 0                                                            # Start with first four bytes of key
-    for p_index in range(0, len(p_array_working)):
-        val_to_xor        =   (key[ key_index      % len(key)] << 24)  \
-                            + (key[(key_index + 1) % len(key)] << 16)  \
-                            + (key[(key_index + 2) % len(key)] <<  8)  \
-                            + (key[(key_index + 3) % len(key)]      )
-
-        p_array_working[p_index] ^= val_to_xor                                # XOR bytes with p_array element
-        key_index += 4                                                        # Move key index up 4 bytes
-
-
-
-
-    # Run the blowfish cipher on a 64-bit zero block. The ciphertext halves will replace p_array[0] and p[1]. Those
-    # two ciphertext halves are then encrypted together as a single block using the new p_array and s_boxes,
-    # resulting in a new ciphertext that will replace p_array[2] and p_array[3]. This same process continues until
-    # all of p_array and all of s_boxes have been replaced
-    ciphertext = 0                                                         # Encryption process starts with all 0 block
-    for i in range(0, len(p_array_working), 2):                            # Start replacing p_array
-        ciphertext = _blowfish_on_block(ciphertext)                        # Encryption processes uses last ciphertext
-        p_array_working[i    ] = ciphertext & 0xFFFFFFFF00000000 >> 32     # Left half of ciphertext replaces curr entry
-        p_array_working[i + 1] = ciphertext & 0x00000000FFFFFFFF           # Right half replaces the entry right after
+            p_array_working[p_index] ^= val_to_xor  # XOR bytes with p_array element
+            key_index += 4  # Move key index up 4 bytes
 
 
-    for i in range(len(s_boxes_working)):                                  # s_boxes: Iterate through outer 4 objects
-        for j in range(0, len(s_boxes_working[i]), 2):                     # For each group in s_boxes, replace in twos
-            ciphertext = _blowfish_on_block(ciphertext)
-            s_boxes_working[i][j    ] = ciphertext & 0xFFFFFFFF00000000 >> 32
-            s_boxes_working[i][j + 1] = ciphertext & 0x00000000FFFFFFFF
 
+        # Run the blowfish cipher on a 64-bit zero block. The ciphertext halves will replace p_array[0] and p[1]
+        # two ciphertext halves are then encrypted together as a single block using the new p_array and s_boxes,
+        # resulting in a new ciphertext that will replace p_array[2] and p_array[3]. This same process continues until
+        # all of p_array and all of s_boxes have been replaced
+        ciphertext = 0  # Encryption process starts with all 0 block
+        for i in range(0, len(p_array_working), 2):  # Start replacing p_array
+            ciphertext = _blowfish_on_block(ciphertext)  # Encryption processes uses last ciphertext
+            p_array_working[i] = ciphertext & 0xFFFFFFFF00000000 >> 32  # Left half of ciphertext replaces curr entry
+            p_array_working[i + 1] = ciphertext & 0x00000000FFFFFFFF  # Right half replaces the entry right after
+
+        for i in range(len(s_boxes_working)):  # s_boxes: Iterate through outer 4 objects
+            for j in range(0, len(s_boxes_working[i]), 2):  # For each group in s_boxes, replace in twos
+                ciphertext = _blowfish_on_block(ciphertext)
+                s_boxes_working[i][j] = ciphertext & 0xFFFFFFFF00000000 >> 32
+                s_boxes_working[i][j + 1] = ciphertext & 0x00000000FFFFFFFF
+
+        return None
+
+
+    # If in a mode that uses IV—everything other than ECB—then cut out the part that uses the IV. That part is the size
+    # of a single block that is character encoded using the encoding_scheme
+    if mode_of_operation != "ecb":
+
+        # Cut out the part of the key that is relevant to the IV
+        block_bits = 0xFFFFFFFF00000000                                           # Random 64 bits (16 hex digits)
+        len_to_skip = len(misc.int_to_chars_encoding_scheme(block_bits,           # Figure out how much to read
+															encoding_scheme))
+        key = key[len_to_skip : ]
+
+
+    # Reverse the key to get the actual blowfish key
+    key = misc.chars_to_int_decoding_scheme(key, encoding_scheme)
+
+
+    # Run the key schedule
+    run_key_schedule(key)
 
 
 
