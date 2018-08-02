@@ -31,6 +31,7 @@ def execute(data:str, output_location:str) -> None:
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
+@misc.static_vars(decrypted_key="", percent_english=0)
 def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_source:str, encryption_key:str,
                     alphabet_size:int, output_location:str) -> None:
     """
@@ -46,11 +47,6 @@ def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_sou
     :return:                 (NoneType)
     """
 
-    # Store information from the last encryption done here(Just declarations):
-
-    # Store information from the last decryption done here:
-    testing_execute.decrypted_key = ""
-    testing_execute.percent_english = 0
 
 
     # Encryption code

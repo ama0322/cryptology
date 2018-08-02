@@ -1,4 +1,5 @@
 from typing import Callable # for callable type hints
+from Cryptography import cipher_settings                           # to read/save cipher settings
 
 import time                 # for timing the encryption/decryption processes
 import csv                  # to convert ngram csv to a dictionary
@@ -6,6 +7,7 @@ import base64               # for several character encoding schemes
 import random               # to generate random numbers
 import secrets              # to generate cryptographically secure numbers
 import codecs               # For hex string to utf-8 encoding
+
 
 
 
@@ -53,7 +55,7 @@ SURROGATE_BOUND_LENGTH = 57343 - 55296 + 1  # equal to 2048
 
 
 # Modes of encryptions
-MODES_OF_ENCRYPTION = ["ecb"]
+MODES_OF_ENCRYPTION = ["ecb", "cbc"]
 
 
 
@@ -86,6 +88,9 @@ GENERAL_DECRYPTION_CODE =\
                                 + " (μs)"
                             ])
     """
+
+
+
 
 
 ######################################################################### USER INTERFACING AND FUNCTION CALLS ##########
@@ -422,6 +427,12 @@ def testing_execute_encryption_and_decryption(encryption:str, decryption:str,
 
     except Exception:                                               # Ciphertext alphabet not restricted. Do nothing
         pass
+
+
+    # Set the mode of operation
+    exec(decryption + ".mode_of_operation = cipher_settings.mode_of_operation")
+
+
 
     # EXECUTE THE ENCRYPTION, and store the output
     start_time = time.time()
@@ -965,7 +976,7 @@ def chars_to_chars_decoding_scheme(string:str, encoding:str) -> str:
 def encrypt_ecb(plaintext_blocks:list, algorithm:Callable[[int], int], block_size:int,
                 key: str, encoding: str) -> (list, str):
     """
-    Conducts ecb with a symmetric block cipher.
+    Conducts ecb with a block cipher.
 
     :param plaintext_blocks: (list)     list of int blocks. This is the plaintext to encrypt
     :param algorithm:        (Callable) the encrypt block cipher algorithm to use
@@ -976,18 +987,15 @@ def encrypt_ecb(plaintext_blocks:list, algorithm:Callable[[int], int], block_siz
     :return:                 (str)      the new key generated (same as regular key because ecb)
     """
 
-    ciphertext_blocks = []               # Build the ciphertext blocks here
+    ciphertext_blocks = [0] * len(plaintext_blocks)               # Build the ciphertext blocks here
 
 
     # Apply the block algorithm on each plaintext block to get the ciphertext block
-    for block in plaintext_blocks:
-        ciphertext_blocks.append(algorithm(block))
-        print("Encryption percent done: " + str((len(ciphertext_blocks) / len(plaintext_blocks)) * 100))
-
+    for i in range(0, len(plaintext_blocks)):
+        ciphertext_blocks[i] = algorithm(plaintext_blocks[i])
+        print("Encryption percent done: " + str( ( i / len(plaintext_blocks)) * 100) )
 
     return ciphertext_blocks, key
-
-
 
 
 # ECB mode. Straightforward decryption on each separate block. Nothing special
@@ -1007,19 +1015,94 @@ def decrypt_ecb(ciphertext_blocks:list, algorithm:Callable[[int], int], block_si
 
 
 
-    plaintext_blocks = []                # Build up the plaintext blocks here
+    plaintext_blocks = [0] * len(ciphertext_blocks)           # Build up the plaintext blocks here
 
 
 
 
     # Apply the block algorithm on each ciphertext block to get the plaintext block
-    for block in ciphertext_blocks:
-        plaintext_blocks.append(algorithm(block))
-        print("Decryption percent done: " + str((len(plaintext_blocks) / len(ciphertext_blocks)) * 100))
+    for i in range(0, len(ciphertext_blocks)):
+        plaintext_blocks[i] = algorithm(ciphertext_blocks[i])
+        print("Decryption percent done: " + str( ( i / len(ciphertext_blocks)) * 100) )
 
     return plaintext_blocks, key
 
 
+
+
+
+# CBC mode. Generate IV and apply CBC. Also, make sure to update the key with the IV
+def encrypt_cbc(plaintext_blocks:list, algorithm:Callable[[int], int], block_size:int,
+                key: str, encoding: str) -> (list, str):
+    """
+    Conducts cbc with a block cipher. Also, prepends the key with the character encoded IV
+
+    :param plaintext_blocks: (list)     list of int blocks. This is the plaintext to encrypt
+    :param algorithm:        (Callable) the encrypt block cipher algorithm to use
+    :param block_size:       (int)      NOT USED
+    :param key:              (str)      the regular key
+    :param encoding:         (str)      NOT USED
+    :return:                 (list)     list of encrypted int blocks
+    :return:                 (str)      the new key generated (same as regular key because ecb)
+    """
+
+    ciphertext_blocks = [0] * len(plaintext_blocks)                 # Build up the ciphertext blocks here
+
+
+    # Generate an IV (same bit length as one of the blocks)
+    iv = secrets.randbits(block_size)
+    iv_char = int_to_chars_encoding_scheme_pad(iv, encoding, block_size)       # Character encode the IV
+    key = iv_char +  key                                                       # Prepend key with iv_char
+
+    # CBC encrypt the first block
+    ciphertext_blocks[0] = algorithm(plaintext_blocks[0] ^ iv)
+
+
+    # CBC encrypt the rest of the blocks
+    for i in range(1, len(plaintext_blocks)):
+        ciphertext_blocks[i] = algorithm(ciphertext_blocks[i - 1] ^ plaintext_blocks[i])
+        print("Encryption percent done: " + str((i / len(plaintext_blocks)) * 100))
+
+    return ciphertext_blocks, key
+
+
+
+# CBC mode. Read in the IV and apply CBC.
+def decrypt_cbc(ciphertext_blocks:list, algorithm:Callable[[int], int], block_size:int,
+                key: str, encoding: str) -> (list, str):
+    """
+    Conducts ecb with a block cipher on ciphertext to get plaintext
+
+    :param ciphertext_blocks: (list)     list of int blocks. This is the plaintext to encrypt
+    :param algorithm:         (Callable) the encrypt block cipher algorithm to use
+    :param block_size:        (int)      NOT USED
+    :param key:               (str)      the regular key
+    :param encoding:          (str)      NOT USED
+    :return:                  (list)     list of encrypted int blocks
+    :return:                  (str)      the new key generated (same as regular key because ecb)
+    """
+
+    plaintext_blocks = [0] * len(ciphertext_blocks)     # Build up the plaintext blocks here
+
+
+    # Figure out what the iv is (read in from the key the iv and convert it)
+    rand_bits = 1 << (block_size - 1)                                           # Int with same size as iv
+    len_to_read = len(int_to_chars_encoding_scheme(rand_bits, encoding))        # Figure out how many to read
+    iv = key[0 : len_to_read]                                                   # Get iv part of the key
+    iv = chars_to_int_decoding_scheme(iv, encoding)                             # Convert to iv
+
+
+    # Apply cbc decryption on the first block
+    plaintext_blocks[0] = algorithm(ciphertext_blocks[0]) ^ iv
+
+
+    # CBC decrypt the rest of the blocks
+    for i in range(1, len(ciphertext_blocks)):
+        plaintext_blocks[i] = algorithm(ciphertext_blocks[i]) ^ ciphertext_blocks[i - 1]
+        print("Decryption percent done: " + str((i / len(plaintext_blocks)) * 100))
+
+
+    return plaintext_blocks, key
 
 
 ########## PRIME NUMBERS ##########

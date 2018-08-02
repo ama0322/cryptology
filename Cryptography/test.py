@@ -1,4 +1,5 @@
 from Cryptography import misc
+from Cryptography import cipher_settings                           # to read/save cipher settings
 
 
 import datetime                                  # for labelling the date that files are created
@@ -10,16 +11,16 @@ import os                                        # for deleting files
 ########################################################################################### PRIMARY FUNCTIONS ##########
 
 # MODIFY THESE VALUES
-plaintext_source = "Resources/Library/Test10.txt"
+plaintext_source =                        "Resources/Library/Eleonora"
+
+key =                                     "This is a key for testing"
 
 
-key = "This is a key for testing"
+encoding_scheme                         = "base64"
+alphabet_size = misc.CHAR_SET_TO_SIZE.get("unicode_plane0")
 
 
-encoding_scheme = "base16"
-alphabet_size = misc.CHAR_SET_TO_SIZE.get("ascii")
-
-block_cipher_modes = -1 # TODO
+mode_of_operation                       = "ecb"
 
 
 
@@ -162,12 +163,16 @@ def manual_testing(given_cipher):
             elif char_set == misc.ALPHABETS:  # If alphabet, return the size of the set
                 char_set = alphabet_size
 
+
             return encryption, decryption, plaintext, output_location, encryption_key, char_set
         e, d, p, o_l, e_k, c_s = get_testing_info_with_command(given_cipher)
 
         # If return was None, None, ... then exit back to cryptography runner
         if e is None:
             return None
+
+        # Set the mode of operation
+        cipher_settings.mode_of_operation = mode_of_operation
 
         # Pass this info to decryption's testing_execute
         exec("import Decryption." + d)
@@ -189,8 +194,16 @@ def manual_testing(given_cipher):
         if encryption is None:
             return
 
+
+
         # Else, proceed regularly. Pass this info to decryption's testing_execute
         else:
+
+            # Set the mode of encryption (in cipher_settings)
+            cipher_settings.mode_of_operation = mode_of_operation
+
+
+
             exec("import Decryption." + decryption)
             exec("Decryption." + decryption
                 + ".testing_execute(encryption, decryption, plaintext, plaintext_source, "
@@ -298,7 +311,7 @@ def automated_testing():
                 my_file = open("Resources/Temp", "r", encoding="utf-8")
                 first_line = my_file.readline()
                 second_line = my_file.readline()
-                if second_line == "INCORRECT":
+                if second_line[0:9] == "INCORRECT":
                     incorrect_ciphers.append(decrypt_cipher + " (I) " + char_set_name + " " + str(len(plaintext)))
                 my_file.close()
 
@@ -327,8 +340,9 @@ def automated_testing():
 
 
 
+
 # This function automatically checks all the ciphers (may take some time) Needs to be as optimized as possible
-def automated_testing2():
+def automated_testing_old():
     """
     This will test all of the Decryption ciphers by:
         1: Encrypt with the corresponding encryption cipher

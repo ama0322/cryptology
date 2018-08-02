@@ -2,7 +2,7 @@ from Cryptography import misc
 
 
 import copy    # Used to deepcopy
-import secrets # To generate random key
+
 
 
 # Cipher info:
@@ -325,10 +325,12 @@ def execute(data:str, output_location:str) -> None:
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
+@misc.static_vars(time_for_key_schedule=0, num_blocks=0, block_size=0)
 def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_source:str, encryption_key:str,
 					encoding:str, output_location:str) -> None:
     """
-    Conducts a rotation decryption in testing mode
+    Conducts a rotation decryption in testing mode. The static variables hold information about the last
+    encryption/decryption done.
 
     :param encryption:       (str) 		the name of the encryption cipher to use
     :param decryption:       (str)      the name of the decryption cipher to use (this module)
@@ -341,10 +343,6 @@ def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_sou
     """
 
 
-    # Store statistics from the last encryption here (Just declarations):
-    testing_execute.time_for_key_schedule = 0
-    testing_execute.num_blocks = 0
-    testing_execute.block_size = 0
 
     # Encryption code
     encryption_code = \

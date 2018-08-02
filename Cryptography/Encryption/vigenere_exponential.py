@@ -28,6 +28,10 @@ def execute(data:str, output_location:str) -> None:
 
 
 
+
+
+
+
 # The actual algorithm to encrypt using a vigenere cipher(exponents instead of addition)
 def encrypt(plaintext:str, key:str, alphabet_size:int) -> str:
     """
@@ -41,7 +45,7 @@ def encrypt(plaintext:str, key:str, alphabet_size:int) -> str:
     """
 
 
-    ciphertext = "" # The string used to build up the encrypted text, one character at a time
+    ciphertext = [] # The list used to build up the encrypted text, one character (block) at a time
     key_index = 0 # This indicates the index of the key that the vigenere cipher is currently on
     counter = 0 # To print regular updates
 
@@ -55,7 +59,7 @@ def encrypt(plaintext:str, key:str, alphabet_size:int) -> str:
     for x in plaintext:
 
         # Print updates (every 1000 characters)
-        if counter % 1000 == 0:
+        if counter % 100 == 0:
             print("ENCRYPTION\tPercent of text done: " + str((counter / len(plaintext)) * 100) + "%")
         counter += 1
 
@@ -94,12 +98,17 @@ def encrypt(plaintext:str, key:str, alphabet_size:int) -> str:
 
         #  figure out the character corresponding to the unicode value, and add to the ciphertext
         encrypted_char = chr(uni_val_encrypted)
-        ciphertext = ciphertext + encrypted_char + str(overlap_counter) + " "
+        ciphertext.append(encrypted_char + str(overlap_counter) + " ")
 
 
 
+    ciphertext = "".join(ciphertext)
 
     return ciphertext
+
+
+
+
 
 
 

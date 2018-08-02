@@ -32,30 +32,30 @@ def main():
         print("See README for usage."
               + "\nTo print out the available cipher types, type \"help\".")
         print()
-        usage()
+        _usage()
 
 
     # forever while loop to continually take in user input and executing commands
     while True:
 
         # Obtain information from the user command
-        cipher, encrypt, data, output_location = parse_user_input()
+        cipher, encrypt, data, output_location = _parse_user_input()
 
         # Set up the global variable last for next iteration
         last = output_location
 
         # print out the data, and let the user know where the output location is
-        print_data_and_location( data, output_location )
+        _print_data_and_location( data, output_location )
 
         # execute the encryption/decryption on the data
-        execute_encryption_or_decryption( encrypt, cipher, data, output_location )
+        _execute_encryption_or_decryption( encrypt, cipher, data, output_location )
 
     # End of forever while loop
 ######################################################################################## END OF MAIN FUNCTION ##########
 
 
 # Print out available Encryption/Decryption types
-def usage():
+def _usage():
     print("ENCRYPTION/DECRYPTION TYPES AVAILABLE: ")
     print("Available for both encryption and decryption: ", end = "")
     print(*(misc.ENCRYPTION_SET & misc.DECRYPTION_SET), sep=", ")
@@ -65,7 +65,7 @@ def usage():
 
 
 # Parse user input and return relevant information
-def parse_user_input():
+def _parse_user_input():
     """
     This function parses user input and returns relevant information.
     User input is unix-like, with: command [optional flag] (argument) <optional argument>
@@ -113,7 +113,7 @@ def parse_user_input():
 
         if command == "help":
             # region Handle command: help
-            usage()                                                     # Print helpful info
+            _usage()                                                     # Print helpful info
             statement = input("Enter statement: ")                      # Obtain user input for next iteration
             continue                                                    # Jump to next iteration
             # endregion
@@ -122,12 +122,27 @@ def parse_user_input():
 
         if command == "clear":
             # region Handle command: clear
-            # delete files in /Files_Decrypted
+
+
+            # delete files in /Files_Decrypted and Files_Encrypted
             for file in os.listdir("Resources/Files_Decrypted"):
                     os.unlink("Resources/Files_Decrypted/" + file)
-            # delete files in /Files_Encrypted
             for file in os.listdir("Resources/Files_Encrypted"):
                     os.unlink("Resources/Files_Encrypted/" + file)
+
+
+            # If -a flag, then ask for confirmation
+            statement = statement.split(" ")                            # Split statement into words separated by spaces
+            if len(statement) > 1 and statement[1] == "-a":
+                confirmation = input("Confirm deletion of Databases, Files_Decrypted, Files_Encrypted, "
+                                     + "and Files_Logs (type \"y\"): ")
+                if confirmation == "y":
+                    for file in os.listdir("Resources/Databases"):
+                        os.unlink("Resources/Databases/" + file)
+                    for file in os.listdir("Resources/Files_Logs"):
+                        os.unlink("Resources/Files_Logs/" + file)
+
+
             # Obtain next command
             statement = input("Files deleted. Enter statement: ")        # obtain user input
             continue
@@ -420,7 +435,7 @@ def parse_user_input():
 
 
 # Print data and the output location
-def print_data_and_location(data, output_location):
+def _print_data_and_location(data, output_location):
 
     print("\nTHIS IS THE DATA: \n" + data)
     print("*******************************************************")
@@ -429,7 +444,7 @@ def print_data_and_location(data, output_location):
 
 
 # execute encryption/decryption on the data, save the output, and print out the output
-def execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
+def _execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
 
 
     if encrypt:
@@ -438,6 +453,8 @@ def execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
     else:
         exec("from Decryption import " + cipher)
         output = eval(cipher + ".execute(data, output_location)")
+
+
 
 
 

@@ -1,5 +1,6 @@
 from Cryptography import misc
-import secrets # to generate random number to figure out the number of characters to read
+import secrets                  # to generate random number to figure out the number of characters to read
+import random                   # generate random number to get length of character encoded block
 
 # Cipher info:
 char_set    = misc.BINARY_TO_CHAR_ENCODING_SCHEMES
@@ -38,6 +39,7 @@ def execute(data:str, output_location:str) -> None:
 
 
 # Figure out the encryption and decryption code. Pass info to misc' testing_execute function
+@misc.static_vars(time_to_generate_keys=0, num_blocks=0, block_size=0)
 def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_source:str, encryption_key:str,
                     encoding:str, output_location:str) -> None:
     """
@@ -53,12 +55,7 @@ def testing_execute(encryption:str, decryption:str, plaintext:str, plaintext_sou
     :return:                 None
     """
 
-    # Store statistics from the last encryption here(Just declarations):
-    testing_execute.time_to_generate_keys = 0
-    testing_execute.num_blocks = 0
-    testing_execute.block_size = 0
 
-    # Store statistics from the last decryption done here.
 
     # Encryption code
     encryption_code = \
@@ -138,15 +135,13 @@ def decrypt(ciphertext:str, private_key:str, encoding_scheme:str) -> str:
 
 
     # Set the static vars in _rsa_on_block() in preparation for the decryption
-    _read_rsa_key(private_key)
+    _prep_read_rsa_key(private_key, encoding_scheme)
 
 
 
     # Figure out the number of characters to read in a block (same as modulus' bit length). Generate a random integer
-    # that has _rsa_on_block.modulus.bit_length(), encode that, and count the length of the result
-    randint = secrets.randbits(_rsa_on_block.modulus.bit_length())
-    block_size_len = len(misc.int_to_chars_encoding_scheme_pad(randint, encoding_scheme,
-                                                               _rsa_on_block.modulus.bit_length()))
+    # that has the same bit_length as key_bits, encode that, and count the length of the result
+    block_size_len = len(misc.int_to_chars_encoding_scheme(1 << (key_bits - 1), encoding_scheme))
 
 
 
@@ -206,21 +201,31 @@ def _rsa_on_block(block:int) -> int:
 
 
 # Reads an rsa key and sets static vars in _rsa_on_block in preparation for encryption/decryption
-def _read_rsa_key(key:str) -> None:
+def _prep_read_rsa_key(key:str, scheme:str) -> None:
     """
     This reads the rsa key which is in the format of "RSA (character length of e or d) (e or d) n"
 
-    :param key: (str) the rsa key
-    :return:    (int) the public/private exponent key
-    :return:    (int) the modulus for rsa
+    :param key:    (str) the rsa key
+    :param scheme: (str) the name of the encoding scheme used
+    :return:       (int) the public/private exponent key
+    :return:       (int) the modulus for rsa
     """
 
-    # Figure out the character scheme of the key
-    scheme = misc.char_encoding_scheme_of(key)
+
+    # Cut out the IV part if necessary (IV is same size as a block size, also same as key_bits)
+    if mode_of_operation != "ecb":
+
+        # Cut out the part of the key that is relevant to the IV
+        block_bits = 1 << (key_bits - 1)                                         # Block of key_bits random bits
+        len_to_skip = len(misc.int_to_chars_encoding_scheme(block_bits,          # Figure out how much to skip
+                                                            scheme))
+        key = key[len_to_skip:]
+
+
+
 
     # Decode the key to format: "RSA (character length of e or d) (e or d) n"
     key = misc.chars_to_chars_decoding_scheme(key, scheme)
-
 
     # Figure out how many characters to read for the exponent d/e. From the first space to the second. Convert to int
     first_space_index = key.find(" "); second_space_index = key.find(" ", first_space_index + 1)

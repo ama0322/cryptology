@@ -69,11 +69,11 @@ def encrypt(plaintext:str, given_key:str, encoding_scheme:str) ->(str, str, str)
 
 
         # Calculate the public key and the private key
-        public_key, private_key = _generate_public_and_private_key(prime_one, prime_two, encoding_scheme)
+        public_key, private_key = _prep_generate_public_and_private_key(prime_one, prime_two, encoding_scheme)
 
     # Else, parse public_key to figure out e and n.
     else:
-        _copy_read_rsa_key(given_key)
+        _copy_prep_read_rsa_key(given_key, encoding_scheme)
         public_key = given_key
 
 
@@ -136,13 +136,13 @@ def _copy_rsa_on_block(block:int) -> int:
 
 
 # Read the rsa key and set static vars in Decryption.rsa._rsa_on_block() to be used for encryption
-def _copy_read_rsa_key(key:str) -> None:
-    return rsa._read_rsa_key(key)
+def _copy_prep_read_rsa_key(key:str, scheme:str) -> None:
+    return rsa._prep_read_rsa_key(key, scheme)
 
 
 
 # Generates a public and private key. Sets static vars in Decryption.rsa._rsa_on_block() to be used for encryption
-def _generate_public_and_private_key(prime_one:int, prime_two:int, encoding_scheme:str) ->(str, str):
+def _prep_generate_public_and_private_key(prime_one:int, prime_two:int, encoding_scheme:str) ->(str, str):
     """
     Given two primes, calculate the private and public key
 

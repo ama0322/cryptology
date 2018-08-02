@@ -6,25 +6,28 @@
 
 
 
-NEED TO FINISH/FIX:
-    Add option to select default char_encoding_scheme/alphabet
-    Make block cipher modes of encryption an option instead of extra modules (blowfish_cbc turned to option)
-    add clear -a option
-    blowfish cbc
-    database command
+ALGORITHM GOALS/FIXES:
     Whatever was caught by automatic tests
-    Update README
-    decrypt vigenere_nokey
-    for file paths with spaces, add option to enclose in quotation marks (using escape character right now)
     rsa not working on longer texts (Clarissa.txt ...)
+    decrypt vigenere_nokey
+
+
+
+
+GENERAL GOALS/FIXES:
+    Add modes of encryption information to relevant info and statistics file
+    UPDATE TESTS TO NEW MODE_OF_OPERATION_FORMAT
+    mode of encryption setting needs to be added to tests
+    database command
+    for file paths with spaces, add option to enclose in quotation marks (using escape character right now)
     Add type hints to everything
+    Make all encrypt()/decrypt() functions take char_set:str instead of alphabet_size:int
+
 
 
 
 
 NEED TO ADD:
-    add cbc for block ciphers
-    graph results for test -a
     Handle failed decryption (because user entered wrong key) for ciphers such as rsa or blowfish that can severely fail
 
 

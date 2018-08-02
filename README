@@ -2,7 +2,7 @@
 
 
 
-Needed Modules:
+Needed Non-Standard Modules:
 
 
 
@@ -27,22 +27,21 @@ Needed Modules:
         Does the same thing as encrypt, but decrypts. Note that there are more decryption ciphers than encryption ones.
         This is because some decryption ciphers only decrypt.
 
-    test    OR    test [optional flag]    OR    test (decryption_cipher)
+    test    OR    test [flag]    OR    test (decryption_cipher)
         1. test
             Just typing "test" will enter into testing mode, where the word "test" is already provided as the first
             command and [optional flag] or (decryption_cipher) must be inputted
 
-        2. test [optional flag]
-            Flags:
-                -e: exit the testing mode back into regular mode where commands other than "test" can be used
+        2. test [flag]
+            -e: exit the testing mode back into regular mode where commands other than "test" can be used
 
-                -a: automated testing. Tests are run automatically on all decryption* ciphers. If this flag is provided
+            -a: automated testing. Tests are run automatically on all decryption* ciphers. If this flag is provided
                     while NOT already in testing mode, then the user is automatically exited out of testing mode upon
                     completion. Otherwise, if ALREADY IN testing mode, then program will continue in testing mode.
 
                     * The encryption cipher corresponding to the decryption cipher should never raise an error.
 
-                -c: will clear all logs in Resources/Files_Logs
+            -c: will clear all logs in Resources/Files_Logs
 
         3. test (decryption_cipher)
             This command will run a test with parameters (such as plaintext, key...) described in Cryptography/test.py.
@@ -50,27 +49,24 @@ Needed Modules:
             plaintext. Then, the ciphertext will be decrypted with the user provided "decryption_cipher". This
             decryption result will be compared against the plaintext for correctness.
 
-    database [optional flags] (cipher) (new_database_file_name)    OR     database [optional flags] (database_file_name)
-             OR     database [optional flags]
-        1. database [optional flags] (cipher) (new_database_file_name)
-            Flags:
-                -n (cipher) (new_database_file_name): Create a new database with name: "new_database_file_name". The
-                method of encryption is "cipher", which must be a valid encryption cipher. The program will ask for the
-                key for encryption and/or decryption later on if necessary.
+    database [flags] (cipher) (new_database_file_name)    OR     database [flags] (database_file_name)
+             OR     database [flags]
+        1. database [flags] (cipher) (new_database_file_name)
+            -n (cipher) (new_database_file_name): Create a new database with name: "new_database_file_name". The
+            method of encryption is "cipher", which must be a valid encryption cipher. The program will ask for the
+            key for encryption and/or decryption later on if necessary.
 
-                -e (cipher) (abs_file_path_to_new_database): The file pointed to by "abs_file_path_to_new_database"
-                will be turned into a new database file with info file. "cipher" will be the encrypting cipher used.
+            -e (cipher) (abs_file_path_to_new_database): The file pointed to by "abs_file_path_to_new_database"
+            will be turned into a new database file with info file. "cipher" will be the encrypting cipher used.
 
-        2. database [optional flags] (database_file_name)
-            Flags:
-                -o (database_file_name): Open up the encrypted database named: "database_file_name"
+        2. database [flags] (database_file_name)
+            -o (database_file_name): Open up the encrypted database named: "database_file_name"
 
-        3. database [optional flags]
-            Flags:
-                -c: Clear all files in the Resources/Database folder. The program will ask the user for a check before
-                the deletion actually occurs.
+        3. database [flags]
+            -c: Clear all files in the Resources/Database folder. The program will ask the user for a check before
+            the deletion actually occurs.
 
-                -i: Print out the usage of database.
+            -i: Print out the usage of database.
 
     help
         Will print out helpful information
@@ -78,8 +74,13 @@ Needed Modules:
     exit
         Will exit the program
 
-    clear
-        Clears files in Files_Decrypted and Files_Encrypted
+    clear     OR     clear [flags]
+        1. clear:
+            Clears files in Files_Decrypted and Files_Encrypted
+
+        2. clear [flags]:
+            -a: Clear everything in Resources/Databases, Resources/Files_Decrypted, Resources/Files_Encrypted, and
+                                    Resources/Logs
 
 
 
@@ -112,11 +113,13 @@ PROJECT STRUCTURE (Cryptography)
 
 
         The five folders are:
-            -Resources/Library         - this folder stores all text files you want to use with this program
-            -Resources/Files_Decrypted - this is where the generated decrypted files go
-            -Resources/Files_Encrypted - this is where the generated encrypted files go
-            -Resources/Files_Logs      - where the logs from testing go
-            -Resources/Databases       - holds encrypted databases, along with info files about those databases.
+            -Resources/Algorithm_Resources - Files that some misc functions use as resources. NOT used by user.
+            -Resources/Library             - this folder stores all text files you want to use with this program (most
+                                             likely as plaintext)
+            -Resources/Files_Decrypted     - this is where the generated decrypted files go
+            -Resources/Files_Encrypted     - this is where the generated encrypted files go
+            -Resources/Files_Logs          - where the logs from testing go
+            -Resources/Databases           - holds encrypted databases, along with info files about those databases.
 
 
 
@@ -160,12 +163,19 @@ ENCRYPTION
 
     ### GENERAL FILE FORMAT ###
         I. def execute() - this function makes a call to misc's function to encrypt/decrypt in the section:
-            USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input and and writes down
-            relevant information to a file. It also returns the encrypted text for this function(execute) to return
-            back to cryptography_runner.py. This function is called from cryptography_runner.py
+               USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input and and writes down
+               relevant information to a file. It also returns the encrypted text for this function(execute) to return
+               back to cryptography_runner.py. This function is called from cryptography_runner.py
 
-        II. def encrypt() - this function contains the actual algorithm to encrypt the plaintext. It is generally called
-            from misc' encrypt/decrypt function. When in testing mode, however, it is called from test.py
+        II. def encrypt() - this function contains the actual algorithm to encrypt the plaintext. It is generally
+                called from misc' encrypt/decrypt function. When in testing mode, however, it is called from test.py
+
+        III. (BLOCK CIPHERS ONLY) def _"name of cipher"_on_block() - this function is the algorithm applied onto the
+                 actual block of integers
+
+        IV. (BLOCK CIPHERS ONLY) def _prep_...() - this function is often run right before III. can be run. It sets up
+                for III. to be used
+
 
     ROTATION.PY
         This shifts the unicode values of the plaintext up (addition) by the amount that the key is in unicode.
@@ -228,39 +238,46 @@ DECRYPTION
     ### GENERAL FILE FORMAT ###
 
         I. CIPHER INFO (some files) - Where variables about the cipher are stored.
-            (1) char_set - the type of character set used, either misc.ALPHABETS or
+               (1) char_set - the type of character set used, either misc.ALPHABETS or
                        misc.BINARY_TO_CHAR_ENCODING_SCHEMES
-            (2) cipher_type - symmetric or asymmetric
+               (2) cipher_type - symmetric or asymmetric
 
-            (3) key_size = the size/type of the key used for encrypting/decryption
-                i.   "zero characters" is an encrypting cipher that doesn't need a key input
-                ii.  "calculated characters" is a decrypting cipher that finds the key automatically
-                iii. "single character" is a symmetric encrypting/decrypting cipher that uses a single user-entered
-                              character
-                iv.  "multiple characters" is an symmetric encrypting/decrypting cipher that uses user-entered
-                              multiple characters
-                v.   "multiple generated characters" is a symmetric encrypting/decrypting cipher that uses randomly
-                              generated keys
+               (3) key_size = the size/type of the key used for encrypting/decryption
+                   i.   "zero characters" is an encrypting cipher that doesn't need a key input
+                   ii.  "calculated characters" is a decrypting cipher that finds the key automatically
+                   iii. "single character" is a symmetric encrypting/decrypting cipher that uses a single user-entered
+                            character
+                   iv.  "multiple characters" is an symmetric encrypting/decrypting cipher that uses user-entered
+                            multiple characters
+                   v.   "multiple generated characters" is a symmetric encrypting/decrypting cipher that uses randomly
+                            generated keys
 
-            (4) ciphertext_alphabet_restricted - Applies only to ciphers that use alphabets. "Restricted" means that
+               (4) ciphertext_alphabet_restricted - Applies only to ciphers that use alphabets. "Restricted" means that
                     the alphabet to use during encryption (same as the alphabet of the resulting ciphertext) must
                     be the same as, or bigger than, the alphabet that the plaintext is in.
 
-            (5) no_short_texts - This decryption cipher cannot be used on short texts (mostly because the cipher
-                    relies on detecting English).
+               (5) no_short_texts - This decryption cipher cannot be used on short texts (mostly because the cipher
+                       relies on detecting English).
 
         II. CIPHER SETTINGS (some files) - Where settings for the cipher are stored. For example, rsa has a setting for
-            the number of bits to use for the key.
+                the number of bits to use for the key.
 
         III. def execute() - this function makes a call to misc's function to encrypt/decrypt in the section:
-            USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input if necessary and and writes
-            down relevant information to a file. It also returns the decrypted text for this function(execute) to return
-            back to cryptography_runner.py. This function is called from cryptography_runner.py
+                 USER INTERFACING AND FUNCTION CALLS. misc's function asks for user input if necessary and and writes
+                 down relevant information to a file. It also returns the decrypted text for this function(execute) to
+                 return back to cryptography_runner.py. This function is called from cryptography_runner.py
 
         IV. def testing_execute() - this function is called from test.py. It is the testing form of execute, which means
-            that file are not generated in Files_Encrypted or Files_Decrypted. Instead, it writes statistics and
-            plain and ciphertext to a file in Files_Logs. This function either calls a general one from misc, or it
-            writes specialized statistics itself directly from this function.
+                that file are not generated in Files_Encrypted or Files_Decrypted. Instead, it writes statistics and
+                plain and ciphertext to a file in Files_Logs. This function either calls a general one from misc, or it
+                writes specialized statistics itself directly from this function.
 
         V. def decrypt() - this function contains the actual algorithm to decrypt the ciphertext. It is generally called
-            from misc' encrypt/decrypt function. When in testing mode, however, it is called from testing_execute()
+               from misc' encrypt/decrypt function. When in testing mode, however, it is called from testing_execute()
+
+        VI. (BLOCK CIPHERS ONLY) def _"name of cipher"_on_block() - this function is the algorithm applied onto the
+                actual block of integers
+
+        VII. (BLOCK CIPHERS ONLY) def _prep_...() - this function is often run right before III. can be run. It sets up
+                 for VI. to be used
+
