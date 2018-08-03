@@ -1,7 +1,12 @@
-from Cryptography import misc
-from Cryptography import test     # for manual/automatic testing
-import datetime                   # to be used in fileName
-import os                         # to delete files in decrypted and encrypted, handle directory stuff
+from Cryptography import misc      # for miscellaneous functions
+from Cryptography import test      # for manual/automatic testing
+
+from Cryptography.Ciphers import *
+
+import datetime                    # to be used in fileName
+import os                          # to delete files in decrypted and encrypted, handle directory stuff
+import copy                        # To make deep-copies
+import time                        # To time encryption/decryption
 
 
 
@@ -11,14 +16,13 @@ import os                         # to delete files in decrypted and encrypted, 
 
 
 
-last = "" # Store the path to the last created encrypted file
-
+last = "" # Store the path to the last created encrypted/decrypted file
 
 
 ###################################################################################### START OF MAIN FUNCTION ##########
 def main():
 
-    # Set the current working directory to be the project "Cryptography", two levels above from this file.
+    # Set the current working directory to be the project "Cryptography_2", two levels above from this file.
     path_here = os.path.realpath(__file__)
     one_above = path_here[:path_here.rfind("\\")]
     two_above = path_here[:one_above.rfind("\\")]
@@ -26,36 +30,38 @@ def main():
 
 
     #  Print out info when the program first begins
-    global last
-    if last == "":
-        print()
-        print("See README for usage."
-              + "\nTo print out the available cipher types, type \"help\".")
-        print()
-        _usage()
+    _usage()
 
 
-    # forever while loop to continually take in user input and executing commands
+    # Forever while loop to continually take in user input and executing commands
     while True:
 
         # Obtain information from the user command
-        cipher, encrypt, data, output_location = _parse_user_input()
+        cipher, encrypt_or_decrypt, data, source_location, output_location = _parse_user_input()
 
         # Set up the global variable last for next iteration
+        global last
         last = output_location
 
         # print out the data, and let the user know where the output location is
         _print_data_and_location( data, output_location )
 
         # execute the encryption/decryption on the data
-        _execute_encryption_or_decryption( encrypt, cipher, data, output_location )
+        _execute_encryption_or_decryption( encrypt_or_decrypt, cipher, data, source_location, output_location )
 
-    # End of forever while loop
+
 ######################################################################################## END OF MAIN FUNCTION ##########
+
 
 
 # Print out available Encryption/Decryption types
 def _usage():
+
+    print("***********************************************************************************************************")
+    print("See README for usage."
+        + "\nTo print out the available cipher types, type \"help\".")
+    print()
+
     print("ENCRYPTION/DECRYPTION TYPES AVAILABLE: ")
     print("Available for both encryption and decryption: ", end = "")
     print(*(misc.ENCRYPTION_SET & misc.DECRYPTION_SET), sep=", ")
@@ -80,17 +86,19 @@ def _parse_user_input():
     So the path:     Resources/Library/Space File.txt
     is typed out as: Resources/Library/Space\ File.txt
 
-    :return: cipher           (string) stores the cipher type that the user wants to use
-    :return: encrypt          (boolean) decides whether encryption or decryption is used
-    :return: data             (string) the information to be encrypted/decrypted
-    :return: output_location  (string) the output location of the generated file
+    :return: cipher             (str) stores the cipher type that the user wants to use
+    :return: encrypt_or_decrypt (str) Either "encrypt" or "decrypt". Indicates encrypt or decrypt mode
+    :return: data               (str) the information to be encrypted/decrypted
+    :return: source_location    (str) The filepath to the source file of the text
+    :return: output_location    (str) the output location of the generated file
     """
 
     # Variables to return
-    cipher          = ""      # The name of the cipher to use
-    encrypt_mode    = True    # Whether I am in encrypt mode or in decrypt mode
-    data            = ""      # The string of the input. Either plaintext or ciphertext
-    output_location = ""      # The file path to store the output of encryption/decryption
+    cipher             = "" # The name of the cipher to use
+    encrypt_or_decrypt = "" # Either "encrypt" or "decrypt". Indicates which mode to use
+    data               = "" # The string of the input. Either plaintext or ciphertext
+    source_location    = "" # The file path of the source file of the text
+    output_location    = "" # The file path to store the output of encryption/decryption
 
 
 
@@ -172,6 +180,8 @@ def _parse_user_input():
                                  extra_args.find(" ") + 1) + 1:]
                 prompt = "Extra argument (" + extra_args + ") given! Enter another statement: "
 
+            # TODO
+            """ 
             # If no optional arguments or flags provided, enter testing mode with no cipher provided
             elif len(statement) == 1:
                 test.manual_testing("")
@@ -189,6 +199,7 @@ def _parse_user_input():
             else:
                 test.manual_testing(statement[1])
                 prompt = "Manual testing done! Enter another statement: "
+            """
 
             statement = input(prompt)                                   # Obtain user input for next iteration
             continue                                                    # Jump to the next iteration
@@ -200,9 +211,11 @@ def _parse_user_input():
         if command == "encrypt" or command == "decrypt":
             # region Handle command: encrypt or decrypt
 
-            # Set encrypt_mode based on command encrypt/decrypt
-            if command == "decrypt": encrypt_mode = False
-
+            # Set encrypt_or_decrypt based on command encrypt/decrypt
+            if command == "decrypt":
+                encrypt_or_decrypt = "decrypt"
+            elif command == "encrypt":
+                encrypt_or_decrypt= "encrypt"
 
             # Function to split statement into list separated by spaces. (file_paths may have spaces escaped with "\ ")
             def statement_to_list(statement):
@@ -279,7 +292,10 @@ def _parse_user_input():
             # If the input is "last", then use the data from the file path "pointed" to by last
             if input_path == "last":
 
-                #  open the file and store its contents in the string data
+                # Save the source location
+                source_location = last
+
+                #  open the file and store its contents in the string data.
                 try:
                     my_file = open(last, "r", encoding="utf-8")
                     data = my_file.read()
@@ -289,6 +305,9 @@ def _parse_user_input():
                     continue
             # Otherwise, a source is given (NOT last)
             elif not input_path == "last":
+
+                # Save the source location
+                source_location = input_path
 
                 #  Try to open the file as is (the literal file path)
                 try:
@@ -377,7 +396,7 @@ def _parse_user_input():
 
 
             # Return all relevant variables
-            return cipher, encrypt_mode, data, output_location
+            return cipher, encrypt_or_decrypt, data, source_location, output_location
             # endregion
 
 
@@ -431,35 +450,463 @@ def _parse_user_input():
 
 
 
-
-
-
 # Print data and the output location
 def _print_data_and_location(data, output_location):
 
     print("\nTHIS IS THE DATA: \n" + data)
-    print("*******************************************************")
+    print("***********************************************************************************************************")
     print("\nNEW FILE LOCATED HERE: " + output_location)
     print("TYPE \"info\" FOR MORE INFORMATION ON FURTHER PROMPTS.\n")
 
 
 # execute encryption/decryption on the data, save the output, and print out the output
-def _execute_encryption_or_decryption( encrypt, cipher, data, output_location ):
+def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str, data:str,
+                                       source_location, output_location:str ) -> None:
+    """
+    This will execute the encryption/decryption. The output, along with relevant information, is stored in the
+    output_location.
+
+    :param encrypt_or_decrypt: (str)  Either "encrypt" or "decrypt". Indicates which mode to use
+    :param cipher_module:      (str)  The name of the cipher module to use
+    :param data:               (str)  The data to encrypt or decrypt. Is either plaintext of ciphertext
+    :param source_location     (str)  The name of the source of the data
+    :param output_location:    (str)  The filepath to store the processed text
+    :return:                   (None)
+    """
 
 
-    if encrypt:
-        exec("from Encryption import " + cipher)
-        output = eval(cipher + ".execute(data, output_location)")
+    # Get the ClassName of the cipher. Is same but with CapWord convention instead of lower_case_with_underscores
+    def get_class_name(module:str) -> str:
+        module = module.capitalize()                 # Capitalize the first letter
+        while module.find("_") != -1:                # Process all of the "_" characters
+
+            underscore_index = module.find("_")                      # Find the first underscore
+            capitalized = module[underscore_index + 1].upper()       # Capitalize the letter right after
+
+            # Remove the first underscore, and replace the immediately following character with capitalized version
+            module = module[0:underscore_index] + capitalized + module[underscore_index + 2:len(module) - 1]
+
+        return module
+    cipher_class_name = get_class_name(cipher_module)
+
+
+    # Get relevant cipher information (Class static variable)
+    cipher_char_set            = eval("%s.%s.CHAR_SET"            % (cipher_module, cipher_class_name))
+    cipher_restrict_alphabet   = eval("%s.%s.RESTRICT_ALPHABET"   % (cipher_module, cipher_class_name))
+    cipher_cipher_type         = eval("%s.%s.CIPHER_TYPE"         % (cipher_module, cipher_class_name))
+    cipher_key_type            = eval("%s.%s.KEY_TYPE"            % (cipher_module, cipher_class_name))
+    cipher_uses_mode_of_op     = (cipher_char_set == "encoding scheme")
+    cipher_variable_block_size = eval("%s.%s.VARIABLE_BLOCK_SIZE" % (cipher_module, cipher_class_name))
+
+    # Specific variables to use during encryption/decryption. Fill in before using in construction of Cipher object.
+    plaintext       = ""                  # The plaintext, needs to be set during encryption
+    ciphertext      = ""                  # The ciphertext, needs to be set during decryption
+    char_set        = ""                  # An alphabet or encoding scheme, optionally provided by the user
+    key             = ""                  # FOr symmetric ciphers, optionally provided by user
+    public_key      = ""                  # For asymmetric ciphers, optionally provided by user
+    private_key     = ""                  # FOr asymmetric ciphers, needs to be provided by user
+    block_size      = 0                   # For ciphers that support variable block sizes, optionally provided by user
+    key_size        = 0                   # For ciphers that support variable key sizes, optionally provided by the user
+    mode_of_op      = ""                  # For block ciphers, optionally set by user
+    source_location = source_location     # The source file for the data
+    output_location = output_location     # The output file to store the output
+
+    # Variables to fill after the encryption/decryption is done
+    time           = 0.0
+    processed_data = ""
+
+    # Set the plaintext or ciphertext with data
+    def get_plaintext_or_ciphertext(encrypt_or_decrypt:str, data:str) -> (str, str):
+        """
+        Set the plaintext or ciphertext.
+
+        :param encrypt_or_decrypt: (str) Either "encrypt" or "decrypt"
+        :param data:               (str) The text data to process
+        :return:                   (str) The plaintext
+        :return:                   (str) The ciphertext
+        """
+
+        plaintext  = ""
+        ciphertext = ""
+
+        if encrypt_or_decrypt == "encrypt":
+            plaintext = data
+
+        else:
+            ciphertext = data
+
+        return plaintext, ciphertext
+    plaintext, ciphertext = get_plaintext_or_ciphertext(encrypt_or_decrypt, data)
+
+
+    # Figure out the specific char_set to use during encryption/decryption
+    def get_char_set(encrypt_or_decrypt:str, cipher_char_set:str, cipher_restrict_alphabet:bool) -> str:
+
+
+        # If encrypt, then ask for the char_set
+        if encrypt_or_decrypt == "encrypt":
+
+            # Ask for the char_set
+            def take_char_set(cipher_char_set: str) -> str:
+
+                # Set the default character set and the available options, based on cipher_char_set
+                if cipher_char_set == "alphabet":
+                    default_selection = "unicode"
+                    options = misc.ALPHABETS
+                else:
+                    default_selection = "alphabet"
+                    options = misc.ENCODING_SCHEMES
+
+                # Print out the prompt for the user
+                selection = input("Enter the %s to be used for the ciphertext (or to use the default alphabet, \"%s\", "
+                                  "leave empty): " % (cipher_char_set, default_selection))
+
+                # Loop while the user gives an invalid alphabet. If valid, then break
+                while True:
+
+                    # If the user asks for help
+                    if selection == "info":
+                        print("The available %ss are: " % cipher_char_set, end="")
+                        for option in options:
+
+                            if option == "ascii":
+                                print(" " * (45 - len("The available alphabets are: ")) + option)
+
+                            elif option == "base16":
+                                print(" " * (45 - len("The available encoding schemes are: ")) + option)
+
+                            else:
+                                print(" " * 45 + option)
+
+                        selection = input(
+                            "\nEnter the %s to be used for the ciphertext (or to use the default alphabet, \"%s\", "
+                            "leave empty): " % (cipher_char_set, default_selection))
+                        continue
+
+                    # User wants default char_set
+                    elif selection == "":
+                        selection = "unicode_plane0"
+                        break
+
+                    # Invalid option
+                    elif selection.rstrip() not in options:
+                        selection = input("Invalid %s (%s)! Try again: " % (cipher_char_set, selection.rstrip()))
+                        continue
+
+                    # If here, then user gave valid option. All clear
+                    else:
+                        break
+
+                return selection
+            chosen_char_set = take_char_set(cipher_char_set)
+
+            # Adjust the alphabet (The function will handle non-adjustments also)
+            return misc.adjust_alphabet(data, chosen_char_set, cipher_char_set, cipher_restrict_alphabet)
+
+
+
+        # Elif decrypt, try to figure out the char_set automatically
+        elif encrypt_or_decrypt == "decrypt":
+            return misc.calculate_char_set_of(data, cipher_char_set)
+    char_set = get_char_set(encrypt_or_decrypt, cipher_char_set, cipher_restrict_alphabet)
+
+
+    # Figure out the key to use during encryption/decryption
+    def get_key(cipher_cipher_type:str, cipher_key_type:str) -> (str, str, str):
+        """
+        Figure out the correct key to use:
+            "zero characters" is an encrypting cipher that doesn't need a key input
+            "calculated characters" is a decrypting cipher that finds the key automatically
+            "single character" is a symmetric encrypting/decrypting cipher that uses a single user-entered character
+            "multiple characters" is an symmetric encrypting/decrypting cipher that uses user-entered multiple characters
+            "multiple generated characters" is a symmetric encrypting/decrypting cipher that uses randomly generated keys
+
+        :param cipher_cipher_type: (str) the type of the cipher
+        :param cipher_key_type:    (str) the sort of the key that is used
+        :return:                   (str) symmetric key, may or may not be filled
+        :return:                   (str) public key, may or may not be filled
+        :return:                   (str) private key, may or may not be filled
+        """
+
+        # This helper function obtain a single char key from the user and returns that
+        def get_single_char_key() -> str:
+            """
+            This function obtains a key from the user that must be a single character
+
+            :return: (str) the single character key
+            """
+
+            # TAKE A KEY
+            key = input("Enter a key (single character only): ")
+
+            # While the key is not valid, ask user to enter a key again
+            while True:
+                # If the user did not enter a key, ask the user to enter one
+                if key == "":
+                    key = input("No key given! Enter a key (single character only): ")
+                    continue
+
+                # IF THE USER DID NOT GIVE A SINGLE CHARACTER, FORCE THE USER TO ENTER IT AGAIN
+                if len(key) != 1:
+                    key = input("Not a single character! Enter a key (single character only): ")
+                    continue
+
+                # All checks passed, so break out of the for loop
+                break
+
+            return key
+
+        # This help function obtains a general key from the user and returns that
+        def get_general_key() -> str:
+            """
+            This function obtains a key of any length fro the user
+
+            :return: (str) the user-entered key
+            """
+
+            # TAKE A KEY
+            key = input("Enter a key: ")
+
+            # IF THE USER DID NOT GIVE ANYTHING, SEND AN ERROR MESSAGE AND FORCE THE USER TO ENTER IT AGAIN
+            while key == "":
+                key = input("No key given! Enter a key: ")
+
+            return key
+
+        # This helper function obtains a private key from the user
+        def get_private_key() -> str:
+            """
+            This function obtains a key of any length fro the user
+
+            :return: (str) the user-entered key
+            """
+
+            # TAKE A KEY
+            key = input("Enter the private key: ")
+
+            # While the key is not valid
+            while True:
+
+                # If nothing entered
+                if key == "":
+                    key = input("No key given! Enter the private key: ")
+                    continue
+
+                # All checks passed, so break out of loop
+                break
+
+            return key
+
+        # This helper function gets a public key from the user. If the user wants to generate keys, then input() is blank
+        def get_public_key() -> str:
+            """
+            This function obtains a public key from the user. If nothing entered, then the user wants to generate a key.
+
+            :return: (str) the user-entered key
+            """
+
+            # Take a key
+            key = input("Enter the public key (Leave empty to generate public/private keys): ")
+
+            return key
+
+
+        key         = ""
+        public_key  = ""
+        private_key = ""
+
+        if cipher_cipher_type == "symmetric":
+            if cipher_key_type         == "zero characters":
+                key = ""
+
+            elif cipher_key_type[0:20] == "calculated characters":
+                key = ""
+
+            elif cipher_key_type       == "single character":
+                key = get_single_char_key()
+
+            elif cipher_key_type       == "multiple characters":
+                key = get_general_key()
+
+            elif cipher_key_type       == "multiple generated characters":
+                if encrypt_or_decrypt   == "encrypt":                   # If encrypting, key is generated
+                    key = ""
+                elif encrypt_or_decrypt == "decrypt":
+                    key = get_general_key()
+
+
+        elif cipher_cipher_type == "asymmetric":
+            if encrypt_or_decrypt == "encrypt":
+                public_key = get_public_key()                           # get_public_key() will get the user to enter a
+                                                                        # public key from some previous encryption or
+                                                                        # blank. If blank, encrypt() functions in
+                                                                        # Encryption will generate their own public and
+                                                                        # private keys.
+            elif encrypt_or_decrypt == "decrypt":
+                private_key = get_private_key()  # Private keys are required, unlike public ones
+
+
+        return key, public_key, private_key
+    key, public_key, private_key = get_key(cipher_cipher_type, cipher_key_type)
+
+
+    # Figure out the mode of operation to use during encryption/decryption (function handles non-block ciphers also)
+    def get_mode_of_op(cipher_uses_mode_of_operation:bool) -> str:
+
+        # If doesn't use mode of operation, just exit function
+        if cipher_uses_mode_of_operation is False:
+            return ""
+
+        # Print ouf the prompt for the user
+        selection = input("Enter the mode of operation to be used for ciphertext (To use the default scheme, "
+                          + "\"ecb\", leave empty): ")
+
+        # Loop while the user gives an invalid alphabet
+        while True:
+
+            if selection[0:4] == "info":
+                print("The available modes of encryption are: ", end="")
+
+
+                for mode in misc.MODES_OF_ENCRYPTION:
+                    if mode == "ecb":
+                        print(" " * (45 - len("The available modes of encryption are: ")) + mode)
+
+                    else:
+                        print(" " * 45 + mode)
+
+
+                selection = input("\nEnter the mode of encryption to be used for ciphertext (To use the default "
+                                  "scheme, \"ecb\", leave empty): ")
+                continue
+
+            elif selection == "":
+                selection = "ecb"
+                break
+
+
+            elif selection.rstrip() not in misc.MODES_OF_ENCRYPTION:
+                selection = input("Invalid encoding scheme (%s)! Try again: " % selection.rstrip())
+                continue
+
+            # If here, then all clear
+            else:
+                break
+
+        return selection
+    mode_of_op = get_mode_of_op(cipher_uses_mode_of_op)
+
+
+    # Figure out the block size to use (function handles non-variable block ciphers or non-block ciphers also) TODO
+    def get_block_size() -> int:
+        pass
+
+
+    # Figure out the key size to use (function handles non-variable block ciphers or non-block ciphers also) TODO
+    def get_key_size() -> int:
+        pass
+
+
+    # Create the Cipher object
+    """
+    cipher_obj = eval("rotation.Rotation(plaintext=%s, ciphertext=%s, char_set=%s, mode_of_op=%s, key=%s, "
+                      "public_key=%s, private_key=%s, block_size=%d, key_size=%d, source_location=%s, output_location=%s"
+                      % (plaintext, ciphertext, char_set, mode_of_op, key,
+                         public_key, private_key, block_size, key_size, source_location, output_location))
+    """
+
+    cipher_obj = rotation.Rotation(plaintext, ciphertext, char_set, mode_of_op, key, public_key, private_key,
+                                   block_size, key_size, source_location, output_location)
+
+    """
+    cipher_obj = eval("%s.%s(plaintext=%s, ciphertext=%s, char_set=%s, mode_of_op=%s, key=%s, public_key=%s, "
+                      "private_key=%s, block_size=%d, key_size=%d, source_location=%s, output_location=%s"
+                      % (cipher_module, cipher_class_name, plaintext, ciphertext, char_set, mode_of_op, key,
+                         public_key, private_key, block_size, key_size, source_location, output_location))
+    """
+
+
+    # Run the encryption/decryption and time it. Save time and the processed_data. Also, print out the results
+    if encrypt_or_decrypt == "encrypt":
+        cipher_obj.time           = misc.time_this(cipher_obj.encrypt_plaintext)
+        cipher_obj.processed_data = cipher_obj.ciphertext
+        print("*" * 120 + "\n\nThis is the RESULTING CIPHERTEXT: \n%s" % cipher_obj.processed_data)
     else:
-        exec("from Decryption import " + cipher)
-        output = eval(cipher + ".execute(data, output_location)")
+        cipher_obj.time           = misc.time_this(cipher_obj.decrypt_ciphertext)
+        cipher_obj.processed_data = cipher_obj.plaintext
+        print("*" * 120 + "\n\nThis is the RESULTING PLAINTEXT: \n%s" % cipher_obj.processed_data)
+
+
+    # Write out the output to the output_location
+    def write_processed_data(output_location:str) -> None:
+        with open(output_location, "w", encoding="utf-8") as output_file:
+            output_file.write(cipher_obj.processed_data)
+        output_file.close()
+    write_processed_data(output_location)
 
 
 
+    # Write out the info in the info file (path is output_location appended with "_(Relevant_Information)")
+    # noinspection PyListCreation
+    def write_info_file(info_location:str) -> None:
+
+        info_file = open(info_location, "w", encoding="utf-8")
+
+        # Holds name related to the process (either encryption or decryption)
+        if encrypt_or_decrypt == "encrypt":
+            process_noun = "𝐄𝐍𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍"
+            processed_text = "ciphertext"
+            process_verb = "𝐄𝐧𝐜𝐫𝐲𝐩𝐭𝐞𝐝"
+        else:
+            process_noun = "𝐃𝐄𝐂𝐑𝐘𝐏𝐓𝐈𝐎𝐍"
+            processed_text = "plaintext"
+            process_verb = "𝐃𝐞𝐜𝐫𝐲𝐩𝐭𝐞𝐝"
+
+        # Begin to generate the lines of text to store in the file. Start with the "title"
+        lines = []
+        lines.append("\n\n\n\n%s with %s on %s"
+                           % (process_noun, type(cipher_obj).CIPHER_NAME, cipher_obj.source_location))
+
+        # Print out the symmetric_key/public_and_private_key
+        if cipher_char_set == "alphabet":             # "alphabet" indicates user-provided key. Print symmetric key
+            lines.append("--------------- key ---------------")
+            lines.append("%s" % cipher_obj.key)
+            lines.append("-" * 120)
+            lines.append(" ")
+
+        elif cipher_cipher_type == "symmetric":       # Is symmetric block cipher. Print symmetric key
+            lines.append("--------------- %d-bit key ---------------" % cipher_obj.key_size)
+            lines.append("%s" % cipher_obj.key)
+            lines.append("-" * 120)
+            lines.append(" ")
+
+        elif cipher_cipher_type == "asymmetric":      # Is asymmetric block cipher, print public and private key
+            lines.append("--------------- %d-bit public key ---------------" % cipher_obj.key_size)
+            lines.append("%s" %cipher_obj.public_key)
+            lines.append("-" * 120)
+            lines.append(" ")
+            lines.append("--------------- %d-bit private key ---------------" % cipher_obj.key_size)
+            lines.append("%s" %cipher_obj.private_key)
+            lines.append("-" * 120)
+            lines.append(" ")
+
+        # Print out the alphabet/encoding_scheme
+        lines.append("The %s's %s is: \"%s\"" % (processed_text, cipher_char_set, char_set))
+
+        # Print out the total time of encryption/decryption
+        if cipher_char_set == "alphabet":                      # "alphabet" indicates non-block cipher
+            lines.append("%s in these seconds: %f (s) with %s characters"
+                         % (process_verb, cipher_obj.time, "{:,}".format(len(cipher_obj.plaintext))))
+        else:
+            lines.append("%s in these seconds: %f (s) with %s characters and %s blocks (%d characters each)"
+                         % (process_verb, cipher_obj.time, "{:,}".format(len(cipher_obj.plaintext)),
+                            "{:,}".format(cipher_obj.num_blocks), len(cipher_obj.plaintext) / cipher_obj.num_blocks))
+
+        # Figure out the microseconds per character
+        lines.append("Microseconds per character: %f" % (cipher_obj.time / len(cipher_obj.plaintext)) * 1000000 )
 
 
-
-
+    write_info_file(output_location + "_(Relevant_Information)")
 
 
 

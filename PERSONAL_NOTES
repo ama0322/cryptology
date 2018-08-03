@@ -5,6 +5,36 @@
 
 
 
+ALGORITHM GOALS/FIXES:
+
+
+
+
+
+GENERAL GOALS/FIXES:
+    Add default keys for everything
+    Refine source_location
+    Fix formatting of relevant files (probably using .format())
+
+
+
+
+NEED TO ADD:
+
+
+
+
+TRY:
+    Stuff with C for optimization
+
+
+
+
+
+
+
+
+(OLD)
 
 ALGORITHM GOALS/FIXES:
     Whatever was caught by automatic tests
@@ -29,7 +59,6 @@ GENERAL GOALS/FIXES:
 
 NEED TO ADD:
     Handle failed decryption (because user entered wrong key) for ciphers such as rsa or blowfish that can severely fail
-
 
 
 
