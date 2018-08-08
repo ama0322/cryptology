@@ -1,9 +1,8 @@
-from Cryptography import misc
-from Cryptography import cipher_settings                           # to read/save cipher settings
-
-
-import datetime                                  # for labelling the date that files are created
-import os                                        # for deleting files
+from Cryptography.Ciphers._cipher import          Cipher   # To get the abstract superclass
+from Cryptography.Ciphers         import *                 # To construct Cipher objects
+from Cryptography                 import misc              # To get misc functions
+import                                   datetime          # for labelling the date that files are created
+import                                   os                # for deleting files
 
 
 
@@ -11,656 +10,422 @@ import os                                        # for deleting files
 ########################################################################################### PRIMARY FUNCTIONS ##########
 
 # MODIFY THESE VALUES
-plaintext_source =                        "Resources/Library/Eleonora"
+testing_plaintext_source                 = "Resources/Library/Eleonora"
 
-key =                                     "This is a key for testing"
+testing_key                              = "This is a key for testing"
+testing_key_size                         = 2048
+testing_block_size                       = 0
 
+testing_encoding_scheme                  = "base64"
+testing_alphabet                         = "ascii"
 
-encoding_scheme                         = "base64"
-alphabet_size = misc.CHAR_SET_TO_SIZE.get("unicode_plane0")
-
-
-mode_of_operation                       = "ecb"
-
-
+testing_mode_of_operation                = "ecb"
 
 
-# This function enters the testing mode where the user can enter commands to see check ciphers and see stats
-def manual_testing(given_cipher):
+
+
+
+
+def manual_testing(statement:str) -> None:
     """
-    Mode for manual testing.
+    The given_command is everything that follows the "test ". Read this to figure out what to do.
 
-    :param given_cipher: (string) May be empty string. Otherwise, run testing on what is given.
-    :return:
-    """
-
-
-    # Run if the user has provided more args in addition to just entering test mode (test <cipher>, test clear, etc.)
-    def handle_first_command(given_cipher):
-
-        # Check that given_cipher is not empty ("")
-        if given_cipher == "":
-            return ""
-
-        # Otherwise, run the command
-        def get_testing_info_with_command(command):
-
-            # Values to return
-            encryption = ""
-            decryption = ""
-            plaintext = ""
-            output_location = ""
-            encryption_key = key  # Modify key as needed for the chosen cipher
-            char_set = ""  # num for ALPHABETS, name for encoding scheme
-
-            # Get the decryption type and the encryption type (same name as decryption but w/o "_nokey")
-            def parse_user_input_with_command(command):
-                """
-                This prompts the user and reads user info. The user may choose to change the default ciphertext location
-                by entering "set " followed by the file of the ciphertext. Otherwise, the user specifies a decryption
-                method to test.
-                Note, this does not handle "-a" because "-a" flag is handled in cryptography_runner.py
-
-                :return: (string) the decryption method to test
-                """
-
-                # Prompt the user for a command
-                statement = command
-
-                # Loop until the user enters a legitimate decryption type
-                while True:
-
-                    # split the statement into an array of words
-                    command = statement.split()
-
-                    # If empty, continue
-                    if statement == "":
-                        statement = input("No command entered! Enter a testing mode command: "
-                                          + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
-                        continue
-
-                    # If exit, exit
-                    if statement == "-e":
-                        return None
-
-
-                    # Check if the user decides to clear logs
-                    if command[0] == "-c":
-                        # delete files in /Files_Logs
-                        for file in os.listdir("Resources/Files_Logs"):
-                            os.unlink("Resources/Files_Logs/" + file)
-
-                        statement = input("Testing logs cleared! Enter a testing mode command: "
-                                          + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
-                        continue
-
-                    # Check that the command is a legitimate decryption type. If so, break out of loop
-                    if statement in misc.DECRYPTION_SET:
-                        break
-
-                    # Prompt the user for a command again
-                    statement = input("Invalid command (" + statement + ")! Enter a testing mode command: "
-                                      + "\u001b[32m" + "test " + "\u001b[0m")                       # test colored green
-
-                return statement
-            decryption = parse_user_input_with_command(command)
-
-            # If decryption is None, indicating to exit, then, return None, None, None, None, None, None
-            if decryption is None:
-                return None, None, None, None, None, None,
-
-            encryption = decryption if decryption.find("_nokey") == -1 else decryption[0: -6]
-
-            # Obtain the plaintext
-            my_file = open(plaintext_source, "r", encoding="utf-8")
-            plaintext = my_file.read()
-            my_file.close()
-
-            # Create the output location for this run
-            now = datetime.datetime.now()
-            output_location = "Resources/Files_Logs/" + decryption + "_" + now.strftime("%Y-%m-%d_h%Hm%Ms%S")
-
-            # Figure out the correct key to use (read key_size)
-            # "zero characters"               is an encrypting cipher that doesn't need a key input
-            # "calculated characters"         is a decrypting cipher that finds the key automatically
-            # "single character"              is a symmetric encrypting/decrypting cipher that uses a single user-entered
-            #                                 character
-            # "multiple characters"           is an symmetric encrypting/decrypting cipher that uses user-entered string
-            # "multiple generated characters" is a symmetric encrypting/decrypting cipher that uses randomly generated chars
-            exec("import Decryption." + decryption)  # Import module to read cipher properties
-            key_size = eval("Decryption." + decryption + ".key_size")  # The size of the key used (see comment above)
-            char_set = eval("Decryption." + decryption + ".char_set")  # char_set used
-            cipher_type = eval("Decryption." + decryption + ".cipher_type")  # Symmetric or asymmetric
-
-            if cipher_type == "symmetric":
-                if key_size == "zero characters":
-                    encryption_key = ""
-
-                elif key_size.find("calculated characters") != -1:  # If calculated, read on
-                    if key_size[22:] == "(single character)":
-                        encryption_key = key[0]
-                    elif key_size[22:] == "(multiple characters)":
-                        encryption_key = key
-                    elif key_size[22:] == "(multiple generated characters)":
-                        encryption_key = ""
-
-                elif key_size == "single character":
-                    encryption_key = key[0]
-
-                elif key_size == "multiple characters":
-                    encryption_key = key
-
-                elif key_size == "multiple generated characters":  # Key is generated for us
-                    encryption_key = ""
-
-
-            elif cipher_type == "asymmetric":  # Key is generated for us
-                encryption_key = ""
-
-            # Figure out the char_set to use
-            if char_set == misc.BINARY_TO_CHAR_ENCODING_SCHEMES:  # If encoding scheme, just return name
-                char_set = encoding_scheme
-            elif char_set == misc.ALPHABETS:  # If alphabet, return the size of the set
-                char_set = alphabet_size
-
-
-            return encryption, decryption, plaintext, output_location, encryption_key, char_set
-        e, d, p, o_l, e_k, c_s = get_testing_info_with_command(given_cipher)
-
-        # If return was None, None, ... then exit back to cryptography runner
-        if e is None:
-            return None
-
-        # Set the mode of operation
-        cipher_settings.mode_of_operation = mode_of_operation
-
-        # Pass this info to decryption's testing_execute
-        exec("import Decryption." + d)
-        exec("Decryption." + d
-                + ".testing_execute(e, d, p, plaintext_source, "
-                + "                 e_k, c_s, o_l)")
-    handle_first_command(given_cipher)
-
-
-
-    # Forever while loop to take in user commands and execute them
-    while True:
-
-        # Get information necessary for encrypting and decryption
-        encryption, decryption, plaintext, output_location, encryption_key, char_set = _get_testing_info()
-
-
-        # If _get_testing_info() output is all None's, then exit this function back to Cryptography_runner
-        if encryption is None:
-            return
-
-
-
-        # Else, proceed regularly. Pass this info to decryption's testing_execute
-        else:
-
-            # Set the mode of encryption (in cipher_settings)
-            cipher_settings.mode_of_operation = mode_of_operation
-
-
-
-            exec("import Decryption." + decryption)
-            exec("Decryption." + decryption
-                + ".testing_execute(encryption, decryption, plaintext, plaintext_source, "
-                + "                 encryption_key, char_set, output_location)")
-
-
-
-
-# This function automatically checks all the ciphers (may take some time). Needs to be as optimized as possible
-def automated_testing():
-    """
-    This will test all of the Decryption ciphers by calling their testing_execute() functions
-
-    Run tests with all Decryption ciphers, ALPHABETS/encoding_schemes, and different* plaintext lengths (for blocks),
-    and also plaintexts of different character sets. For block ciphers, run modes of encryption too.
-    While testing is conducted, print out the results.
-    *In general, use short text so that the test doesn't take too long.
-
-    :return: None
+    :param statement: (str)  The command
+    :return:          (None)
     """
 
+
+    # This function will parse the user "test" statement
+    def parse_user_input(statement:str) -> str or None:
+        """
+        Parses user input. If the user wishes to exit, then this function returns None. If the user gives a
+        legitimate cipher, then the test for that cipher will run
+
+        :param statement: (str) The statement to process
+        :return:          (str or None) Gives the name of the cipher to test, or None to exit this function
+        """
+        # If the statement is empty, then ask the user for a command
+        if statement == "":
+            statement = input("Enter a testing mode command: {}test {}".format("\u001b[32m", "\u001b[0m"))
+
+        # Loop until the given_command is a legitimate command
+        while True:
+            # split the statement into an array of words
+            command = statement.split()
+
+            # If empty, continue
+            if statement == "":
+                # region Handle empty command
+                statement = input("No command entered! Enter a testing mode command: "
+                                  + "\u001b[32m" + "test " + "\u001b[0m")  # test colored green
+                continue
+                # endregion
+
+            # If automated, then run that, and take next command
+            if command[0] == "-a":
+                # region Handle automated test command
+                # If there is stuff afterwards, is an error
+                if statement.rstrip(" ") != "-a":
+                    statement = input("Extraneous arguments \"{}\"! Enter a testing mode command: "
+                                      "{}test {}".format(statement[statement.find("-e") + 3:], "\u001b[32m",
+                                                         "\u001b[0m"))
+                    continue
+
+
+                automated_testing()
+                statement = input("Automated tests done! Enter a testing mode command: "
+                                  + "\u001b[32m" + "test " + "\u001b[0m")  # test colored green
+                continue
+                # endregion
+
+            # If "exit", then return None:
+            if command[0] == "-e":
+                # region Handle exit command
+                # If there is stuff afterwards, is an error
+                if statement.rstrip(" ") != "-e":
+                    statement = input("Extraneous arguments \"{}\"! Enter a testing mode command: "
+                                      "{}test {}".format(statement[statement.find("-e") + 3:], "\u001b[32m",
+                                                         "\u001b[0m"))
+                    continue
+
+
+                return None
+                # endregion
+
+            # Check if the user decides to clear logs
+            if command[0] == "-c":
+                # region Handle clear command
+                # If there is stuff afterwards, is an error
+                if statement.rstrip(" ") != "-c":
+                    statement = input("Extraneous arguments \"{}\"! Enter a testing mode command: "
+                                      "{}test {}".format(statement[statement.find("-c") + 3:], "\u001b[32m",
+                                                         "\u001b[0m"))
+                    continue
+
+                for file in os.listdir("Resources/Files_Logs"):  # delete files in /Files_Logs
+                    os.unlink("Resources/Files_Logs/" + file)
+
+                statement = input("Testing logs cleared! Enter a testing mode command: "
+                                  + "\u001b[32m" + "test " + "\u001b[0m")  # test colored green
+                continue
+                # endregion
+
+            # Check that the command is a legitimate decryption type. If so, break out of loop
+            if statement.rstrip(" ") in Cipher.DECRYPTION_SET:
+                # region Handle legitimate cipher command
+                return statement.rstrip(" ")
+                # endregion
+
+            # Else, Prompt the user for a command again
+            else:
+                # region Handle invalid command
+                statement = input("Invalid command \"" + command[0] + "\"! Enter a testing mode command: "
+                                                                      "\u001b[32m" + "test " + "\u001b[0m")
+                # endregion
+    chosen_cipher = parse_user_input(statement)
+
+    # If the user typed "-e", the parse_user_input() returns None, indicating to return back to cryptography_runner
+    if chosen_cipher is None:
+        return None
+
+
+
+    # Generate the cipher object and save the original plaintext (for comparison against the decrypt() output)
+    cipher_obj = _get_testing_info(chosen_cipher)
+    test_result = _conduct_test_and_write_stats(cipher_obj)
+
+
+
+    # Print test success/failure
+    if test_result == True:                                  # If correct, then print green CORRECT
+        print("{}: {}𝐂𝐎𝐑𝐑𝐄𝐂𝐓{}".format(misc.get_class_name(chosen_cipher), "\u001b[32m", "\u001b[0m"))
+    else:                                                    # If incorrect, then print red CORRECT
+        print("{}: {}𝐈𝐍𝐂𝐎𝐑𝐑𝐄𝐂𝐓{}".format(misc.get_class_name(chosen_cipher), "\u001b[31m", "\u001b[0m"))
+
+
+    # Enter back into the testing mode
+    statement = input("\n{} testing done! Enter another testing mode command: {}test {}"
+                      .format(misc.get_class_name(chosen_cipher), "\u001b[32m", "\u001b[0m"))
+    return manual_testing(statement)
+
+
+
+
+def automated_testing() -> None:
+    """
+    Runs testing on all ciphers, with all combinations
+
+    :return: (None)
+    """
+
+
+
+    # Store the original global vars. Will reset back to this at the end of the automated_testing()
+    global testing_key_size
+    global testing_block_size
+    global testing_encoding_scheme
+    global testing_alphabet
+    global testing_mode_of_operation
+    global testing_plaintext_source
+    original_testing_encoding_scheme   = testing_encoding_scheme
+    original_testing_alphabet          = testing_alphabet
+    original_testing_mode_of_operation = testing_mode_of_operation
+    original_testing_plaintext_source  = testing_plaintext_source
+    original_testing_key_size          = testing_key_size
+    original_testing_block_size        = testing_block_size
 
     # Random characters. Use this for testing.
     plaintext_sample = \
     """I AM come of a race noted for vigor of fancy and ardor of passion. Men have called me mad; but the question is not yet settled, whether madness is or is not the loftiest intelligence—whether much that is glorious—whether all that is profound—does not spring from disease of thought—from moods of mind exalted at the expense of the general intellect. They who dream by day are cognizant of many things which escape those who dream only by night. In their gray visions they obtain glimpses of eternity, and thrill, in awakening, to find that they have been upon the verge of the great secret. In snatches, they learn something of the wisdom which is of good, and more of the mere knowledge which is of evil. They penetrate, however, rudderless or compassless into the vast ocean of the “light ineffable,” and again, like the adventures of the Nubian geographer, “agressi sunt mare tenebrarum, quid in eo esset exploraturi.” We will say, then, that I am mad. I grant, at least, that there are two distinct conditions of my mental existence—the condition of a lucid reason, not to be disputed, and belonging to the memory of events forming the first epoch of my life—and a condition of shadow and doubt, appertaining to the present, and to the recollection of what constitutes the second great era of my being. Therefore, what I shall tell of the earlier period, believe; and to what I may relate of the later time, give only such credit as may seem due, or doubt it altogether, or, if doubt it ye cannot, then play unto its riddle the Oedipus. """
 
-    # ADD HERE. Use smaller key sizes on ciphers to save time (use exec to prevent conflict with same name in Encrypt)
-    exec("from Cryptography.Decryption import rsa")
-    exec("rsa_original = rsa.key_bits; rsa.key_bits = 512")
+    # Build up plaintext. Need different lengths and character sets. Save to Resources. Delete them at the end
+    testing_plaintexts = ["plaintext_sample[0:10]", "plaintext_sample[0:100]", "plaintext_sample[0:1000]"]
+    for file_name in testing_plaintexts:
+        sample_file = open("Resources/" + file_name, "w", encoding="utf-8")
+        text = eval(file_name)
+        sample_file.write(text)
+        sample_file.close()
 
 
-
-    # Build up plaintext. Need different lengths and character sets
-    testing_plaintexts = [plaintext_sample[:10], plaintext_sample[:100], plaintext_sample[:1000]]
-
-    # Store incorrect ciphers here.
+    # Store incorrect ciphers here
     incorrect_ciphers = []
 
-    # FOR ALL DECRYPTION CIPHERS, test them
-    for decrypt_cipher in misc.DECRYPTION_SET:
-
-        # Figure out which encrypting cipher to use (same name, but without "_nokey" if that suffix exists)
-        encrypt_cipher = decrypt_cipher if decrypt_cipher.find("_nokey") == -1 else decrypt_cipher[0: -6]
-
-        # Figure out the encrypting key to use
-        encrypt_key = _obtain_encryption_key(decrypt_cipher)
-
-        # Figure out whether to use alphabet or character encoding scheme
-        exec("from Cryptography.Decryption import " + decrypt_cipher)
-        character_sets = eval(decrypt_cipher + ".char_set")
-
-
-        # Test the different char sets and different plaintexts
-        for char_set, plaintext in [(x, y) for x in character_sets for y in testing_plaintexts]:
-
-            # The name of the character set (to print out during errors)
-            char_set_name = char_set
-
-            # If char_set is an alphabet, then change value to size of the alphabet
-            if char_set in misc.ALPHABETS:
-                char_set = misc.CHAR_SET_TO_SIZE.get(char_set)
-
-
-            # If needs english, then don't test
-            try:                                                      # ciphers that don't need english raise exception
-                if eval(decrypt_cipher + ".needs_english") == True:
+    # Figure out how many tests will be run
+    total_tests = 0
+    misc.disable_print()
+    for decrypt_cipher in Cipher.DECRYPTION_SET:
+        # Figure out whether to use alphabet or encoding scheme
+        if eval("{}.{}.CHAR_SET".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) == "alphabet":
+            char_sets = Cipher.ALPHABETS
+        else:
+            char_sets = Cipher.ENCODING_SCHEMES
+        for char_set, plaintext, mode_of_op in [(x, y, z) for x in char_sets
+                                                          for y in testing_plaintexts
+                                                          for z in Cipher.MODES_OF_OPERATION]:
+            # If doesn't use mode of operation, then just continue if the mode has already been tested
+            if eval("{}.{}.IS_BLOCK_CIPHER".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) is False:
+                # If has already been run once (past the "ecb", which is the first choice), then skip
+                if mode_of_op != "ecb":
                     continue
-            except:                                                   # Does not require english, pass
-                pass
+            # If requires english, then skip the short 10 length one
+            if eval("{}.{}.NEEDS_ENGLISH".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) is True \
+                                                                                               and len(plaintext) < 100:
+                continue
 
-
-            # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext
-            # alphabet is smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to
-            # decrypt correctly. So switch to use the plaintext's alphabet for encryption, and inform the user
-            exec("from Cryptography.Decryption import " + decrypt_cipher)
-            try:                                                           # Non restricted ciphers fail "try" statement
-                restrict = eval(decrypt_cipher                             # Ciphertext alphabet restricted
-                                           + ".ciphertext_alphabet_restricted")
-                if restrict == True:                                       # Restrict by using plaintext's alphabet.
-                    chosen_alphabet = char_set_name
-                    true_alphabet = misc.alphabet_of(plaintext)
-                    if char_set < misc.CHAR_SET_TO_SIZE.get(true_alphabet):
-                        print("The chosen alphabet for encryption ({}) is insufficient for the alphabet that the"
-                              + "plaintext is in. \nTherefore, the alphabet for encryption is switched to: {}."
-                              .format(chosen_alphabet, true_alphabet))
-                        char_set = misc.CHAR_SET_TO_SIZE.get(true_alphabet)
-            except Exception:                                              # Ciphertext alphabet not restricted. Pass
-                pass
+            # ONE TEST IS RUN HERE
+            total_tests += 1
+    misc.enable_print()
 
 
 
 
-            # Call decryption_cipher's testing_execute()
-            try:
-                exec(decrypt_cipher + ".testing_execute(encrypt_cipher, decrypt_cipher, "
-                                                   "plaintext, \"Doesn't matter\", "
-                                                   "encrypt_key, char_set, \"Resources/Temp\")")
-            except:
-                incorrect_ciphers.append(decrypt_cipher + " (F) " + char_set_name + " " + str(len(plaintext)) )
 
 
 
-            # Open up Resources/Temp to determine if the encryption and decryption worked (on second line)
-            try:
-                my_file = open("Resources/Temp", "r", encoding="utf-8")
-                first_line = my_file.readline()
-                second_line = my_file.readline()
-                if second_line[0:9] == "INCORRECT":
-                    incorrect_ciphers.append(decrypt_cipher + " (I) " + char_set_name + " " + str(len(plaintext)))
-                my_file.close()
+    # A counter for the number of tests run
+    tests_run = 0
 
-                # Delete the file
-                os.remove("Resources/Temp")
-            except:
+    # For all ciphers, test them
+    for decrypt_cipher in Cipher.DECRYPTION_SET:
+
+        # Figure out whether to use alphabet or encoding scheme
+        if eval("{}.{}.CHAR_SET".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) == "alphabet":
+            char_sets = Cipher.ALPHABETS
+        else:
+            char_sets = Cipher.ENCODING_SCHEMES
+
+        # Test all the different character sets, mode of operation, and different plaintexts
+        for char_set, plaintext, mode_of_op in [(x, y, z) for x in char_sets
+                                                          for y in testing_plaintexts
+                                                          for z in Cipher.MODES_OF_OPERATION]:
+
+            # If doesn't use mode of operation, then just continue if the mode has already been tested
+            if eval("{}.{}.IS_BLOCK_CIPHER".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) is False:
+                # If has already been run once (past the "ecb", which is the first choice), then skip
+                if mode_of_op != "ecb":
+                    continue
+                # Also, set the name of "ecb" to empty space "   "
+                mode_of_op = ""
+
+            # If requires english, then skip the short 10 length one
+            if eval("{}.{}.NEEDS_ENGLISH".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) is True \
+                                                                                               and len(plaintext) < 100:
                 continue
 
 
+            # Set the global vars up above in preparation for _get_testing_info().
+            testing_encoding_scheme   = char_set
+            testing_alphabet          = char_set
+            testing_mode_of_operation = mode_of_op
+            testing_plaintext_source  = "Resources/" + plaintext
+            testing_key_size          = eval("{}.{}.AUTO_TEST_KEY_SIZE".format(decrypt_cipher,
+                                                                          misc.get_class_name(decrypt_cipher)))
+            testing_block_size        = eval("{}.{}.AUTO_TEST_BLOCK_SIZE".format(decrypt_cipher,
+                                                                              misc.get_class_name(decrypt_cipher)))
+
+            # Create the cipher object and test it
+            misc.disable_print()                                                             # Temporarily block print
+            cipher_obj = _get_testing_info(decrypt_cipher)
 
 
-    # Print out incorrect ciphers (may be duplicates)
-    incorrect_ciphers.sort()
-    print()
-    print(
-        "An (F) indicates that the decryption failed to run correctly (some error raised during decryption).")
-    print("An (I) indicates that the decryption produced an incorrect result (not the original plaintext)")
-    print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢:\n", end="")
-    if len(incorrect_ciphers) == 0: incorrect_ciphers.append("NONE")
-    print(*incorrect_ciphers, sep="\n")
-    print()
+            # Attempt to run the test. If encryption and decryption fails, print (f). If success, check correctness
+            try:
 
-    # ADD HERE. Undo the temporary key size changes
-    exec("rsa.key_bits = rsa_original")
+                # Increase test counter
+                tests_run += 1
 
-
-
-
-
-# This function automatically checks all the ciphers (may take some time) Needs to be as optimized as possible
-def automated_testing_old():
-    """
-    This will test all of the Decryption ciphers by:
-        1: Encrypt with the corresponding encryption cipher
-        2: Decrypt with the Decryption cipher
-        3: Checking the decrypted text against the original plaintext
-
-    Run tests with all Decryption ciphers, ALPHABETS/encoding_schemes, and different* plaintext lengths (for blocks),
-    and also plaintexts of different character sets.
-    While testing is conducted, print out the results.
-    *In general, use short text so that the test doesn't take too long.
-
-    :return: None
-    """
-
-    # Random characters. Use this for testing.
-    plaintext_sample = """
-    extremely concerned, my dearest friend, for the disturbances that have happened in your family. I know how it must hurt
-    you to become the subject of the public ﾶ talk: and yet, upon an occasion so generally known, it is impossible but that
-    whatever relates to a young  treatment they gave him when he went ん And yet that other, although in unbosoming himself
-    to a select friend, he discovers wickedness enough to entitle him to general detestation, preserves a decency, as well
-    in his images as in his language, which is not always to be found in the works of some of the most celebrated modern
-    writers, whose subjects and characters have less warranted the liberties they have taken.
-
-    In the letters of the two ん young ladies, it is presumed, will be found not only the highest exercise of a reasonable
-    and practicable friendship, between minds endowed with the noblest principles of virtue and religion, but occasionally
-    interspersed, such delicacy of sentiments, particularly with regard to the other sex; such instances of impartiality,
-    each freely, as a fundamental principle of their friendship, blaming, praising, and setting right the other, as are
-    strongly to be recommended to the observation of the younger part (more specially) of female readers.
-    """
-
-    # ADD HERE. Use smaller key sizes on ciphers to save time (use exec to prevent conflict with same name in Encrypt)
-    exec("from Cryptography.Decryption import rsa")
-    exec("rsa_original = rsa.key_bits; rsa.key_bits = 512")
+                cipher_obj.encrypt_plaintext()
+                cipher_obj.decrypt_ciphertext()
+                misc.enable_print()                         # Enable print
+                if cipher_obj.original_plaintext != cipher_obj.plaintext:    # If incorrect, print that out
+                    incorrect_ciphers.append("{} (I) {} {} {}"
+                                             .format(decrypt_cipher, char_set, mode_of_op, len(cipher_obj.plaintext)))
+            except:                                                          # Cipher complete failure
+                incorrect_ciphers.append("{} (I) {} {} {}".format(decrypt_cipher, char_set, mode_of_op,
+                                                                  len(cipher_obj.plaintext)))
 
 
-
-    # Build up plaintext. Need different lengths and character sets
-    testing_plaintexts = [plaintext_sample[:10], plaintext_sample[:100], plaintext_sample[:1000]]
-
-    # Store incorrect ciphers here.
-    incorrect_ciphers = []
-
-    # FOR ALL DECRYPTION CIPHERS, test them
-    for decrypt_cipher in misc.DECRYPTION_SET:
-
-        # Figure out which encrypting cipher to use (same name, but without "_nokey" if that suffix exists)
-        encrypt_cipher = decrypt_cipher if decrypt_cipher.find("_nokey") == -1 else decrypt_cipher[0: -6]
-
-        # Figure out the encrypting key to use
-        encrypt_key = _obtain_encryption_key(decrypt_cipher)
-
-        # Figure out whether to use alphabet or character encoding scheme
-        exec("from Cryptography.Decryption import " + decrypt_cipher)
-        character_sets = eval(decrypt_cipher + ".char_set")
-
-        # FOR ALL THE ALPHABETS/CHARACTER_ENCODING_SCHEMES (depending on the decrypt_cipher)
-        for char_set in character_sets:
-
-            # If char_set uses alphabets, then calculate the alphabet_size
-            chosen_alphabet = ""
-            if char_set in misc.ALPHABETS:
-                chosen_alphabet = char_set
-                char_set = misc.CHAR_SET_TO_SIZE.get(chosen_alphabet)  # Get size of the alphabet
-
-            # FOR ALL OF THE PLAINTEXTS TO TEST
-            for plaintext in testing_plaintexts:
-
-                # If decrypt_cipher does not allow short texts, then skip the short texts
-                try:
-                    if eval(decrypt_cipher + ".needs_english") == True:
-                        continue
-                except Exception:                                       # Short texts allowed, do nothing
-                    pass
-
-                # Adjust the character set if necessary. Some ciphers cannot work correctly if the chosen ciphertext
-                # alphabet is smaller than the plaintext's alphabet. They require at minimum the plaintext's alphabet to
-                # decrypt correctly. So switch to use the plaintext's alphabet for encryption, and inform the user
-                exec("from Cryptography.Decryption import " + decrypt_cipher)
-                try:                                                       # Non restricted ciphers fail "try" statement
-                    restrict = eval(decrypt_cipher                         # Ciphertext alphabet restricted
-                                    + ".ciphertext_alphabet_restricted")
-                    if restrict == True:                                   # Restrict by using plaintext's alphabet.
-                        alphabet = misc.alphabet_of(plaintext)
-                        if char_set < misc.CHAR_SET_TO_SIZE.get(alphabet): # If chosen alphabet (char_set) is not enough
-
-                            print("The chosen alphabet for encryption ({}) is insufficient for the alphabet that the"
-                                  + "plaintext is in. \nTherefore, the alphabet for encryption is switched to: {}."
-                                  .format(chosen_alphabet, alphabet))
-                            char_set = misc.CHAR_SET_TO_SIZE.get(alphabet)
-                except Exception:                                          # Ciphertext alphabet not restricted. Pass
-                    pass
-
-
-
-
-                # Run the ENCRYPTION, and parse the output (may be a tuple) to get ciphertext and key
-                ciphertext  = ""     # Fill this in
-                decrypt_key = ""     # Fill this in
-                exec("from Cryptography.Encryption import " + encrypt_cipher)
-                encryption_output = eval(encrypt_cipher + ".encrypt(plaintext, encrypt_key, char_set)")   # encrypt
-
-
-                # PARSE the output of the encryption to figure out ciphertext and decrypt_key
-                if type(encryption_output) is tuple:            # If tuple, then ciphertext is 1st index
-                    ciphertext = encryption_output[0]
-
-                    if len(encryption_output) == 3:             # Len 3 indicates asym keys. Decrypt key is index 2
-                        decrypt_key = encryption_output[2]
-
-                    elif len(encryption_output) == 2:           # Len 2 indicates symm. key generated. Key is index 1
-                        decrypt_key = encryption_output[1]
-
-                else:  # Not tuple, just regular ciphertext
-                    ciphertext  = encryption_output
-                    decrypt_key = encrypt_key
-
-
-
-
-                # Run DECRYPTION, save time and decrypted text
-                try:                                                        # Run decryption
-                    decrypted = ""
-                    exec("from Cryptography.Decryption import " + decrypt_cipher)
-                    decryption_output = eval(decrypt_cipher + ".decrypt(ciphertext, decrypt_key, char_set)")
-
-                    if type(decryption_output) is tuple:                    # If tuple, then decrypted is 1st index
-                        decrypted = decryption_output[0]
-                    else:                                                   # Otherwise, decrypted is the only output
-                        decrypted = decryption_output
-
-                    # Check if the decrypted text is same as plaintext and add to graph
-                    if decrypted != plaintext:                              # When decrypt produces wrong result
-                        incorrect_ciphers.append(decrypt_cipher + " (I)")
-                except:                                                     # When decrypt not working at all
-                    incorrect_ciphers.append(decrypt_cipher + " (F)")
-                    continue
-
-
+            # Print the percentage of automated tests done
+            print("Percent done: {}{:.2%}{} \twith tests finished: {}{}/{}{}"
+                  .format("\u001b[32m", tests_run / total_tests, "\u001b[0m",
+                          "\u001b[32m",tests_run, total_tests, "\u001b[0m"))
 
     # Print out incorrect ciphers (may be duplicates)
     incorrect_ciphers.sort()
     print()
     print("An (F) indicates that the decryption failed to run correctly (some error raised during decryption).")
     print("An (I) indicates that the decryption produced an incorrect result (not the original plaintext)")
-    print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢: ", end="")
-    if len(incorrect_ciphers) == 0: incorrect_ciphers.append("NONE")
-    print(*incorrect_ciphers, sep=", ")
+    print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢:\n", end="")
+    if len(incorrect_ciphers) == 0: incorrect_ciphers.append("\u001b[32mNONE\u001b[0m")     # Colored green
+    print(*incorrect_ciphers, sep="\n")
     print()
 
-    # ADD HERE. Undo the temporary key size changes
-    exec("rsa.key_bits = rsa_original")
 
 
+    # Build up plaintext. Need different lengths and character sets. Save to Resources. Delete them at the end
+    for file_name in testing_plaintexts:
+        try:
+            os.remove("Resources/" + file_name)
+            os.remove("Resources/plaintext_sample[0")
+        except Exception:
+            pass
 
-
-
-
-
-
-
-
+    # Reset the global vars to their original values
+    testing_encoding_scheme   = original_testing_encoding_scheme
+    testing_alphabet          = original_testing_alphabet
+    testing_mode_of_operation = original_testing_mode_of_operation
+    testing_plaintext_source  = original_testing_plaintext_source
+    testing_key_size          = original_testing_key_size
+    testing_block_size        = original_testing_block_size
 
 ######################################################################################### ANCILLARY FUNCTIONS ##########
 
-# Obtain information necessary to conduct encryption and decryption
-def _get_testing_info():
 
-    # Values to return
-    encryption = ""
-    decryption = ""
-    plaintext = ""
-    output_location = ""
-    encryption_key = key                                    # Modify key as needed for the chosen cipher
-    char_set = ""                                           # num for ALPHABETS, name for encoding scheme
-
-    # Get the decryption type and the encryption type (same name as decryption but w/o "_nokey")
-    decryption = _parse_user_input()
-    if decryption is None:                # If the output (decryption) is None indicating "exit", return None, None, ...
-        return None, None, None, None, None, None
-    else:                                                     #Otherwise, proceed as necessary
-        encryption = decryption if decryption.find("_nokey") == -1 else decryption[0: -6]
-
-    # Obtain the plaintext
-    my_file = open(plaintext_source, "r", encoding="utf-8")
-    plaintext = my_file.read()
-    my_file.close()
-
-    # Create the output location for this run
-    now = datetime.datetime.now()
-    output_location = "Resources/Files_Logs/" + decryption + "_" + now.strftime("%Y-%m-%d_h%Hm%Ms%S")
-
-
-    # Get the encryption key
-    encryption_key = _obtain_encryption_key(decryption)
-
-
-    # Figure out the char_set to use
-    exec("from Cryptography.Decryption import " + decryption)
-    char_set = eval(decryption + ".char_set")                              # char_set used
-    if char_set == misc.BINARY_TO_CHAR_ENCODING_SCHEMES:                   # If encoding scheme, just return name
-        char_set = encoding_scheme
-    elif char_set == misc.ALPHABETS:                             # If alphabet, return the size of the alphabet
-        char_set = alphabet_size
-
-
-    return encryption, decryption, plaintext, output_location, encryption_key, char_set
-
-
-
-# Obtain the key to use in encryption (and maybe decryption)
-def _obtain_encryption_key(decryption_cipher):
+# This generates a cipher object for testing (takes encryption and decryption parameters from variables above)
+def _get_testing_info(decrypt_cipher:str) -> Cipher:
     """
-    Function that determines that key to use based on the decryption_cipher
+    Generate a cipher object for testing based on the testing settings variables up above.
 
-    :param decryption_cipher: (string) the name of the decryption_cipher to use
-    :return: (string) The key to use in encryption (May end up to be empty in certain cases; e.g. RSA)
+    :param decrypt_cipher: (str)           The name of the decryption cipher to use
+    :return:               (cipher.Cipher) The general object to return
     """
 
-    # Figure out the correct key to use (read key_size)
-    # "zero characters"               is an encrypting cipher that doesn't need a key input
-    # "calculated characters"         is a decrypting cipher that finds the key automatically
-    # "single character"              is a symmetric encrypting/decrypting cipher that uses a single user-entered
-    #                                 character
-    # "multiple characters"           is an symmetric encrypting/decrypting cipher that uses user-entered string
-    # "multiple generated characters" is a symmetric encrypting/decrypting cipher that uses randomly generated chars
-    exec("import Decryption." + decryption_cipher)                             # Import module to read cipher properties
-    key_size =    eval("Decryption." + decryption_cipher + ".key_size")        # The size of the key used (see notes)
-    char_set =    eval("Decryption." + decryption_cipher + ".char_set")        # char_set used
-    cipher_type = eval("Decryption." + decryption_cipher + ".cipher_type")     # Symmetric or asymmetric
+
+    # Specific variables to use during encryption/decryption. Fill in before using in construction of Cipher object
+    plaintext       = ""        # FILL IN. The plaintext, needs to be set in variable above (in source file)
+    ciphertext      = ""        # Leave empty
+    char_set        = ""        # FILL IN. Will be an alphabet or an encoding scheme, set in variable above
+    key             = ""        # FILL IN. For symmetric ciphers, automatically set. For block ciphers, is ""
+    public_key      = ""        # For asymmetric ciphers, set to ""
+    private_key     = ""        # For asymmetric ciphers, set to ""
+    block_size      = 0         # For block ciphers, automatically set by the cipher class constructor
+    key_size        = 0         # For block ciphers, automatically set by the cipher class constructor
+    mode_of_op      = ""        # FILL IN. For block ciphers, set in variable above
+    source_location = ""        # FILL IN. The source file for the data, set in variable above
+    output_location = ""        # FILL IN. The output file to store the output, automatically created
 
 
-    encryption_key = ""                          # Fill this in
+    # The class name for the specific Cipher subclass object
+    class_name = misc.get_class_name(decrypt_cipher)
 
-    if cipher_type == "symmetric":
-        if key_size ==     "zero characters":
-            encryption_key = ""
-
-        elif key_size.find("calculated characters") != -1:                                  # If calculated, read on
-            if key_size[22:] == "(single character)": encryption_key = key[0]
-            elif key_size[22:] == "(multiple characters)": encryption_key = key
-            elif key_size[22:] == "(multiple generated characters)": encryption_key = ""
-
-        elif key_size ==   "single character":
-            encryption_key = key[0]
-
-        elif key_size ==   "multiple characters":
-            encryption_key = key
-
-        elif key_size ==   "multiple generated characters":                                 # Key is generated for us
-            encryption_key = ""
-
-
-    elif cipher_type == "asymmetric":                                                       # Key is generated for us
-        encryption_key = ""
-
-
-    return encryption_key
-
-
-# Obtain commands from the user
-def _parse_user_input():
-        """
-        This prompts the user and reads user info. The user may choose to change the default ciphertext location by
-        entering "set " followed by the file of the ciphertext. Otherwise, the user specifies a decryption method to
-        test
-
-        :return: (string) the decryption method to test
-        """
-
-        # Prompt the user for a command
-        statement = input("Enter a testing mode command: "
-                          + "\u001b[32m" + "test " + "\u001b[0m")  # test colored green
-
-        # Loop until the user enters a legitimate decryption type
-        while True:
-
-                # split the statement into an array of words
-                command = statement.split()
-
-                # If empty, continue
-                if statement == "":
-                    statement = input("No command entered! Enter a testing mode command: "
-                                        + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
-                    continue
-
-                # If automated, then run that, and take next command
-                if statement == "-a":
-                    automated_testing()
-                    statement = input("Automated tests done! Enter a testing mode command: "
-                                        + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
-                    continue
-
-                # If "exit", then return None:
-                if statement == "-e":
-                    return None
-
-                # Check if the user decides to clear logs
-                if command[0] == "-c":
-
-                    for file in os.listdir("Resources/Files_Logs"):                  # delete files in /Files_Logs
-                        os.unlink("Resources/Files_Logs/" + file)
-
-                    statement = input("Testing logs cleared! Enter a testing mode command: "
-                                        + "\u001b[32m" + "test " + "\u001b[0m")                   # test colored green
-                    continue
+    # Fill in the immediate and obvious variables
+    source_location = testing_plaintext_source                                                     # source_location
+    with open(source_location, "r", encoding="utf-8") as source_file:
+        data = source_file.read()
+    output_location = "Resources/Files_Logs/" + class_name + "_" \
+                      + datetime.datetime.now().strftime("%Y-%m-%d_h%Hm%Ms%S")                     # output_location
+    mode_of_op = testing_mode_of_operation                                                         # mode_of_op
+    plaintext = data                                                                               # plaintext
 
 
 
-                # Check that the command is a legitimate decryption type. If so, break out of loop
-                if statement in misc.DECRYPTION_SET:
-                    break
+    # Set a key for non-block alphabet ciphers
+    if eval("{}.{}.CHAR_SET".format(decrypt_cipher, class_name)) == "alphabet":
+        key_type = eval("{}.{}.KEY_TYPE".format(decrypt_cipher, class_name))
+        if key_type.find("single character") != -1:           # Encryption uses a single character
+            key = testing_key[0]
+        elif key_type.find("multiple characters") != -1:      # Encryption uses multiple characters
+            key = testing_key
+        else:                                                 # Encryption generates its own key
+            key = ""
+    else:                                                     # Else, no need to manually set the key
+        key = ""
 
-                # Prompt the user for a command again
-                statement = input("Invalid command (" + command[0] + ")! Enter a testing mode command: "
-                                    + "\u001b[32m" + "test " + "\u001b[0m")  # test colored green
 
-        return statement
 
+    #  Set the character set
+    if eval("{}.{}.CHAR_SET".format(decrypt_cipher, class_name)) == "alphabet":
+        char_set = testing_alphabet
+        char_set = misc.adjust_alphabet(data, char_set, "alphabet",                  # Adjust alphabet if necessary
+                                        eval("{}.{}.RESTRICT_ALPHABET".format(decrypt_cipher, class_name)))
+    else:
+        char_set = testing_encoding_scheme
+
+
+
+    # Set the key and block size
+    key_size = testing_key_size
+    block_size = eval("{}.{}.TEST_BLOCK_SIZE".format(decrypt_cipher, class_name))
+
+
+
+    # Create the Cipher object
+    cipher_obj = eval("{}.{}(plaintext, ciphertext, char_set, mode_of_op, key, public_key, private_key, "
+                      "      block_size, key_size, source_location, output_location)"
+                      .format(decrypt_cipher, class_name))
+
+
+    return cipher_obj
+
+
+
+# This writes to a file with the statistics about the encryption and decryption
+def _conduct_test_and_write_stats(cipher_obj:Cipher) -> bool:
+    """
+    The cipher object to run encryption and then decryption. Write to a file detailing the statistics of encryption
+    and decryption.
+
+    :param cipher_obj: (_cipher.Cipher) The cipher object to encrypt and decrypt with
+    :return:           (bool)           THe success or failure of the encryption and decryption
+    """
+
+
+
+    # Run the encryption, and then run the decryption
+    cipher_obj.encrypt_plaintext()
+    cipher_obj.decrypt_ciphertext()
+
+
+    # Generate file name and write to that file containing the statistics of the encryption and decryption
+    cipher_name = str(type(cipher_obj))
+    cipher_name = cipher_name[cipher_name.rfind(".") + 1: -2]
+    stats_file_path = "Resources/Files_Logs/{}__{}"\
+                      .format(cipher_name, datetime.datetime.now().strftime("%Y-%m-%d_h%Hm%Ms%S"))
+    cipher_obj.write_statistics(stats_file_path)
+
+
+    # Return the correctness of the encryption and decryption
+    return cipher_obj.original_plaintext == cipher_obj.plaintext
 
 
 
