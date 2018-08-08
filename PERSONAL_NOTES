@@ -12,6 +12,9 @@ ALGORITHM GOALS/FIXES:
 
 
 GENERAL GOALS/FIXES:
+
+    RSA only works part of time. Blocks are sometimes not done correctly.
+    Create own ord() and chr() functions that automatically adjusts for surrogates
     Add default keys for everything
     Refine source_location
     Fix formatting of relevant files (probably using .format())
