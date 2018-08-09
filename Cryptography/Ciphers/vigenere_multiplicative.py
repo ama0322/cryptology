@@ -40,7 +40,11 @@ class VigenereMultiplicative(Cipher):
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
     def encrypt_plaintext(self) -> None:
         """
-        This encrypts with a rotation cipher (using modular addition) and fills in self.ciphertext
+        This follows a similar format to vigenere, but uses modular multiplication instead of modular addition.
+        However, because modular multiplication is not reversible like modular addition in a very straightforward
+        way, I must store the number of unicode values that give the same result as the plaintext character unicode
+        value when the modular multiplication is done. This is done so that the original plaintext character can be
+        calculated without confusing it for other unicode values that just happen to coincide.
 
         :return:          (None)
         """
@@ -118,7 +122,11 @@ class VigenereMultiplicative(Cipher):
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
     def decrypt_ciphertext(self) -> None:
         """
-        This decrypts with a rotation cipher (using modular subtraction)
+        In order to reverse the modular multiplication, I have to test unicode values by applying the modular
+        multiplication with the key's unicode value to see if it matches the ciphertext value. However, because there
+        may be coincidences in which unicode values which are not the original plaintext character's unicode value, I
+        must take into account the number of overlaps, which was calculated during encryption. So, when I test values
+        up from 0, I can stop when I reach the number of overlaps, indicating that I had reached the original value.
 
         :return:           (None)
         """

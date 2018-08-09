@@ -41,7 +41,8 @@ class Rotation(Cipher):
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
     def encrypt_plaintext(self) -> None:
         """
-        This encrypts with a rotation cipher (using modular addition) and fills in self.ciphertext
+        This gets the unicode value of the key, and modularly adds it to he unicode value of the plaintext character.
+        This is done with all the characters in the plaintext
 
         :return:          (None)
         """
@@ -90,7 +91,8 @@ class Rotation(Cipher):
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
     def decrypt_ciphertext(self) -> None:
         """
-        This decrypts with a rotation cipher (using modular subtraction)
+        This modularly subtracts the key's unicode value from the ciphertext character's unicode value to get the
+        plaintext character.
 
         :return:           (None)
         """

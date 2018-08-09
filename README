@@ -108,8 +108,9 @@ PROJECT STRUCTURE (Cryptography)
                                             performance
             -database.py            - this file holds everything necessary for handling the encryption/decryption of
                                             databases.
-            -package Decryption     - this package holds all files necessary to perform a decryption
-            -package Encryption     - this package holds all files necessary to perform an encryption
+            -package Ciphers        - this package holds all the different cipher objects, each one containing a method
+                                            encryption and decryption. It also contains the .py file for the superclass
+                                            of all the different cipher objects.
 
 
         The five folders are:
@@ -158,6 +159,27 @@ MISC.PY
 TEST.PY
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########## OUTDATED BELOW ##########
 
 ENCRYPTION
 

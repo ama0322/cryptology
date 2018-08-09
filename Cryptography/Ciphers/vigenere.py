@@ -40,7 +40,9 @@ class Vigenere(Cipher):
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
     def encrypt_plaintext(self) -> None:
         """
-        This encrypts with a rotation cipher (using modular addition) and fills in self.ciphertext
+        This works like rotation, but cycles the letters of the key used. So, the first character is encrypted with
+        the first letter, the second character with the second letter, and so on. When we run out of characters in
+        the key, just start the cycle from the first key again.
 
         :return:          (None)
         """
@@ -94,7 +96,7 @@ class Vigenere(Cipher):
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
     def decrypt_ciphertext(self) -> None:
         """
-        This decrypts with a rotation cipher (using modular subtraction)
+        This does the same thing as encrypt, but modularly subtracts to do the reversal.
 
         :return:           (None)
         """

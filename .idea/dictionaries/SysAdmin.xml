@@ -21,10 +21,12 @@
       <w>hexstring</w>
       <w>keychar</w>
       <w>keysize</w>
+      <w>modularly</w>
       <w>ngram</w>
       <w>ngrams</w>
       <w>nokey</w>
       <w>openable</w>
+      <w>pcbc</w>
       <w>plaintexts</w>
       <w>primality</w>
       <w>straighforward</w>

@@ -45,7 +45,7 @@ class RotationUnknown(Rotation):
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
     def encrypt_plaintext(self) -> None:
         """
-        This encrypts with a rotation cipher (using modular addition) and fills in self.ciphertext
+        This is the same thing as rotation's encrypt.
 
         :return:          (None)
         """
@@ -62,7 +62,9 @@ class RotationUnknown(Rotation):
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
     def decrypt_ciphertext(self) -> None:
         """
-        This decrypts with a rotation cipher (using modular subtraction)
+        In order to decrypt, decrypt with rotation with random unicode values to see if the result is in English. For
+        this to work, the plaintext must be in mostly English. The "random" unicode values are tested starting from 0 to
+        the maximum unicode value.
 
         :return:           (None)
         """

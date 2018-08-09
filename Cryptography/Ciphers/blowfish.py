@@ -333,7 +333,9 @@ class Blowfish(Cipher):
     @misc.store_time_in("self.encrypt_time_overall")
     def encrypt_plaintext(self) -> None:
         """
-        This encrypts with a blowfish cipher
+        This encrypts with a blowfish cipher. Like all block ciphers, the plaintext is changed into 64-bit integer
+        blocks. Then, the key schedule is run with a randomly generated key, which sets the "true" key, the p_array and
+        s_boxes static variables in the _blowfish_on_block() function.
 
         :return:          (None)
         """
@@ -386,13 +388,20 @@ class Blowfish(Cipher):
 
 
 
+
+
+
+
+
     # Algorithm to decrypt ciphertext
     @misc.get_time_for_algorithm("self.decrypt_time_for_algorithm", "self.decrypt_time_overall",
                                  "self.decrypt_time_for_key")
     @misc.store_time_in("self.decrypt_time_overall")
     def decrypt_ciphertext(self) -> None:
         """
-        This decrypts with a blowfish cipher
+        As with all block ciphers, the ciphertext is split into 64-bit integer blocks. This method needs a given key,
+        which is read to be used for the key schedule. Blowfish decryption is exactly the same as the encryption,
+        except that the p_array must be reversed.
 
         :return:           (None)
         """

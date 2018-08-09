@@ -54,7 +54,9 @@ class Rsa(Cipher):
     @misc.store_time_in("self.encrypt_time_overall")
     def encrypt_plaintext(self) -> None:
         """
-        This encrypts with an rsa cipher
+        This encrypts with an rsa cipher. The user can choose to either provide a public key, in which case that key
+        will be used to encrypt, or to leave the public key blank, in which case a pair of asymmetric keys will be
+        generated. In either case, the exponent for encryption is saved into the _rsa_on_blocK() as a static variable.
 
         :return:          (None)
         """
@@ -116,7 +118,8 @@ class Rsa(Cipher):
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
     def decrypt_ciphertext(self) -> None:
         """
-        This decrypts with an rsa cipher
+        This method requires that the self object be given a private key. This private key is read for its exponent,
+        which is set as a static variable in the class function _rsa_on_block().
 
         :return:           (None)
         """
