@@ -16,7 +16,6 @@ import                           os       # to delete files in decrypted and enc
 
 
 
-
 last = "" # Store the path to the last created encrypted/decrypted file
 
 

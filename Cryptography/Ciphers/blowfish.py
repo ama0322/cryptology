@@ -317,6 +317,10 @@ class Blowfish(Cipher):
     def __init__(self, plaintext:str, ciphertext:str, char_set:str, mode_of_op:str, key:str, public_key:str,
                     private_key:str, block_size:int, key_size:int, source_location:str, output_location:str) -> None:
 
+        # If the given key_size is impossible, use the default
+        if key_size < Blowfish.MIN_KEY_SIZE:
+            key_size = Blowfish.DEFAULT_KEY_SIZE
+
         super().__init__(plaintext,   ciphertext,     char_set,     mode_of_op,     key,     "",
                     "",              64,             key_size,     source_location,     output_location    )
 
@@ -350,9 +354,11 @@ class Blowfish(Cipher):
 
 
         # Generate a key and run the key_schedule
-        key = secrets.randbits(key_size) ^ (1 << (key_size - 1))                # Generate key with right size
-        key = misc.int_to_chars_encoding_scheme(key, encoding)                  # Turn key to str, and set in self
-        self._read_blowfish_key_and_run_key_schedule(key, encoding, mode_of_op) # Run key schedule
+        key = secrets.randbits(key_size) ^ (1 << (key_size - 1))                       # Generate key with right size
+        key = misc.int_to_chars_encoding_scheme(key, encoding)                         # Turn key to str
+        self._read_blowfish_key_and_run_key_schedule(False, key, encoding, mode_of_op) # Run key schedule
+
+
 
 
 
@@ -406,10 +412,11 @@ class Blowfish(Cipher):
 
 
 
-
         # Key schedule preparation. Same as encryption, but reverse p_array
-        self._read_blowfish_key_and_run_key_schedule(key, encoding, mode_of_op)   # Run key schedule
-        Blowfish._blowfish_on_block.p_array.reverse()                             # Reverse the p_array
+        self._read_blowfish_key_and_run_key_schedule(True, key, encoding, mode_of_op)   # Run key schedule
+        Blowfish._blowfish_on_block.p_array.reverse()                                   # Reverse the p_array
+
+
 
 
 
@@ -417,7 +424,6 @@ class Blowfish(Cipher):
         plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}(self, Blowfish._blowfish_on_block, "
                                                   "ciphertext_blocks, key, \"\")"
                                                   .format(self.mode_of_op))
-
 
 
 
@@ -437,6 +443,10 @@ class Blowfish(Cipher):
 
         # Return nothing
         return None
+
+
+
+
 
 
     # Write to the file about the statistics of the file (Call super-method)
@@ -586,22 +596,24 @@ class Blowfish(Cipher):
 
 
     # Reads key (accounts for mode of operation) and runs the key schedule, which sets static_vars in _blowfish_on_block
-    def _read_blowfish_key_and_run_key_schedule(self, key:str, encoding:str, mode_of_op:str) -> None:
+    def _read_blowfish_key_and_run_key_schedule(self, is_decrypt:bool, key:str, encoding:str, mode_of_op:str) -> None:
         """
     	Reads the key. Skips over IV portion of the key, if it exists. Then, it runs the key schedule
 
+        :param is_decrypt (bool) If in decrypting mode
         :param key:       (str) The key to read
         :param encoding:  (str) The character encoding used
         :param mode_of_op (str) The name of the mode of operation to use
     	:return:          (str) The new key, adjusted for mode_of_operation
     	"""
 
-        # If in a mode that uses IV—everything other than ECB—then cut out the part that uses the IV.
-        if mode_of_op != "ecb":
+
+        # If encoding and if in a mode that uses IV—everything other than ECB—then cut out the part that uses the IV.
+        if is_decrypt is True and mode_of_op != "ecb":
 
             # Cut out the part of the key that is relevant to the IV
-            block_bits = 0xFFFFFFFF00000000                                               # 1 block size (64 bits)
-            len_to_skip = len(misc.int_to_chars_encoding_scheme(block_bits, encoding))    # Find how much to skip
+
+            len_to_skip = len(misc.int_to_chars_encoding_scheme_pad(1, encoding, self.DEFAULT_BLOCK_SIZE))
             key = key[len_to_skip:]
 
         # Decode the key to get the actual blowfish int key

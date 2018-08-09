@@ -21,9 +21,9 @@ class Rsa(Cipher):
     MAX_KEY_SIZE         = float("inf")
     AUTO_TEST_KEY_SIZE   = 256
 
-    DEFAULT_BLOCK_SIZE   = DEFAULT_KEY_SIZE - 42 # Block_size is key_size - 42
-    MIN_BLOCKS_SIZE      = MIN_KEY_SIZE - 42     # Block_size is key_size - 42
-    MAX_BLOCK_SIZE       = float("inf")          # Block_size is key_size - 42
+    DEFAULT_BLOCK_SIZE   = DEFAULT_KEY_SIZE - 42   # Block_size is key_size - 42
+    MIN_BLOCK_SIZE       = MIN_KEY_SIZE - 42       # Block_size is key_size - 42
+    MAX_BLOCK_SIZE       = float("inf")            # Block_size is key_size - 42
     AUTO_TEST_BLOCK_SIZE = AUTO_TEST_KEY_SIZE - 42
 
     # Restrictions
@@ -38,8 +38,12 @@ class Rsa(Cipher):
     def __init__(self, plaintext:str, ciphertext:str, char_set:str, mode_of_op:str, key:str, public_key:str,
                     private_key:str, block_size:int, key_size:int, source_location:str, output_location:str) -> None:
 
+        # If the key_size is impossible, then use the default
+        if key_size < Rsa.MIN_KEY_SIZE:
+            key_size = Rsa.DEFAULT_KEY_SIZE
+
         super().__init__(plaintext,   ciphertext,     char_set,     mode_of_op,     "",      public_key,
-                    private_key,     key_size,     key_size,     source_location,     output_location    )
+                    private_key,     key_size - 42,  key_size,     source_location,     output_location    )
 
 
 
@@ -76,8 +80,8 @@ class Rsa(Cipher):
 
 
         # Read/generate key
-        public_key, private_key = self._read_public_or_private_key(public_key, private_key, key_size,
-                                                                                                   encoding, mode_of_op)
+        public_key, private_key = self._read_public_or_private_key(False, public_key, private_key, key_size, block_size,
+                                                                                    encoding, mode_of_op)
 
 
 
@@ -137,8 +141,8 @@ class Rsa(Cipher):
 
 
         # Read the private key
-        public_key, private_key = self._read_public_or_private_key(public_key, private_key, key_size, encoding,
-                                                                 mode_of_op)
+        public_key, private_key = self._read_public_or_private_key(True, public_key, private_key, key_size,
+                                                                   block_size, encoding, mode_of_op)
 
 
 
@@ -215,19 +219,21 @@ class Rsa(Cipher):
 
 
     # Reads key (accounts for mode of op) and runs the key gen, which sets static_vars in _blowfish_on_block
-    def _read_public_or_private_key(self, public_key:str, private_key:str, key_size:int, encoding:str,
-                                    mode_of_op:str) -> (str, str):
+    def _read_public_or_private_key(self, is_decrypt:bool, public_key:str, private_key:str, key_size:int,
+                                    block_size:int, encoding:str, mode_of_op:str) -> (str, str):
         """
     	Reads the key. If it is a public key and is empty (""), then generate own pair of public and private keys.
     	Otherwise, read the key and set the exponent in _rsa_on_block().
 
-        :param public_key:  (str) The public key to read. May be empty during encryption
-        :param private_key: (str) The private key to read. Is NEVER empty during decryption
-        :param key_size     (int) The size of the key for generation (if needed)
-        :param encoding:    (str) The name of the encoding scheme used
-        :param mode_of_op:  (str) The name of the mode operation to be used
-    	:return:            (str) The public key
-    	:return:            (str) The private key
+        :param is_decrypt   (bool) If in decrypt mode
+        :param public_key:  (str)  The public key to read. May be empty during encryption
+        :param private_key: (str)  The private key to read. Is NEVER empty during decryption
+        :param key_size     (int)  The size of the key for generation (if needed)
+        :param block_size   (int)  The size of the block (for reading IV's)
+        :param encoding:    (str)  The name of the encoding scheme used
+        :param mode_of_op:  (str)  The name of the mode operation to be used
+    	:return:            (str)  The public key
+    	:return:            (str)  The private key
     	"""
 
 
@@ -236,6 +242,7 @@ class Rsa(Cipher):
 
             # Create and return the public and private keys
             public_key, private_key = self._generate_public_and_private_keys(key_size, encoding)
+
 
 
 
@@ -249,13 +256,11 @@ class Rsa(Cipher):
                 key = public_key
 
             # If in a mode that uses IV—everything other than ECB—then cut out the part that uses the IV.
-            if mode_of_op != "ecb":
+            if is_decrypt is True and mode_of_op != "ecb":
 
                 # Cut out the part of the key that is relevant to the IV
-                block_bits = 1 << (self.key_size - 1)  # Get key_size bits
-                len_to_skip = len(misc.int_to_chars_encoding_scheme(block_bits, self.char_set)) # Find how much to skip
+                len_to_skip = len(misc.int_to_chars_encoding_scheme_pad(1, encoding, block_size))
                 key = key[len_to_skip:]
-
 
 
             # Decode the key to format: "RSA (character length of e or d) (e or d) n"

@@ -13,13 +13,13 @@ import                                   os                # for deleting files
 testing_plaintext_source                 = "Resources/Library/Eleonora"
 
 testing_key                              = "This is a key for testing"
-testing_key_size                         = 2048
+testing_key_size                         = 0
 testing_block_size                       = 0
 
-testing_encoding_scheme                  = "base64"
+testing_encoding_scheme                  = "extended_ascii"
 testing_alphabet                         = "ascii"
 
-testing_mode_of_operation                = "ecb"
+testing_mode_of_operation                = "cbc"
 
 
 

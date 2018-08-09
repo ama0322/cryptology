@@ -559,9 +559,11 @@ def int_to_chars_encoding_scheme_pad(number:int, encoding:str, key_size:int) -> 
         # Turn the integer into a string with binary representation. Get rid of leading "0b"
         number = bin(number)[2:]
 
-        # Pad the front if necessary (all the way up to key_size)
+        # Pad the front if necessary (all the way up to key_size and divisible by 8)
         if len(number) < key_size:
             number = (key_size - len(number)) * "0" + number
+        if len(number) % 8 != 0:
+            number = (8 - (len(number) % 8)) * "0" + number
 
         # Read bits 8 at a time. Interpret those 8 bits as extended_ascii(unicode) and add to encoded
         while number != "":
@@ -1380,7 +1382,7 @@ def is_english_n_grams(data:str) ->(bool, float):
 
 # ECB mode. Just a straightforward encryption on each block. Nothing special
 def encrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
-                                                                                         key_two:str) -> (list, str):
+                                                                        key_two:str) -> (list, str, str):
     """
     This runs an encryption in ECB mode.
 
@@ -1391,6 +1393,7 @@ def encrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
     :param key_two           (str)      Another key to append to (Probably the private_key)
     :return:                 (list)     The encrypted ciphertext_blocks
     :return:                 (str)      The new key
+    :return:                 (str)      The new private key, if it exists
     """
 
 
@@ -1401,7 +1404,7 @@ def encrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
     # Apply the block cipher on each plaintext block to get the ciphertext block
     for i in range(0, len(plaintext_blocks)):
         ciphertext_blocks[i] = algorithm(plaintext_blocks[i])
-        if i % utf_8_to_int_blocks.update_interval == 0 or i == (len(plaintext_blocks) - 1):
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(plaintext_blocks) - 1):
             print("Encryption percent done: {}{:.2%}{} with {} characters"
                   .format("\u001b[32m",
                           i / len(plaintext_blocks),
@@ -1416,7 +1419,7 @@ def encrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 # ECB mode. Straightforward decryption on each block. Nothing special
 def decrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
-                                                                                          key_two:str) -> (list, str):
+                                                                    key_two:str) -> (list, str, str):
     """
     This runs a decryption in ECB mode.
 
@@ -1427,6 +1430,7 @@ def decrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
     :param key_two:           (str)      Just for consistency's sake. Do nothing with this
     :return:                  (list)     The decrypted ciphertext_blocks
     :return:                  (str)      The key that was used
+    :return:                  (str)      The private key that was used (if it exists)
     """
 
 
@@ -1438,13 +1442,12 @@ def decrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
     # Apply the block algorithm on each ciphertext block to get the plaintext block
     for i in range(0, len(ciphertext_blocks)):
         plaintext_blocks[i] = algorithm(ciphertext_blocks[i])
-        if i % utf_8_to_int_blocks.update_interval == 0 or i == (len(ciphertext_blocks) - 1):
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(ciphertext_blocks) - 1):
             print("Decryption percent done: {}{:.2%}{} with {} characters"
                   .format("\u001b[32m",
                           i / len(ciphertext_blocks),
                           "\u001b[0m",
-                          "{:,}".format(int(safe_div(i,
-                                                     (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
+                          "{:,}".format(int(safe_div(i, (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
 
 
     # Return
@@ -1452,8 +1455,112 @@ def decrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
 
 
 
+# CBC mode. XOR IV with first block and then encrypt. Successive blocks are XOR'd with previous encrypted block
+def encrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+                                                                key_two:str) ->(list, str, str):
+    """
+    CBC mode. XOR IV with first block and then encrypt. Successive blocks are XOR'd with previous encrypted block.
+    Also, prepend keys with the character-encoded IV
+
+    :param cipher_obj:       (Cipher)   The cipher object to get properties
+    :param algorithm:        (Callable) The algorithm to use
+    :param plaintext_blocks: (list)     The plaintext int blocks to encrypt
+    :param key_one:          (str)      The key to prepend IV with
+    :param key_two:          (str)      Another key to prepend IV with
+    :return:                 (list)     The encrypted int block
+    :return:                 (str)      The IV-prepended key
+    :return:                 (str)      IV-prepended private key, if it exists
+    """
 
 
+    # Important instance vars for encryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the ciphertext blocks here
+    ciphertext_blocks = [0] * len(plaintext_blocks)
+
+
+    # Generate an IV (and prepend it to keys)
+    iv = secrets.randbits(block_size) ^ (1 << (block_size - 1))
+    key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
+    key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
+
+
+    # XOR the first block with the IV. Save into ciphertext_blocks
+    ciphertext_blocks[0] = algorithm( iv ^ plaintext_blocks[0] )
+
+
+
+    # For all other blocks, XOR with previous encrypted block before applying algorithm
+    for i in range(1, len(plaintext_blocks)):
+        ciphertext_blocks[i] = algorithm( ciphertext_blocks[i - 1] ^ plaintext_blocks[i] )
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(plaintext_blocks) - 1):
+            print("Encryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(plaintext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(plaintext_blocks) - 1)) * len(cipher_obj.plaintext)))))
+
+
+    # Return ciphertext_blocks and the new keys
+    return ciphertext_blocks, key_one, key_two
+
+
+
+# CBC mode. Decrypt with CBC
+def decrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+                                                                key_two:str) -> (list, str, str):
+    """
+    Decrypt with CBC. Reverse what the encrypt did
+
+    :param cipher_obj:        (Cipher)   The cipher object to get instance vars from
+    :param algorithm:         (Callable) The algorithm to decrypt a block
+    :param ciphertext_blocks: (list)     The encrypted integer blocks
+    :param key_one:           (str)      The key to read IV from
+    :param key_two:           (str)      Do nothing with this
+    :return:                  (list)     The decrypted integer blocks
+    :return:                  (str)      The symmetric/public key, not really used by caller
+    :return:                  (str)      The private key, not really used by caller
+    """
+
+    # Important instance vars for decryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the plaintext blocks here
+    plaintext_blocks = [0] * len(ciphertext_blocks)
+
+
+    # Read the IV. Generate random bits, and see how many characters to read
+    iv_len = len(int_to_chars_encoding_scheme_pad(1, encoding, block_size))   # Encode block_size bits and get its len
+    iv = chars_to_int_decoding_scheme(key_one[0 : iv_len], encoding)          # Get the integer form of the iv
+
+
+
+
+    # Call algorithm on first ciphertext_block and XOR with iv
+    plaintext_blocks[0] = algorithm(ciphertext_blocks[0]) ^ iv
+
+
+
+    # For all successive blocks, call algorithm on ciphertext_block and XOR with the previous ciphertext_block
+    for i in range(1, len(ciphertext_blocks)):
+        plaintext_blocks[i] = algorithm(ciphertext_blocks[i]) ^ ciphertext_blocks[i - 1]
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(ciphertext_blocks) - 1):
+            print("Decryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(ciphertext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
+
+
+    # Return
+    return plaintext_blocks, key_one, key_two
 
 
 

@@ -18,7 +18,7 @@ class Cipher(ABC):
 
     ENCODING_SCHEMES = {"base16":16, "base32":32, "base64":64, "base85":85, "extended_ascii":256, "base4096":4096}
 
-    MODES_OF_OPERATION = ["ecb"]
+    MODES_OF_OPERATION = ["ecb", "cbc"]
 
     # Cipher info of the class of the particular instantiation (overridden when specific cipher object is created):
     CIPHER_NAME         = ""
@@ -359,7 +359,8 @@ class Cipher(ABC):
         lines.append(" ")
         lines.append(" ")
         lines.append("Ciphertext: ")
-        if len(self.ciphertext) < 100000:
+        length = len(self.ciphertext)
+        if len(self.ciphertext) > 100000:
             lines.append(self.ciphertext[0:100000] + ".....To be continued.....")
         else:
             lines.append(self.ciphertext)
@@ -367,7 +368,7 @@ class Cipher(ABC):
         lines.append(" ")
         lines.append(" ")
         lines.append("Decrypted text: ")
-        if len(self.plaintext) < 100000:
+        if len(self.plaintext) > 100000:
             lines.append(self.plaintext[0:100000] + ".....To be continued.....")
         else:
             lines.append(self.plaintext)
@@ -376,7 +377,7 @@ class Cipher(ABC):
         lines.append(" ")
         lines.append(" ")
         lines.append("Plaintext text: ")
-        if len(self.original_plaintext) < 100000:
+        if len(self.original_plaintext) > 100000:
             lines.append(self.original_plaintext[0:100000] + ".....To be continued.....")
         else:
             lines.append(self.original_plaintext)
