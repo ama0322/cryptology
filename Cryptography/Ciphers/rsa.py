@@ -15,8 +15,8 @@ class Rsa(Cipher):
     # Block cipher info
     IS_BLOCK_CIPHER      = True
     VARIABLE_BLOCK_SIZE  = False                 # Don't ask for block_size
-    VARIABLE_KEY_SIZE    = True                  # Key size should be EVEN
-    DEFAULT_KEY_SIZE     = 2048
+    VARIABLE_KEY_SIZE    = True
+    DEFAULT_KEY_SIZE     = 1999
     MIN_KEY_SIZE         = 44
     MAX_KEY_SIZE         = float("inf")
     AUTO_TEST_KEY_SIZE   = 256
@@ -41,6 +41,9 @@ class Rsa(Cipher):
         # If the key_size is impossible, then use the default
         if key_size < Rsa.MIN_KEY_SIZE:
             key_size = Rsa.DEFAULT_KEY_SIZE
+
+        # RSA uses a block size that is 42 bits smaller than the size of the key
+        block_size = key_size - 42
 
         super().__init__(plaintext,   ciphertext,     char_set,     mode_of_op,     "",      public_key,
                     private_key,     key_size - 42,  key_size,     source_location,     output_location    )
@@ -151,8 +154,9 @@ class Rsa(Cipher):
 
 
         # Decrypt the text using the proper mode of encryption
+
         plaintext_blocks, public_key, private_key = eval("misc.decrypt_{}(self, Rsa._rsa_on_block, ciphertext_blocks, "
-                                                         "public_key, private_key)"
+                                                                         "public_key, private_key)"
                                                          .format(self.mode_of_op))
 
 
@@ -307,23 +311,6 @@ class Rsa(Cipher):
         :return:                (str) private key in format "d = ..., n = ..."
         """
 
-        # Calculate d (modular multiplicative inverse of (e mod n). Compute with extended euclidean algorithm
-        def inverse(x: int, modulus: int) -> int:
-
-            # Extended euclidean algorithm
-            a, b, u = 0, modulus, 1
-            while x > 0:
-                # Figure out the integer quotient
-                quotient = b // x
-
-                # Update for next iteration
-                x, a, b, u = b % x, u, x, a - (quotient * u)
-
-            # Calculate the modular multiplicative inverse by a % m
-            if b == 1:
-                return a % modulus
-
-
 
         prime_one, prime_two = misc.generate_prime_pair(key_size)
 
@@ -336,7 +323,7 @@ class Rsa(Cipher):
 
 
         # Calculate d (modular multiplicative inverse of (e mod n). Compute with extended euclidean algorithm
-        d = inverse(e, modulus_totient)
+        d = misc.mod_inverse(e, modulus_totient)
 
 
         # Set the exponent and modulus in (Decryption).rsa._rsa_on_block()

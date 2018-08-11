@@ -16,7 +16,7 @@ testing_key                              = "This is a key for testing"
 testing_key_size                         = 0
 testing_block_size                       = 0
 
-testing_encoding_scheme                  = "extended_ascii"
+testing_encoding_scheme                  = "base85"
 testing_alphabet                         = "ascii"
 
 testing_mode_of_operation                = "cbc"
@@ -207,6 +207,11 @@ def automated_testing() -> None:
                 # If has already been run once (past the "ecb", which is the first choice), then skip
                 if mode_of_op != "ecb":
                     continue
+            # If only uses asymmetric modes of operation, then skip unusable modes of operation
+            if eval("{}.{}.CIPHER_TYPE".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) == "asymmetric":
+                if mode_of_op not in Cipher.ASYMMETRIC_MODES_OF_OPERATION:
+                    continue
+
             # If requires english, then skip the short 10 length one
             if eval("{}.{}.NEEDS_ENGLISH".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) is True \
                                                                                                and len(plaintext) < 100:
@@ -246,7 +251,10 @@ def automated_testing() -> None:
                     continue
                 # Also, set the name of "ecb" to empty space "   "
                 mode_of_op = ""
-
+            # If only uses asymmetric modes of operation, then skip unusable modes of operation
+            if eval("{}.{}.CIPHER_TYPE".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) == "asymmetric":
+                if mode_of_op not in Cipher.ASYMMETRIC_MODES_OF_OPERATION:
+                    continue
             # If requires english, then skip the short 10 length one
             if eval("{}.{}.NEEDS_ENGLISH".format(decrypt_cipher, misc.get_class_name(decrypt_cipher))) is True \
                                                                                                and len(plaintext) < 100:
@@ -280,7 +288,7 @@ def automated_testing() -> None:
                 if cipher_obj.original_plaintext != cipher_obj.plaintext:    # If incorrect, print that out
                     incorrect_ciphers.append("{} (I) {} {} {}"
                                              .format(decrypt_cipher, char_set, mode_of_op, len(cipher_obj.plaintext)))
-            except:                                                          # Cipher complete failure
+            except Exception:                                                          # Cipher complete failure
                 incorrect_ciphers.append("{} (I) {} {} {}".format(decrypt_cipher, char_set, mode_of_op,
                                                                   len(cipher_obj.plaintext)))
 
@@ -295,7 +303,7 @@ def automated_testing() -> None:
     print()
     print("An (F) indicates that the decryption failed to run correctly (some error raised during decryption).")
     print("An (I) indicates that the decryption produced an incorrect result (not the original plaintext)")
-    print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢:\n", end="")
+    print("𝓘𝓝𝓒𝓞𝓡𝓡𝓔𝓒𝓣 𝓒𝓘𝓟𝓗𝓔𝓡𝓢:\n")
     if len(incorrect_ciphers) == 0: incorrect_ciphers.append("\u001b[32mNONE\u001b[0m")     # Colored green
     print(*incorrect_ciphers, sep="\n")
     print()

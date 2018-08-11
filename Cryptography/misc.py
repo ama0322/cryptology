@@ -9,7 +9,7 @@ import csv     # To read csv format
 import copy    # To make deep-copies
 import sys     # To get access to the system (to suppress print() calls)
 import os      # To get access to os         (to suppress print() calls)
-
+import math    # TO get various math functions
 
 ################################################################################################### RESOURCES ##########
 
@@ -137,10 +137,44 @@ def format_to_colon(lines: list, column=35) -> list:
     return lines
 
 # Allow division by zero
-def safe_div(x,y):
+def safe_div(x:int,y:int):
     if y == 0:
         return 0
     return x / y
+
+# Modular multiplicative inverse
+def mod_inverse(x:int, modulus:int) -> int:
+    """
+    This finds the modular multiplicative inverse of a. "x" and "modulus" be coprime
+    1. "xa + yb = gcd(a, b)"       : Start with the extended euclidean algorithm to find x in this equation
+    2. "xa + ym = 1"               : Substitute "b" for "m". Simplify "gcd(x, m)" to "1" because "x" and "m" are coprime
+    3. "xa + ym = 1 (mod modulus)" : Take modulo "m" on both sides
+    4. "xa = 1 (mod modulus)"      : "ym" under "(mod m)" simplifies to "0". The modular inverse is "a" in this equation
+
+    :param x:       (int) The number to find the inverse of
+    :param modulus: (int) The modulus to find the inverse under
+    :return:        (int) The modular multiplicative inverse of a
+    """
+
+    # Extended euclidean algorithm
+    a, b, u = 0, modulus, 1
+    while x > 0:
+        # Figure out the integer quotient
+        quotient = b // x
+
+        # Update for next iteration
+        # noinspection PyRedundantParentheses
+        x, a, b, u = (b % x), (u), (x), (a - quotient * u)
+
+
+
+
+    # Calculate the modular multiplicative inverse by a % m
+    if b != -1:
+        return a % modulus
+
+
+
 
 
 # This function splits utf-8 text into integer blocks, each of them having block_size bits
@@ -309,7 +343,9 @@ def get_class_name(module:str) -> str:
 
     return module
 
+
 # Figure out the character set of the given data automatically if possible. Inaccurate for short texts
+# noinspection SpellCheckingInspection
 @static_vars(short_text_len=300)
 def get_char_set(data: str, cipher_char_set: str, is_encrypt:bool) -> str:
     """
@@ -342,7 +378,7 @@ def get_char_set(data: str, cipher_char_set: str, is_encrypt:bool) -> str:
 
             # If the user asks for help
             if user_choice == "info":
-                print("The available %ss are: " % cipher_obj.CHAR_SET, end="")
+                print("The available %ss are: " % cipher_char_set, end="")
                 for option in options:
 
                     if option == "ascii":
@@ -366,7 +402,7 @@ def get_char_set(data: str, cipher_char_set: str, is_encrypt:bool) -> str:
 
             # Invalid option
             elif user_choice.rstrip() not in options:
-                user_choice = input("Invalid %s (%s)! Try again: " % (cipher_char_set, selection.rstrip()))
+                user_choice = input("Invalid %s (%s)! Try again: " % (cipher_char_set, user_choice.rstrip()))
                 continue
 
             # If here, then user gave valid option. All clear
@@ -454,7 +490,7 @@ def get_char_set(data: str, cipher_char_set: str, is_encrypt:bool) -> str:
                 return "base4096"
 
 
-    return user_selection
+
 
 # Adjust the alphabet if necessary. Some encryption ciphers need the ciphertext alphabet >= plaintext alphabet
 def adjust_alphabet(data: str, alphabet: str, cipher_char_set: str, restrict_alphabet: bool) -> str:
@@ -551,6 +587,22 @@ def int_to_chars_encoding_scheme_pad(number:int, encoding:str, key_size:int) -> 
         encoded = str(base64.b85encode(number))[2: -1]
 
 
+    # If extended_ascii, turn int to bits. Read bits 8 at a time. Pad "0" in front if necessary
+    elif encoding == "ascii":
+
+        # Turn the integer into a string with binary representation. Get rid of leading "0b"
+        number = bin(number)[2:]
+
+        # Pad the front if necessary (all the way up to key_size and divisible by 8)
+        if len(number) < key_size:
+            number = (key_size - len(number)) * "0" + number
+        if len(number) % 7 != 0:
+            number = (7 - (len(number) % 7)) * "0" + number
+
+        # Read bits 8 at a time. Interpret those 8 bits as extended_ascii(unicode) and add to encoded
+        while number != "":
+            encoded += chr( int(number[0:7], 2) )
+            number = number[7:]
 
 
     # If extended_ascii, turn int to bits. Read bits 8 at a time. Pad "0" in front if necessary
@@ -643,6 +695,20 @@ def int_to_chars_encoding_scheme(number:int, encoding:str) -> str:
         encoded = str(base64.b85encode(number))[2: -1]
 
 
+    # If extended_ascii, turn int to bits. Read bits 8 at a time. Pad "0" in front if necessary
+    elif encoding == "ascii":
+
+        # Turn the integer into a string with binary representation. Get rid of leading "0b"
+        number = bin(number)[2:]
+
+        # Pad the front if necessary (all the way up to nearest byte, so divisible by 8)
+        if len(number) % 7 != 0:
+            number = (7 - (len(number) % 7) ) * "0" + number
+
+        # Read bits 8 at a time. Interpret those 8 bits as extended_ascii(unicode) and add to encoded
+        while number != "":
+            encoded += chr( int(number[0:7], 2) )
+            number = number[7:]
 
 
     # If extended_ascii, turn int to bits. Read bits 8 at a time. Pad "0" in front if necessary
@@ -666,7 +732,7 @@ def int_to_chars_encoding_scheme(number:int, encoding:str) -> str:
         # Turn the integer into a string with binary representation. Get rid of leading "0b"
         number = bin(number)[2:]
 
-        # Pad the front if necessary(make divisble by 12)
+        # Pad the front if necessary(make divisible by 12)
         if len(number) % 12 != 0:
             number = (12 - (len(number) % 12)) * "0" + number
 
@@ -718,7 +784,28 @@ def chars_to_int_decoding_scheme(string:str, encoding:str) -> int:
         decoded = int.from_bytes(decoded, byteorder="big")
 
 
+    # elif extended_ascii, turn extended_ascii into a long string of bits. Then, read bits as an integer
+    elif encoding == "ascii":
 
+        # Build up binary string here
+        bin_string = ""
+
+        # Loop through string. Add the extended_ascii characters one at a time to bin_string (in binary form).
+        for x in string:
+
+            # Obtain binary form of the extended_ascii character. Remove leading "0b"
+            eight_bits = bin(ord(x))[2:]
+
+            # Pad to eight digits if necessary
+            if len(eight_bits) % 7 != 0:
+                eight_bits = (7 - len(eight_bits) % 7) * "0" + eight_bits
+
+            #Add to bin string
+            bin_string += eight_bits
+
+
+        # Read the binary string as an integer
+        decoded = int(bin_string, 2)
 
 
     # elif extended_ascii, turn extended_ascii into a long string of bits. Then, read bits as an integer
@@ -800,6 +887,24 @@ def chars_to_chars_encoding_scheme(string:str, encoding:str) -> str:
     elif encoding == "base85":
         encoded = base64.b85encode(bytearray(string, "utf-8")).decode()
 
+    elif encoding == "ascii":
+
+        # Change string to hex format with utf-8
+        hex = string.encode("utf-8").hex()
+
+        # Change hex string into a binary string (remove leading "0b")
+        bin_str = bin(int(hex, 16))[2:]
+
+
+
+        # Read bits seven at a time. Interpret them as ascii
+        while bin_str != "":
+            encoded += chr( int(bin_str[0:7], 2) )
+            bin_str = bin_str[ 7: ]
+
+
+
+
     elif encoding == "extended_ascii":
 
         # Change string to hex format with utf-8
@@ -852,6 +957,24 @@ def chars_to_chars_decoding_scheme(string:str, encoding:str) -> str:
 
     elif encoding == "base85":
         decoded = base64.b85decode(bytearray(string, "utf-8")).decode()
+
+
+
+    elif encoding == "ascii":
+
+        decoded = ""
+        for char in string:
+            # Convert each ascii to 7 bits, and concatenate all of it together. Pad up to seven bits
+            decoded = bin(ord(char))[2:]
+            decoded = (7 - (len(decoded) % 7)) * "0" + decoded
+
+
+        # Turn the bitstring into a regular string with utf-8 encoding
+        decoded = codecs.decode(decoded, "hex").decode("utf-8") # Decode bytes to string using utf-8
+
+
+
+
 
     elif encoding == "extended_ascii":
         for char in string:
@@ -1067,7 +1190,7 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
         while True:
 
             # Generate a number that needs to be tested for primality
-            num_to_test = secrets.randbits(bit_length)
+            num_to_test = secrets.randbits(bit_length) ^ (1 << (bit_length - 1))
 
             # Print updates and update
             print(str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
@@ -1089,9 +1212,6 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
                 num_to_test += 2
                 test_result, failed_prime = small_primes_primality_test(num_to_test)
 
-            # If the num_to_test is too big, then continue from the beginning
-            if num_to_test.bit_length() != bit_length:
-                continue
 
             # If failed the small_primes_primality_test, then generate new number
             if test_result == False:
@@ -1105,28 +1225,60 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
             if rabin_miller_primality_test(num_to_test, 64):
                 return num_to_test
 
-    # Create the list with one prime number is in it(primes are about half the size of prime_bits)
-    primes_list = [generate_prime(prime_bits // 2)]; generate_prime_pair.primes_found += 1
 
-    # Loop until two prime numbers are found whose product is the correct size (prime_bits)
-    while True:
+    # If prim_bits is odd, then, I will have to generate primes of a slightly different bit_length
+    if prime_bits % 2 != 0:
+        # Create the list with one prime number is in it(primes are about half the size of prime_bits)
+        primes_list = [generate_prime(prime_bits // 2)]; generate_prime_pair.primes_found += 1
 
-        # Generate a prime for testing
-        prime_one = generate_prime(prime_bits // 2); generate_prime_pair.primes_found += 1
+        # Loop until two prime numbers are found whose product is the correct size (prime_bits)
+        for i in range(1, sys.maxsize**10):
 
-        # Test all pairs of primes for a key that is of proper size
-        for prime_two in primes_list:
+            # Alternate between generating primes of size (prime_bits // 2) and ((prime_bits // 2) + 1)
+            if i % 2 == 0: prime_one = generate_prime(prime_bits // 2); generate_prime_pair.primes_found += 1
+            else:          prime_one = generate_prime((prime_bits // 2) + 1); generate_prime_pair.primes_found += 1
 
-            # If the primes work out to make a key of correct size
-            if (prime_one * prime_two).bit_length() == prime_bits:
-                # Print updates
-                print("{} numbers tested for primality. Primes found: {}"
-                      .format(generate_prime.numbers_tested, generate_prime_pair.primes_found))
+            # Test all pairs of primes for a key that is of proper size
+            for prime_two in primes_list:
 
-                return prime_one, prime_two
+                # If the primes work out to make a key of correct size
+                if (prime_one * prime_two).bit_length() == prime_bits:
+                    # Print updates
+                    print("{} numbers tested for primality. Primes found: {}"
+                          .format(generate_prime.numbers_tested, generate_prime_pair.primes_found))
 
-        # add this current prime into the list for testing
-        primes_list.append(prime_one)
+                    return prime_one, prime_two
+
+            # add this current prime into the list for testing
+            primes_list.append(prime_one)
+
+
+
+
+    # Else, prime_bits is even, so this is straightforward. Just generate primes that are half the bit_length
+    elif prime_bits % 2 == 0:
+        # Create the list with one prime number is in it(primes are about half the size of prime_bits)
+        primes_list = [generate_prime(prime_bits // 2)]; generate_prime_pair.primes_found += 1
+
+        # Loop until two prime numbers are found whose product is the correct size (prime_bits)
+        while True:
+
+            # Generate a prime for testing
+            prime_one = generate_prime(prime_bits // 2); generate_prime_pair.primes_found += 1
+
+            # Test all pairs of primes for a key that is of proper size
+            for prime_two in primes_list:
+
+                # If the primes work out to make a key of correct size
+                if (prime_one * prime_two).bit_length() == prime_bits:
+                    # Print updates
+                    print("{} numbers tested for primality. Primes found: {}"
+                          .format(generate_prime.numbers_tested, generate_prime_pair.primes_found))
+
+                    return prime_one, prime_two
+
+            # add this current prime into the list for testing
+            primes_list.append(prime_one)
 
 
 
@@ -1252,7 +1404,7 @@ def is_english_n_grams(data:str) ->(bool, float):
             for row in reader:
                 is_english_n_grams.ngram_to_frequency[row["ngram"]] = row["count"]
 
-    # Create inner static variable of dictionary that maps ngrams to posiitonal index(1 for most common 2 for second...)
+    # Create inner static variable of dictionary that maps ngrams to positional index(1 for most common 2 for second...)
     if not hasattr(is_english_n_grams, "ngram_to_positional_index"):
         is_english_n_grams.ngram_to_positional_index = {}
 
@@ -1356,11 +1508,7 @@ def is_english_n_grams(data:str) ->(bool, float):
         return total_points
 
 
-    """
-    # Obtain the similarity between most frequent ngrams of data and of english
-    similarity = difflib.SequenceMatcher(None, most_frequent_ngrams_data, most_frequent_ngrams_english)
-    similarity_english = similarity.ratio()
-    """
+
 
     similarity_english = similarity_of_two_integer_lists(most_frequent_ngrams_data, most_frequent_ngrams_english)
     # If text is in english
@@ -1455,6 +1603,10 @@ def decrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
 
 
 
+
+
+
+
 # CBC mode. XOR IV with first block and then encrypt. Successive blocks are XOR'd with previous encrypted block
 def encrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
                                                                 key_two:str) ->(list, str, str):
@@ -1510,7 +1662,7 @@ def encrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 
 
-# CBC mode. Decrypt with CBC
+# CBC mode. Reverse the CBC
 def decrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
                                                                 key_two:str) -> (list, str, str):
     """
@@ -1561,6 +1713,492 @@ def decrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
 
     # Return
     return plaintext_blocks, key_one, key_two
+
+
+
+
+
+
+
+
+
+# PCBC mode. Similar to CBC, but xor previous ciphertext with the original plaintext before xor'ing with current block
+def encrypt_pcbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+                                                                key_two:str) ->(list, str, str):
+    """
+    PCBC mode. Same as CBC, but XOR the previous ciphertext block with its original plaintext block before xor'ing
+    with the current block before encrypting.
+
+    :param cipher_obj:       (Cipher)   The cipher object to get properties
+    :param algorithm:        (Callable) The algorithm to use
+    :param plaintext_blocks: (list)     The plaintext int blocks to encrypt
+    :param key_one:          (str)      The key to prepend IV with
+    :param key_two:          (str)      Another key to prepend IV with
+    :return:                 (list)     The encrypted int block
+    :return:                 (str)      The IV-prepended key
+    :return:                 (str)      IV-prepended private key, if it exists
+    """
+
+
+    # Important instance vars for encryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the ciphertext blocks here
+    ciphertext_blocks = [0] * len(plaintext_blocks)
+
+
+    # Generate an IV (and prepend it to keys)
+    iv = secrets.randbits(block_size) ^ (1 << (block_size - 1))
+    key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
+    key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
+
+
+    # XOR the first block with the IV. Save into ciphertext_blocks
+    ciphertext_blocks[0] = algorithm( iv ^ plaintext_blocks[0] )
+
+
+
+    # For all other blocks, XOR with previous encrypted block before applying algorithm
+    for i in range(1, len(plaintext_blocks)):
+        ciphertext_blocks[i] = algorithm( (plaintext_blocks[i - 1] ^ ciphertext_blocks[i - 1]) ^ plaintext_blocks[i] )
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(plaintext_blocks) - 1):
+            print("Encryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(plaintext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(plaintext_blocks) - 1)) * len(cipher_obj.plaintext)))))
+
+
+    # Return ciphertext_blocks and the new keys
+    return ciphertext_blocks, key_one, key_two
+
+
+# PCBC mode. Reverse the PCBC
+def decrypt_pcbc(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+                                                                key_two:str) -> (list, str, str):
+    """
+    Decrypt with PCBC. Reverse what the encrypt did
+
+    :param cipher_obj:        (Cipher)   The cipher object to get instance vars from
+    :param algorithm:         (Callable) The algorithm to decrypt a block
+    :param ciphertext_blocks: (list)     The encrypted integer blocks
+    :param key_one:           (str)      The key to read IV from
+    :param key_two:           (str)      Do nothing with this
+    :return:                  (list)     The decrypted integer blocks
+    :return:                  (str)      The symmetric/public key, not really used by caller
+    :return:                  (str)      The private key, not really used by caller
+    """
+
+    # Important instance vars for decryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the plaintext blocks here
+    plaintext_blocks = [0] * len(ciphertext_blocks)
+
+
+    # Read the IV. Generate random bits, and see how many characters to read
+    iv_len = len(int_to_chars_encoding_scheme_pad(1, encoding, block_size))   # Encode block_size bits and get its len
+    iv = chars_to_int_decoding_scheme(key_one[0 : iv_len], encoding)          # Get the integer form of the iv
+
+
+
+
+    # Call algorithm on first ciphertext_block and XOR with iv
+    plaintext_blocks[0] = algorithm(ciphertext_blocks[0]) ^ iv
+
+
+
+    # For all successive blocks, call algorithm on ciphertext_block and XOR with the previous ciphertext_block
+    for i in range(1, len(ciphertext_blocks)):
+        plaintext_blocks[i] = algorithm(ciphertext_blocks[i]) ^ (ciphertext_blocks[i - 1] ^ plaintext_blocks[i - 1])
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(ciphertext_blocks) - 1):
+            print("Decryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(ciphertext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
+
+
+    # Return
+    return plaintext_blocks, key_one, key_two
+
+
+
+
+
+
+
+
+
+
+# CFB mode. Similar to CBC, but encrypt iv instead of the plaintext block. XOR iv encrypted result with plaintext block
+def encrypt_cfb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+                                                                key_two:str) ->(list, str, str):
+    """
+    CFB mode. Similar to CBC, but encrypt the iv instead of the plaintext block. XOR the iv encrypted result with the
+    plaintext block. For successive plaintext blocks, encrypt the previous ciphertext block and XOR with the current
+    plaintext block.
+
+    :param cipher_obj:       (Cipher)   The cipher object to get properties
+    :param algorithm:        (Callable) The algorithm to use
+    :param plaintext_blocks: (list)     The plaintext int blocks to encrypt
+    :param key_one:          (str)      The key to prepend IV with
+    :param key_two:          (str)      Another key to prepend IV with
+    :return:                 (list)     The encrypted int block
+    :return:                 (str)      The IV-prepended key
+    :return:                 (str)      IV-prepended private key, if it exists
+    """
+
+
+    # Important instance vars for encryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the ciphertext blocks here
+    ciphertext_blocks = [0] * len(plaintext_blocks)
+
+
+    # Generate an IV (and prepend it to keys)
+    iv = secrets.randbits(block_size) ^ (1 << (block_size - 1))
+    key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
+    key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
+
+
+    # XOR the first block with the IV. Save into ciphertext_blocks
+    ciphertext_blocks[0] = algorithm(iv) ^ plaintext_blocks[0]
+
+
+
+    # For all other blocks, encrypt the previous ciphertext_block and XOR with the current one
+    for i in range(1, len(plaintext_blocks)):
+        ciphertext_blocks[i] = algorithm( ciphertext_blocks[i - 1] ) ^ plaintext_blocks[i]
+
+
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(plaintext_blocks) - 1):
+            print("Encryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m", i / len(plaintext_blocks), "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(plaintext_blocks) - 1)) * len(cipher_obj.plaintext)))))
+
+
+    # Return ciphertext_blocks and the new keys
+    return ciphertext_blocks, key_one, key_two
+
+
+# CFB mode. Reverse the PCBC
+def decrypt_cfb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+                                                                key_two:str) -> (list, str, str):
+    """
+    Decrypt with OFB. Almost identical to CBC encryption, but done in reverse.
+
+    :param cipher_obj:        (Cipher)   The cipher object to get instance vars from
+    :param algorithm:         (Callable) The algorithm to decrypt a block
+    :param ciphertext_blocks: (list)     The encrypted integer blocks
+    :param key_one:           (str)      The key to read IV from
+    :param key_two:           (str)      Do nothing with this
+    :return:                  (list)     The decrypted integer blocks
+    :return:                  (str)      The symmetric/public key, not really used by caller
+    :return:                  (str)      The private key, not really used by caller
+    """
+
+    # Important instance vars for decryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the plaintext blocks here
+    plaintext_blocks = [0] * len(ciphertext_blocks)
+
+
+    # Read the IV. Generate random bits, and see how many characters to read
+    iv_len = len(int_to_chars_encoding_scheme_pad(1, encoding, block_size))   # Encode block_size bits and get its len
+    iv = chars_to_int_decoding_scheme(key_one[0 : iv_len], encoding)          # Get the integer form of the iv
+
+
+
+
+    # Call algorithm on first ciphertext_block and XOR with iv
+    plaintext_blocks[0] = algorithm(iv) ^ ciphertext_blocks[0]
+
+
+
+    # For all successive blocks, call algorithm on ciphertext_block and XOR with the previous ciphertext_block
+    for i in range(1, len(ciphertext_blocks)):
+        plaintext_blocks[i] = algorithm(ciphertext_blocks[i - 1]) ^ ciphertext_blocks[i]
+
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(ciphertext_blocks) - 1):
+            print("Decryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(ciphertext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
+
+
+    # Return
+    return plaintext_blocks, key_one, key_two
+
+
+
+
+
+
+
+
+
+# OFB mode. It generates keystream blocks, which are XOR'ed with plaintext blocks to get ciphertext blocks
+def encrypt_ofb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+                                                                key_two:str) ->(list, str, str):
+    """
+    OFB mode. Similar to CBC, but encrypt the iv instead of the plaintext block. XOR the iv encrypted result with the
+    plaintext block. For successive plaintext blocks, encrypt the previous ciphertext block and XOR with the current
+    plaintext block.
+
+    :param cipher_obj:       (Cipher)   The cipher object to get properties
+    :param algorithm:        (Callable) The algorithm to use
+    :param plaintext_blocks: (list)     The plaintext int blocks to encrypt
+    :param key_one:          (str)      The key to prepend IV with
+    :param key_two:          (str)      Another key to prepend IV with
+    :return:                 (list)     The encrypted int block
+    :return:                 (str)      The IV-prepended key
+    :return:                 (str)      IV-prepended private key, if it exists
+    """
+
+
+    # Important instance vars for encryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the ciphertext blocks here
+    ciphertext_blocks = [0] * len(plaintext_blocks)
+
+
+    # Generate an IV (and prepend it to keys)
+    iv = secrets.randbits(block_size) ^ (1 << (block_size - 1))
+    key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
+    key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
+
+
+    # XOR the first block with the IV. Save into ciphertext_blocks
+    ciphertext_blocks[0] = algorithm(iv) ^ plaintext_blocks[0]
+    algorithm_output = algorithm(iv)
+
+
+    # For all other blocks, XOR with previous encrypted block before applying algorithm
+    for i in range(1, len(plaintext_blocks)):
+        ciphertext_blocks[i] = algorithm( algorithm_output ) ^ plaintext_blocks[i]
+        algorithm_output = algorithm(algorithm_output)
+
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(plaintext_blocks) - 1):
+            print("Encryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m", i / len(plaintext_blocks), "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(plaintext_blocks) - 1)) * len(cipher_obj.plaintext)))))
+
+
+    # Return ciphertext_blocks and the new keys
+    return ciphertext_blocks, key_one, key_two
+
+
+# OFB mode. Exactly the same as the encrypt
+def decrypt_ofb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+                                                                key_two:str) -> (list, str, str):
+    """
+    Decrypt with OFB. Reverse what the encrypt did.
+
+    :param cipher_obj:        (Cipher)   The cipher object to get instance vars from
+    :param algorithm:         (Callable) The algorithm to decrypt a block
+    :param ciphertext_blocks: (list)     The encrypted integer blocks
+    :param key_one:           (str)      The key to read IV from
+    :param key_two:           (str)      Do nothing with this
+    :return:                  (list)     The decrypted integer blocks
+    :return:                  (str)      The symmetric/public key, not really used by caller
+    :return:                  (str)      The private key, not really used by caller
+    """
+
+    # Important instance vars for decryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the plaintext blocks here
+    plaintext_blocks = [0] * len(ciphertext_blocks)
+
+
+    # Read the IV. Generate random bits, and see how many characters to read
+    iv_len = len(int_to_chars_encoding_scheme_pad(1, encoding, block_size))   # Encode block_size bits and get its len
+    iv = chars_to_int_decoding_scheme(key_one[0 : iv_len], encoding)          # Get the integer form of the iv
+
+
+
+
+    # Call algorithm on first ciphertext_block and XOR with iv
+    plaintext_blocks[0] = algorithm(iv) ^ ciphertext_blocks[0]
+    algorithm_output = algorithm(iv)
+
+
+    # For all successive blocks, call algorithm on ciphertext_block and XOR with the previous ciphertext_block
+    for i in range(1, len(ciphertext_blocks)):
+        plaintext_blocks[i] = algorithm(algorithm_output) ^ ciphertext_blocks[i]
+        algorithm_output = algorithm(algorithm_output)
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(ciphertext_blocks) - 1):
+            print("Decryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(ciphertext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
+
+
+    # Return
+    return plaintext_blocks, key_one, key_two
+
+
+
+
+
+
+
+# CTR mode. It encrypts an iv and a counter, and XORs the result with the plaintext
+def encrypt_ctr(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+                                                                key_two:str) ->(list, str, str):
+    """
+    CTR mode. It encrypts with a block, the upper bits being the IV, and the lower bits being the counter. The result of
+    the encryption is XOR'ed with the plaintext block.
+
+    :param cipher_obj:       (Cipher)   The cipher object to get properties
+    :param algorithm:        (Callable) The algorithm to use
+    :param plaintext_blocks: (list)     The plaintext int blocks to encrypt
+    :param key_one:          (str)      The key to prepend IV with
+    :param key_two:          (str)      Another key to prepend IV with
+    :return:                 (list)     The encrypted int block
+    :return:                 (str)      The IV-prepended key
+    :return:                 (str)      IV-prepended private key, if it exists
+    """
+
+
+    # Important instance vars for encryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the ciphertext blocks here
+    ciphertext_blocks = [0] * len(plaintext_blocks)
+
+
+    # Generate an IV (and prepend it to keys). IV is half the size of the block (will be upper bits so shift)
+    iv = secrets.randbits(block_size // 2) ^ (1 << ((block_size // 2) - 1))         # IV is half the block (round down)
+    iv = iv << int(math.ceil(block_size / 2))                                       # Shift to upper bits (round up)
+    key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
+    key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
+
+
+    # Encrypt with nonce/counter, and XOR with the plaintext block
+    ciphertext_blocks[0] = algorithm(iv ^ 0) ^ plaintext_blocks[0]
+
+
+
+    # For all other blocks, XOR with previous encrypted block before applying algorithm
+    for i in range(1, len(plaintext_blocks)):
+        ciphertext_blocks[i] = algorithm( iv ^ i ) ^ plaintext_blocks[i]
+
+
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(plaintext_blocks) - 1):
+            print("Encryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m", i / len(plaintext_blocks), "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(plaintext_blocks) - 1)) * len(cipher_obj.plaintext)))))
+
+
+    # Return ciphertext_blocks and the new keys
+    return ciphertext_blocks, key_one, key_two
+
+
+# CTR mode. Same as encrypt, but switch plaintext_block and ciphertext_block
+def decrypt_ctr(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+                                                                key_two:str) -> (list, str, str):
+    """
+    Decrypt with CTR. Same as encrypt, but switch plaintext_block and ciphertext_block
+
+    :param cipher_obj:        (Cipher)   The cipher object to get instance vars from
+    :param algorithm:         (Callable) The algorithm to decrypt a block
+    :param ciphertext_blocks: (list)     The encrypted integer blocks
+    :param key_one:           (str)      The key to read IV from
+    :param key_two:           (str)      Do nothing with this
+    :return:                  (list)     The decrypted integer blocks
+    :return:                  (str)      The symmetric/public key, not really used by caller
+    :return:                  (str)      The private key, not really used by caller
+    """
+
+    # Important instance vars for decryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+
+
+    # Build the plaintext blocks here
+    plaintext_blocks = [0] * len(ciphertext_blocks)
+
+
+    # Read the IV. Generate random bits, and see how many characters to read
+    iv_len = len(int_to_chars_encoding_scheme_pad(1, encoding, block_size))   # Encode block_size bits and get its len
+    iv = chars_to_int_decoding_scheme(key_one[0 : iv_len], encoding)          # Get the integer form of the iv
+
+
+
+    # Call algorithm on first ciphertext_block and XOR with iv
+    plaintext_blocks[0] = algorithm(iv ^ 0) ^ ciphertext_blocks[0]
+
+
+
+    # For all successive blocks, call algorithm on ciphertext_block and XOR with the previous ciphertext_block
+    for i in range(1, len(ciphertext_blocks)):
+        plaintext_blocks[i] = algorithm(iv ^ i) ^ ciphertext_blocks[i]
+
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(ciphertext_blocks) - 1):
+            print("Decryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(ciphertext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
+
+
+    # Return
+    return plaintext_blocks, key_one, key_two
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -321,6 +321,9 @@ class Blowfish(Cipher):
         if key_size < Blowfish.MIN_KEY_SIZE:
             key_size = Blowfish.DEFAULT_KEY_SIZE
 
+        # Blowfish uses a block_size of 64
+        block_size = 64
+
         super().__init__(plaintext,   ciphertext,     char_set,     mode_of_op,     key,     "",
                     "",              64,             key_size,     source_location,     output_location    )
 
@@ -429,11 +432,18 @@ class Blowfish(Cipher):
 
 
 
-        # Decrypt the text using the proper mode of encryption
-        plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}(self, Blowfish._blowfish_on_block, "
-                                                  "ciphertext_blocks, key, \"\")"
-                                                  .format(self.mode_of_op))
-
+        # Decrypt when DECRYPT block algorithm is used for the mode of operation
+        if self.mode_of_op in ["ecb", "cbc", "pcbc"]:
+            plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}(self, Blowfish._blowfish_on_block, "
+                                                                      "ciphertext_blocks, key, \"\")"
+                                                      .format(self.mode_of_op))
+        # Else, when ENCRYPT block algorithm is used for the mode of operation
+        else:
+            # Un-reverse the p_array, because we want the encrypt block algorithm
+            Blowfish._blowfish_on_block.p_array.reverse()
+            plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}(self, Blowfish._blowfish_on_block, "
+                                                                      "ciphertext_blocks, key, \"\")"
+                                                      .format(self.mode_of_op))
 
 
 
@@ -498,18 +508,18 @@ class Blowfish(Cipher):
             :return:     (int) 32-bit output as a result of this function
             """
 
-            # Obtain the bit patterns for each quarter (8-bits each) of the 32-bit number.
-            far_left = (block & 0xFF000000) >> 24
-            center_left = (
-                                      block & 0x00FF0000) >> 16  # bit-mask out the unneeded bits and shift all the way to one's place
-            center_right = (block & 0x0000FF00) >> 8
-            far_right = (block & 0x000000FF)
+            # Obtain the bit patterns for each quarter (8-bits each) of the 32-bit number. These serve as the index
+            # for the second dimension of the s_boxes
+            a = (block & 0xFF000000) >> 24
+            b = (block & 0x00FF0000) >> 16  # bit-mask out the unneeded bits and shift all the way to right
+            c = (block & 0x0000FF00) >> 8
+            d = (block & 0x000000FF)
 
             # Perform the +, ^, + operations on the mappings from s_boxes (s_boxes elements are 32 bits)
-            output =           Blowfish._blowfish_on_block.s_boxes[0][far_left]
-            output = (output + Blowfish._blowfish_on_block.s_boxes[1][center_left ]) % 4294967296   # Mod with 2^32
-            output = (output ^ Blowfish._blowfish_on_block.s_boxes[2][center_right])
-            output = (output + Blowfish._blowfish_on_block.s_boxes[3][far_right   ]) % 4294967296    # Mod with 2^32
+            output =           Blowfish._blowfish_on_block.s_boxes[0][a]
+            output = (output + Blowfish._blowfish_on_block.s_boxes[1][b]) % 4294967296   # Mod with 2^32
+            output = (output ^ Blowfish._blowfish_on_block.s_boxes[2][c])
+            output = (output + Blowfish._blowfish_on_block.s_boxes[3][c]) % 4294967296   # Mod with 2^32
 
             return output
 
@@ -566,26 +576,25 @@ class Blowfish(Cipher):
         s_boxes = Blowfish._blowfish_on_block.s_boxes
 
 
-        key = key.to_bytes((key.bit_length() + 7) // 8, "big")           # Turn to bytearray (round up to nearest byte
+        key = key.to_bytes((key.bit_length() + 7) // 8, "big")           # Turn to bytearray (round up to nearest byte)
 
 
         # Each entry in p_array is XOR'ed with key, in groups of 4 bytes (32 bits), and cycling the key.
         key_index = 0                                                     # Start with first four bytes of key
         for p_index in range(0, len(p_array)):
-            key_len = len(key)
-            val_to_xor = (key[ key_index      % len(key)] << 24) \
-                       + (key[(key_index + 1) % len(key)] << 16) \
-                       + (key[(key_index + 2) % len(key)] << 8 ) \
-                       + (key[(key_index + 3) % len(key)]      )
+            val_to_xor = ((key[ key_index      % len(key)] << 24)
+                        + (key[(key_index + 1) % len(key)] << 16)
+                        + (key[(key_index + 2) % len(key)] << 8 )
+                        + (key[(key_index + 3) % len(key)]      ))
 
             p_array[p_index] ^= val_to_xor  # XOR bytes with p_array element
             key_index += 4                  # Move key index up 4 bytes
 
-        # Run the blowfish cipher on a 64-bit zero block. The ciphertext halves will replace p_array[0] and p[1]
-        # two ciphertext halves are then encrypted together as a single block using the new p_array and s_boxes,
-        # resulting in a new ciphertext that will replace p_array[2] and p_array[3]. This same process continues until
-        # all of p_array and all of s_boxes have been replaced
-        ciphertext = 0  # Encryption process starts with all 0 block
+        # Run the blowfish cipher on a 64-bit zero block. The encrypted block halves will replace p_array[0] and p[1]
+        # The two encrypted block halves are then encrypted together as a single block using the new p_array and
+        # s_boxes, resulting in a new ciphertext that will replace p_array[2] and p_array[3]. This same process
+        # continues until all of p_array and all of s_boxes have been replaced
+        ciphertext = 0  # Encryption process starts with an all 0 64-bit block
         for i in range(0, len(p_array), 2):                               # Start replacing p_array in two's
             ciphertext = Blowfish._blowfish_on_block(ciphertext)          # Encryption processes uses last ciphertext
             p_array[i    ] = ciphertext & 0xFFFFFFFF00000000 >> 32        # Left half of ciphertext replaces curr entry

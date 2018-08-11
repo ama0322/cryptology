@@ -394,7 +394,7 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
     def get_mode_of_op() -> str:
 
 
-        def get_encryption_mode_of_encoding() -> str:
+        def get_symm_encryption_mode_of_encoding() -> str:
             """
             This gets a mode of encoding for encrypting. This means that the user can have a default mode of encoding
 
@@ -413,14 +413,14 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
 
                     for mode in Cipher.MODES_OF_OPERATION:
                         if mode == "ecb":
-                            print(" " * (45 - len("The available modes of encryption are: ")) + mode)
+                            print(" " * (45 - len("The available modes of operation are: ")) + mode)
 
                         else:
                             print(" " * 45 + mode)
 
 
-                    selection = input("\nEnter the mode of encoding to be used for ciphertext (To use the default "
-                                      "scheme, \"ecb\", leave empty): ")
+                    selection = input("\nEnter the mode of operation to be used for ciphertext (To use the default "
+                                      "mode, \"ecb\", leave empty): ")
                     continue
 
                 elif selection == "":
@@ -429,7 +429,7 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
 
 
                 elif selection.rstrip() not in Cipher.MODES_OF_OPERATION:
-                    selection = input("Invalid mode of encoding (%s)! Try again: " % selection.rstrip())
+                    selection = input("Invalid mode of operation (%s)! Try again: " % selection.rstrip())
                     continue
 
                 # If here, then all clear
@@ -438,7 +438,7 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
 
             return selection
 
-        def get_decryption_mode_of_encoding() -> str:
+        def get_symm_decryption_mode_of_encoding() -> str:
             """
             In decryption mode, get ta mode of encoding. This means no default modes
 
@@ -455,21 +455,106 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
 
                     for mode in Cipher.MODES_OF_OPERATION:
                         if mode == "ecb":
-                            print(" " * (45 - len("The available modes of encoding are: ")) + mode)
+                            print(" " * (45 - len("The available modes of operation are: ")) + mode)
 
                         else:
                             print(" " * 45 + mode)
 
-                    selection = input("\nEnter the mode of coding to be used: ")
+                    selection = input("\nEnter the mode of operation to be used: ")
                     continue
 
                 elif selection == "":
-                    selection = input("\nNothing entered! Enter the mode of coding to be used: ")
+                    selection = input("\nNothing entered! Enter the mode of operation to be used: ")
                     break
 
 
                 elif selection.rstrip() not in Cipher.MODES_OF_OPERATION:
-                    selection = input("Invalid mode of encoding (%s)! Try again: " % selection.rstrip())
+                    selection = input("Invalid mode of operation (%s)! Try again: " % selection.rstrip())
+                    continue
+
+                # If here, then all clear
+                else:
+                    break
+
+            return selection
+
+
+        def get_asymm_encryption_mode_of_encoding() -> str:
+            """
+            This gets a mode of encoding for encrypting. This means that the user can have a default mode of encoding
+
+            :return: (str) The name of mode of encoding
+            """
+            # Print ouf the prompt for the user
+            selection = input("Enter the mode of operation to be used (To use the default mode, "
+                              "\"ecb\", leave empty): ")
+
+            # Loop while the user gives an invalid alphabet
+            while True:
+
+                if selection[0:4] == "info":
+                    print("The available modes of operation are: ", end="")
+
+
+                    for mode in Cipher.ASYMMETRIC_MODES_OF_OPERATION:
+                        if mode == "ecb":
+                            print(" " * (45 - len("The available modes of encryption are: ")) + mode)
+
+                        else:
+                            print(" " * 45 + mode)
+
+
+                    selection = input("\nEnter the mode of encoding to be used for ciphertext (To use the default "
+                                      "mode, \"ecb\", leave empty): ")
+                    continue
+
+                elif selection == "":
+                    selection = "ecb"
+                    break
+
+
+                elif selection.rstrip() not in Cipher.ASYMMETRIC_MODES_OF_OPERATION:
+                    selection = input("Invalid mode of operation (%s)! Try again: " % selection.rstrip())
+                    continue
+
+                # If here, then all clear
+                else:
+                    break
+
+            return selection
+
+        def get_asymm_decryption_mode_of_encoding() -> str:
+            """
+            In decryption mode, get ta mode of encoding. This means no default modes
+
+            :return:
+            """
+            # Print ouf the prompt for the user
+            selection = input("Enter the mode of operation to be used: ")
+
+            # Loop while the user gives an invalid alphabet
+            while True:
+
+                if selection[0:4] == "info":
+                    print("The available modes of operation are: ", end="")
+
+                    for mode in Cipher.ASYMMETRIC_MODES_OF_OPERATION:
+                        if mode == "ecb":
+                            print(" " * (45 - len("The available modes of operation are: ")) + mode)
+
+                        else:
+                            print(" " * 45 + mode)
+
+                    selection = input("\nEnter the mode of operation to be used: ")
+                    continue
+
+                elif selection == "":
+                    selection = input("\nNothing entered! Enter the mode of operation to be used: ")
+                    break
+
+
+                elif selection.rstrip() not in Cipher.ASYMMETRIC_MODES_OF_OPERATION:
+                    selection = input("Invalid mode of opeartion (%s)! Try again: " % selection.rstrip())
                     continue
 
                 # If here, then all clear
@@ -480,15 +565,20 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
 
 
 
+
+
         # If doesn't use mode of operation, just exit function
         if cipher_obj.IS_BLOCK_CIPHER is False:
             return ""
 
-        if encrypt_or_decrypt == "encrypt":
-            return get_encryption_mode_of_encoding()
 
-        elif encrypt_or_decrypt == "decrypt":
-            return get_decryption_mode_of_encoding()
+        # If symmetric block cipher, then any mode of operation can be used
+        if cipher_obj.CIPHER_TYPE == "SYMMETRIC":
+            if encrypt_or_decrypt == "encrypt":
+                return get_symm_encryption_mode_of_encoding()
+
+            elif encrypt_or_decrypt == "decrypt":
+                return get_symm_decryption_mode_of_encoding()
 
     # Figure out the block size to use (function handles non-variable block ciphers or non-block ciphers also)
     def get_block_size() -> int:

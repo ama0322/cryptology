@@ -18,7 +18,9 @@ class Cipher(ABC):
 
     ENCODING_SCHEMES = {"base16":16, "base32":32, "base64":64, "base85":85, "extended_ascii":256, "base4096":4096}
 
-    MODES_OF_OPERATION = ["ecb", "cbc"]
+    MODES_OF_OPERATION = ["ecb", "cbc", "pcbc", "cfb", "ofb", "ctr"]
+
+    ASYMMETRIC_MODES_OF_OPERATION = ["ecb", "cbc", "pcbc"]
 
     # Cipher info of the class of the particular instantiation (overridden when specific cipher object is created):
     CIPHER_NAME         = ""
@@ -134,6 +136,7 @@ class Cipher(ABC):
             return lines
 
         # Figure out the character set of the given data automatically.
+        # noinspection SpellCheckingInspection
         def get_char_set(data: str, cipher_char_set: str) -> str:
             """
             This calculates the character set of the given data automatically.
@@ -244,12 +247,12 @@ class Cipher(ABC):
 
         elif self.DEFAULT_BLOCK_SIZE != 0 and self.CIPHER_TYPE == "asymmetric":   # Is an asymmetric block cipher
             lines.append("―" * 67)
-            lines.append("―――――――― {}-bit public key ".format(self.key_size).ljust(73, "―"))
+            lines.append("―――――――― {}-bit public key ".format(self.key_size).ljust(73 + 3, "―"))
             lines.append("{}".format(self.public_key))
             lines.append(("――――――――"
                           + " {}(s) ".format(format(self.encrypt_time_for_key,
                                                     ".20f")[0:len(str(self.key_size)) + 12]))
-                            .ljust(73, "―"))
+                            .ljust(73 + 3, "―"))
             lines.append("―" * 67)
 
 
@@ -305,12 +308,12 @@ class Cipher(ABC):
         # Print out the private key if is an asymmetric cipher
         if self.DEFAULT_BLOCK_SIZE != 0 and self.CIPHER_TYPE == "asymmetric":     # Is an asymmetric block cipher
             lines.append("―" * 67)
-            lines.append("―――――――― {}-bit private key ".format(self.key_size).ljust(73, "―"))
+            lines.append("―――――――― {}-bit private key ".format(self.key_size).ljust(73 + 3, "―"))
             lines.append("{}".format(self.public_key))
             lines.append(("――――――――"
                           + " {}(s) ".format(format(self.encrypt_time_for_key,
                                                     ".20f")[0:len(str(self.key_size)) + 13]))
-                            .ljust(73, "―"))
+                            .ljust(73 + 3, "―"))
             lines.append("―" * 67)
 
 
