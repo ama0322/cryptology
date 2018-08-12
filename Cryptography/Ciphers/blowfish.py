@@ -368,7 +368,7 @@ class Blowfish(Cipher):
 
 
         # Encrypt the text using the proper mode of encryption
-        ciphertext_blocks, key, ignore_this = eval("misc.encrypt_{}(self, Blowfish._blowfish_on_block, "
+        ciphertext_blocks, key, ignore_this = eval("misc.encrypt_{}_symm(self, Blowfish._blowfish_on_block, "
                                                    "plaintext_blocks, key, \"\")"
                                                    .format(self.mode_of_op))
 
@@ -434,15 +434,15 @@ class Blowfish(Cipher):
 
         # Decrypt when DECRYPT block algorithm is used for the mode of operation
         if self.mode_of_op in ["ecb", "cbc", "pcbc"]:
-            plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}(self, Blowfish._blowfish_on_block, "
-                                                                      "ciphertext_blocks, key, \"\")"
+            plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}_symm(self, Blowfish._blowfish_on_block, "
+                                                                           "ciphertext_blocks, key, \"\")"
                                                       .format(self.mode_of_op))
         # Else, when ENCRYPT block algorithm is used for the mode of operation
         else:
             # Un-reverse the p_array, because we want the encrypt block algorithm
             Blowfish._blowfish_on_block.p_array.reverse()
-            plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}(self, Blowfish._blowfish_on_block, "
-                                                                      "ciphertext_blocks, key, \"\")"
+            plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}_symm(self, Blowfish._blowfish_on_block, "
+                                                                           "ciphertext_blocks, key, \"\")"
                                                       .format(self.mode_of_op))
 
 

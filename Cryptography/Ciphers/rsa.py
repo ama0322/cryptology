@@ -14,17 +14,18 @@ class Rsa(Cipher):
 
     # Block cipher info
     IS_BLOCK_CIPHER      = True
-    VARIABLE_BLOCK_SIZE  = False                 # Don't ask for block_size
+    VARIABLE_BLOCK_SIZE  = False                 # Don't ask for block_size, is based on key_size
     VARIABLE_KEY_SIZE    = True
     DEFAULT_KEY_SIZE     = 1999
     MIN_KEY_SIZE         = 44
     MAX_KEY_SIZE         = float("inf")
     AUTO_TEST_KEY_SIZE   = 256
 
-    DEFAULT_BLOCK_SIZE   = DEFAULT_KEY_SIZE - 42   # Block_size is key_size - 42
-    MIN_BLOCK_SIZE       = MIN_KEY_SIZE - 42       # Block_size is key_size - 42
-    MAX_BLOCK_SIZE       = float("inf")            # Block_size is key_size - 42
-    AUTO_TEST_BLOCK_SIZE = AUTO_TEST_KEY_SIZE - 42
+    DIFF_KEY_SIZE_BLOCK_SIZE = 1                 # Block sizes are this amount smaller than the key size
+    DEFAULT_BLOCK_SIZE       = DEFAULT_KEY_SIZE   - DIFF_KEY_SIZE_BLOCK_SIZE
+    MIN_BLOCK_SIZE           = MIN_KEY_SIZE       - DIFF_KEY_SIZE_BLOCK_SIZE
+    MAX_BLOCK_SIZE           = float("inf")
+    AUTO_TEST_BLOCK_SIZE     = AUTO_TEST_KEY_SIZE - DIFF_KEY_SIZE_BLOCK_SIZE
 
     # Restrictions
     RESTRICT_ALPHABET    = False
@@ -42,11 +43,11 @@ class Rsa(Cipher):
         if key_size < Rsa.MIN_KEY_SIZE:
             key_size = Rsa.DEFAULT_KEY_SIZE
 
-        # RSA uses a block size that is 42 bits smaller than the size of the key
-        block_size = key_size - 42
+        # Figure out what the block_size is
+        block_size = key_size - Rsa.DIFF_KEY_SIZE_BLOCK_SIZE
 
-        super().__init__(plaintext,   ciphertext,     char_set,     mode_of_op,     "",      public_key,
-                    private_key,     key_size - 42,  key_size,     source_location,     output_location    )
+        super().__init__(plaintext,   ciphertext,      char_set,     mode_of_op,     "",      public_key,
+                    private_key,     block_size,      key_size,     source_location,     output_location    )
 
 
 
@@ -70,7 +71,7 @@ class Rsa(Cipher):
         public_key  = self.public_key
         private_key = self.private_key
         key_size    = self.key_size
-        block_size  = self.key_size - 42
+        block_size  = self.block_size   # This is the bits in the message "m". Technically, block size is key_size
         encoding    = self.char_set
         mode_of_op  = self.mode_of_op
 
@@ -84,6 +85,7 @@ class Rsa(Cipher):
 
 
 
+
         # Read/generate key
         public_key, private_key = self._read_public_or_private_key(False, public_key, private_key, key_size, block_size,
                                                                                     encoding, mode_of_op)
@@ -91,9 +93,11 @@ class Rsa(Cipher):
 
 
         # Encrypt the text using the proper mode of encryption
-        ciphertext_blocks, public_key, private_key = eval("misc.encrypt_{}(self, Rsa._rsa_on_block, plaintext_blocks, "
-                                                          "public_key, private_key)"
+        ciphertext_blocks, public_key, private_key = eval("misc.encrypt_{}_asymm(self, Rsa._rsa_on_block, "
+                                                                                "plaintext_blocks, public_key, "
+                                                                                "private_key, block_size, key_size)"
                                                           .format(mode_of_op))
+
 
 
 
@@ -133,16 +137,15 @@ class Rsa(Cipher):
         public_key  = self.public_key
         private_key = self.private_key
         key_size    = self.key_size
-        block_size  = self.key_size - 42
+        block_size  = self.block_size
         encoding    = self.char_set
         mode_of_op  = self.mode_of_op
 
 
         # Important variables for decryption
-        ciphertext_blocks = misc.encoded_chars_to_int_blocks(ciphertext, encoding, key_size) # Was padded up to key_size
+        ciphertext_blocks = misc.encoded_chars_to_int_blocks(ciphertext, encoding, key_size)  # Use KEY_SIZE, not BLOCK
         plaintext_blocks  = []
         plaintext         = ""
-
 
 
 
@@ -152,13 +155,13 @@ class Rsa(Cipher):
 
 
 
-
         # Decrypt the text using the proper mode of encryption
 
-        plaintext_blocks, public_key, private_key = eval("misc.decrypt_{}(self, Rsa._rsa_on_block, ciphertext_blocks, "
-                                                                         "public_key, private_key)"
+        plaintext_blocks, public_key, private_key = eval("misc.decrypt_{}_asymm(self, Rsa._rsa_on_block, "
+                                                                               "ciphertext_blocks, "
+                                                                               "public_key, private_key, "
+                                                                               "block_size, key_size)"
                                                          .format(self.mode_of_op))
-
 
 
 
@@ -236,7 +239,7 @@ class Rsa(Cipher):
         :param public_key:  (str)  The public key to read. May be empty during encryption
         :param private_key: (str)  The private key to read. Is NEVER empty during decryption
         :param key_size     (int)  The size of the key for generation (if needed)
-        :param block_size   (int)  The size of the block (for reading IV's)
+        :param block_size   (int)  The size of the IV is block_size + 1
         :param encoding:    (str)  The name of the encoding scheme used
         :param mode_of_op:  (str)  The name of the mode operation to be used
     	:return:            (str)  The public key

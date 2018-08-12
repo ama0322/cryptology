@@ -1529,7 +1529,7 @@ def is_english_n_grams(data:str) ->(bool, float):
 ########## MODES OF ENCODING ##########
 
 # ECB mode. Just a straightforward encryption on each block. Nothing special
-def encrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+def encrypt_ecb_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
                                                                         key_two:str) -> (list, str, str):
     """
     This runs an encryption in ECB mode.
@@ -1566,7 +1566,7 @@ def encrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 
 # ECB mode. Straightforward decryption on each block. Nothing special
-def decrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+def decrypt_ecb_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
                                                                     key_two:str) -> (list, str, str):
     """
     This runs a decryption in ECB mode.
@@ -1603,12 +1603,61 @@ def decrypt_ecb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
 
 
 
+# Exactly the same as symm
+def encrypt_ecb_asymm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list,
+                      key_one:str, key_two:str, input_num_bits:int, output_num_bits:int) -> (list, str, str):
+    """
+    This runs an encryption in ECB mode. Same for asymmetric ciphers as it is for symmetric ciphers
+
+    :param cipher_obj:       (Cipher)   The cipher object that is encrypting
+    :param algorithm:        (Callable) The function that encrypts a block
+    :param plaintext_blocks: (list)     The int blocks to encrypt and encode
+    :param key_one:          (str)      The original key to append to (nothing in the case of ECB)
+    :param key_two           (str)      Another key to append to (Probably the private_key)
+    :param input_num_bits:   (int)      The bit_length of the integer that is the input to the cipher
+    :param output_num_bits:  (int)      The bit_length of the integer that is the output to the cipher
+    :return:                 (list)     The encrypted ciphertext_blocks
+    :return:                 (str)      The new key
+    :return:                 (str)      The new private key, if it exists
+    """
+
+
+    return encrypt_ecb_symm(cipher_obj, algorithm, plaintext_blocks, key_one, key_two)
+
+
+# Exactly the same as symm
+def decrypt_ecb_asymm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list,
+                      key_one:str, key_two:str, input_num_bits:int, output_num_bits:int) -> (list, str, str):
+    """
+    This runs a decryption in ECB mode.
+
+    :param cipher_obj:        (Cipher)   The cipher object that is decrypting
+    :param algorithm:         (Callable) The function that decrypts a block
+    :param ciphertext_blocks: (list)     The int blocks to decrypts and decode
+    :param key_one:           (str)      The key to read IV (nothing in this case)
+    :param key_two:           (str)      Just for consistency's sake. Do nothing with this
+    :param input_num_bits:    (int)      The bit_length of the integer that is inputted to the algorithm
+    :param output_num_bits:   (int)      The bit_length of the integer that is outputted from the algorithm
+    :return:                  (list)     The decrypted ciphertext_blocks
+    :return:                  (str)      The key that was used
+    :return:                  (str)      The private key that was used (if it exists)
+    """
+
+
+    return decrypt_ecb_symm(cipher_obj, algorithm, ciphertext_blocks, key_one, key_two)
+
+
+
+
+
+
+
 
 
 
 
 # CBC mode. XOR IV with first block and then encrypt. Successive blocks are XOR'd with previous encrypted block
-def encrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+def encrypt_cbc_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
                                                                 key_two:str) ->(list, str, str):
     """
     CBC mode. XOR IV with first block and then encrypt. Successive blocks are XOR'd with previous encrypted block.
@@ -1627,7 +1676,7 @@ def encrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
     # Important instance vars for encryption
     block_size = cipher_obj.block_size
-    encoding = cipher_obj.char_set
+    encoding   = cipher_obj.char_set
 
 
     # Build the ciphertext blocks here
@@ -1635,14 +1684,15 @@ def encrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 
     # Generate an IV (and prepend it to keys)
-    iv = secrets.randbits(block_size) ^ (1 << (block_size - 1))
+    iv = secrets.randbits(block_size - 1) ^ (1 << (block_size - 1))
     key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
     key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
 
 
+
+
     # XOR the first block with the IV. Save into ciphertext_blocks
     ciphertext_blocks[0] = algorithm( iv ^ plaintext_blocks[0] )
-
 
 
     # For all other blocks, XOR with previous encrypted block before applying algorithm
@@ -1657,13 +1707,16 @@ def encrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
                           "{:,}".format(int(safe_div(i, (len(plaintext_blocks) - 1)) * len(cipher_obj.plaintext)))))
 
 
+
+
+
     # Return ciphertext_blocks and the new keys
     return ciphertext_blocks, key_one, key_two
 
 
 
 # CBC mode. Reverse the CBC
-def decrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+def decrypt_cbc_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
                                                                 key_two:str) -> (list, str, str):
     """
     Decrypt with CBC. Reverse what the encrypt did
@@ -1711,6 +1764,140 @@ def decrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
                           "{:,}".format(int(safe_div(i, (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
 
 
+
+
+    # Return
+    return plaintext_blocks, key_one, key_two
+
+
+
+
+
+
+
+
+# CBC mode. XOR IV with first block and then encrypt. Successive blocks are XOR'd with previous encrypted block
+def encrypt_cbc_asymm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list,
+                key_one:str, key_two:str, input_num_bits:int, output_num_bits:int) ->(list, str, str):
+    """
+    CBC mode. XOR IV with first block and then encrypt. Successive blocks are XOR'd with previous encrypted block.
+    Also, prepend keys with the character-encoded IV
+
+    :param cipher_obj:       (Cipher)   The cipher object to get properties
+    :param algorithm:        (Callable) The algorithm to use
+    :param plaintext_blocks: (list)     The plaintext int blocks to encrypt
+    :param key_one:          (str)      The key to prepend IV with
+    :param key_two:          (str)      Another key to prepend IV with
+    :param input_num_bits:   (int)      The bit_length of the integer to feed into the algorithm
+    :param output_num_bits:  (int)      The bit_length of the integer that comes out of the algorithm
+    :return:                 (list)     The encrypted int block
+    :return:                 (str)      The IV-prepended key
+    :return:                 (str)      IV-prepended private key, if it exists
+    """
+
+
+    # Important instance vars for encryption
+    block_size = cipher_obj.block_size
+    encoding   = cipher_obj.char_set
+
+
+    # Build the ciphertext blocks here
+    ciphertext_blocks = [0] * len(plaintext_blocks)
+
+
+    # Generate an IV (with a size of input_num_bits)
+    iv = secrets.randbits(input_num_bits - 1) ^ (1 << (input_num_bits - 1))
+    key_one = int_to_chars_encoding_scheme_pad(iv, encoding, input_num_bits) + key_one
+    key_two = int_to_chars_encoding_scheme_pad(iv, encoding, input_num_bits) + key_two
+
+
+
+    # XOR the first block with the IV. Save into ciphertext_blocks
+    ciphertext_blocks[0] = algorithm( iv ^ plaintext_blocks[0] )
+
+
+    # For all other blocks, XOR with previous encrypted block before applying algorithm
+    for i in range(1, len(plaintext_blocks)):
+        previous_block = ciphertext_blocks[i - 1]       # Get the previous block
+        bit_mask = int(("1" * input_num_bits), 2)       # Bitmask to save the first input_num_bits ONLY
+        previous_block = previous_block & bit_mask      # Use the first input_num_bits of the previous block in XOR
+
+        # Use the algorithm
+        ciphertext_blocks[i] = algorithm( previous_block ^ plaintext_blocks[i] )
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(plaintext_blocks) - 1):
+            print("Encryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m", i / len(plaintext_blocks), "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(plaintext_blocks) - 1)) * len(cipher_obj.plaintext)))))
+
+
+
+
+
+    # Return ciphertext_blocks and the new keys
+    return ciphertext_blocks, key_one, key_two
+
+
+
+# CBC mode. Reverse the CBC
+def decrypt_cbc_asymm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list,
+                      key_one:str, key_two:str, input_num_bits:int, output_num_bits:int) -> (list, str, str):
+    """
+    Decrypt with CBC. Reverse what the encrypt did
+
+    :param cipher_obj:        (Cipher)   The cipher object to get instance vars from
+    :param algorithm:         (Callable) The algorithm to decrypt a block
+    :param ciphertext_blocks: (list)     The encrypted integer blocks
+    :param key_one:           (str)      The key to read IV from
+    :param key_two:           (str)      Do nothing with this
+    :param input_num_bits:    (int)      The bit_length of the number that is put into the algorithm
+    :param output_num_bits:   (int)      The bit_length of the number that comes out of the algorithm
+    :return:                  (list)     The decrypted integer blocks
+    :return:                  (str)      The symmetric/public key, not really used by caller
+    :return:                  (str)      The private key, not really used by caller
+    """
+
+    # Important instance vars for decryption, and important variables
+    block_size = cipher_obj.block_size             # Same as input_num_bits
+    encoding = cipher_obj.char_set
+    bit_mask = int("1" * input_num_bits, 2)        # The bitmask to get the first input_num_bits of the previous block
+
+    # Build the plaintext blocks here
+    plaintext_blocks = [0] * len(ciphertext_blocks)
+
+
+    # Read the IV. Generate random bits, and see how many characters to read
+    iv_len = len(int_to_chars_encoding_scheme_pad(1, encoding, input_num_bits))  # Encode block_size bits and get bits
+    iv = chars_to_int_decoding_scheme(key_one[0 : iv_len], encoding)             # Get the integer form of the iv
+
+
+
+
+    # Call algorithm on first ciphertext_block and XOR with iv
+    plaintext_blocks[0] = algorithm(ciphertext_blocks[0]) ^ iv
+
+
+
+
+
+    # For all successive blocks, call algorithm on ciphertext_block and XOR with the previous ciphertext_block
+    for i in range(1, len(ciphertext_blocks)):
+        previous_block = ciphertext_blocks[i - 1]    # Get the previous block
+        previous_block &= bit_mask
+
+
+        plaintext_blocks[i] = algorithm(ciphertext_blocks[i]) ^ previous_block
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(ciphertext_blocks) - 1):
+            print("Decryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(ciphertext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
+
+
+
+
     # Return
     return plaintext_blocks, key_one, key_two
 
@@ -1723,7 +1910,7 @@ def decrypt_cbc(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
 
 
 # PCBC mode. Similar to CBC, but xor previous ciphertext with the original plaintext before xor'ing with current block
-def encrypt_pcbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+def encrypt_pcbc_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
                                                                 key_two:str) ->(list, str, str):
     """
     PCBC mode. Same as CBC, but XOR the previous ciphertext block with its original plaintext block before xor'ing
@@ -1750,7 +1937,7 @@ def encrypt_pcbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blo
 
 
     # Generate an IV (and prepend it to keys)
-    iv = secrets.randbits(block_size) ^ (1 << (block_size - 1))
+    iv = secrets.randbits(block_size - 1) ^ (1 << (block_size - 1))
     key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
     key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
 
@@ -1777,7 +1964,7 @@ def encrypt_pcbc(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blo
 
 
 # PCBC mode. Reverse the PCBC
-def decrypt_pcbc(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+def decrypt_pcbc_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
                                                                 key_two:str) -> (list, str, str):
     """
     Decrypt with PCBC. Reverse what the encrypt did
@@ -1835,10 +2022,132 @@ def decrypt_pcbc(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_bl
 
 
 
+# PCBC mode. Adjust the algorithm input size, but otherwise the same
+def encrypt_pcbc_asymm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list,
+                       key_one:str, key_two:str, input_num_bits:int, output_num_bits:int) ->(list, str, str):
+    """
+    PCBC mode. Same as CBC, but XOR the previous ciphertext block with its original plaintext block before xor'ing
+    with the current block before encrypting.
+
+    :param cipher_obj:       (Cipher)   The cipher object to get properties
+    :param algorithm:        (Callable) The algorithm to use
+    :param plaintext_blocks: (list)     The plaintext int blocks to encrypt
+    :param key_one:          (str)      The key to prepend IV with
+    :param key_two:          (str)      Another key to prepend IV with
+    :param input_num_bits    (int)      The bit_length of the number that goes into the algorithm
+    :param output_num_bits   (int)      The bit_length of the number that comes out of the algorithm
+    :return:                 (list)     The encrypted int block
+    :return:                 (str)      The IV-prepended key
+    :return:                 (str)      IV-prepended private key, if it exists
+    """
+
+
+    # Important instance vars for encryption, and important vars
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+    bit_mask = int("1" * input_num_bits, 2)   # The bitmask to get the first input_num_bits of the previous block
+
+    # Build the ciphertext blocks here
+    ciphertext_blocks = [0] * len(plaintext_blocks)
+
+
+    # Generate an IV (and prepend it to keys)
+    iv = secrets.randbits(input_num_bits - 1) ^ (1 << (input_num_bits - 1))
+    key_one = int_to_chars_encoding_scheme_pad(iv, encoding, input_num_bits) + key_one
+    key_two = int_to_chars_encoding_scheme_pad(iv, encoding, input_num_bits) + key_two
+
+
+    # XOR the first block with the IV. Save into ciphertext_blocks
+    ciphertext_blocks[0] = algorithm( iv ^ plaintext_blocks[0] )
+
+
+
+    # For all other blocks, XOR with previous encrypted block before applying algorithm
+    for i in range(1, len(plaintext_blocks)):
+        xor_with = plaintext_blocks[i - 1] ^ ciphertext_blocks[i - 1]   # XOR with this
+        xor_with &= bit_mask                                            # Cut to size of the input_num_bits
+
+        ciphertext_blocks[i] = algorithm( xor_with ^ plaintext_blocks[i] )
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(plaintext_blocks) - 1):
+            print("Encryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(plaintext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(plaintext_blocks) - 1)) * len(cipher_obj.plaintext)))))
+
+
+    # Return ciphertext_blocks and the new keys
+    return ciphertext_blocks, key_one, key_two
+
+
+# PCBC mode. Reverse the encrypt
+def decrypt_pcbc_asymm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list,
+                       key_one:str, key_two:str, input_num_bits:int, output_num_bits:int) -> (list, str, str):
+    """
+    Decrypt with PCBC. Reverse what the encrypt did
+
+    :param cipher_obj:        (Cipher)   The cipher object to get instance vars from
+    :param algorithm:         (Callable) The algorithm to decrypt a block
+    :param ciphertext_blocks: (list)     The encrypted integer blocks
+    :param key_one:           (str)      The key to read IV from
+    :param key_two:           (str)      Do nothing with this
+    :param input_num_bits    (int)      The bit_length of the number that goes into the algorithm
+    :param output_num_bits   (int)      The bit_length of the number that comes out of the algorithm
+    :return:                  (list)     The decrypted integer blocks
+    :return:                  (str)      The symmetric/public key, not really used by caller
+    :return:                  (str)      The private key, not really used by caller
+    """
+
+    # Important instance vars for decryption
+    block_size = cipher_obj.block_size
+    encoding = cipher_obj.char_set
+    bit_mask = int("1" * input_num_bits, 2)  # The bitmask to get the first input_num_bits of the previous block
+
+    # Build the plaintext blocks here
+    plaintext_blocks = [0] * len(ciphertext_blocks)
+
+
+    # Read the IV. Generate random bits, and see how many characters to read
+    iv_len = len(int_to_chars_encoding_scheme_pad(1, encoding, block_size))   # Encode block_size bits and get its len
+    iv = chars_to_int_decoding_scheme(key_one[0 : iv_len], encoding)          # Get the integer form of the iv
+
+
+
+
+    # Call algorithm on first ciphertext_block and XOR with iv
+    plaintext_blocks[0] = algorithm(ciphertext_blocks[0]) ^ iv
+
+
+
+    # For all successive blocks, call algorithm on ciphertext_block and XOR with the previous ciphertext_block
+    for i in range(1, len(ciphertext_blocks)):
+        xor_with = ciphertext_blocks[i - 1] ^ plaintext_blocks[i - 1] # XOR with both previous blocks
+        xor_with &= bit_mask                                          # bitmask out unnecessary bits
+
+        plaintext_blocks[i] = algorithm(ciphertext_blocks[i]) ^ xor_with
+
+        if i % (utf_8_to_int_blocks.update_interval / 1) == 0 or i == (len(ciphertext_blocks) - 1):
+            print("Decryption percent done: {}{:.2%}{} with {} characters"
+                  .format("\u001b[32m",
+                          i / len(ciphertext_blocks),
+                          "\u001b[0m",
+                          "{:,}".format(int(safe_div(i, (len(ciphertext_blocks) - 1)) * len(cipher_obj.ciphertext)))))
+
+
+    # Return
+    return plaintext_blocks, key_one, key_two
+
+
+
+
+
+
+
 
 
 # CFB mode. Similar to CBC, but encrypt iv instead of the plaintext block. XOR iv encrypted result with plaintext block
-def encrypt_cfb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+def encrypt_cfb_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
                                                                 key_two:str) ->(list, str, str):
     """
     CFB mode. Similar to CBC, but encrypt the iv instead of the plaintext block. XOR the iv encrypted result with the
@@ -1866,7 +2175,7 @@ def encrypt_cfb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 
     # Generate an IV (and prepend it to keys)
-    iv = secrets.randbits(block_size) ^ (1 << (block_size - 1))
+    iv = secrets.randbits(block_size - 1) ^ (1 << (block_size - 1))
     key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
     key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
 
@@ -1893,7 +2202,7 @@ def encrypt_cfb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 
 # CFB mode. Reverse the PCBC
-def decrypt_cfb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+def decrypt_cfb_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
                                                                 key_two:str) -> (list, str, str):
     """
     Decrypt with OFB. Almost identical to CBC encryption, but done in reverse.
@@ -1954,7 +2263,7 @@ def decrypt_cfb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
 
 
 # OFB mode. It generates keystream blocks, which are XOR'ed with plaintext blocks to get ciphertext blocks
-def encrypt_ofb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+def encrypt_ofb_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
                                                                 key_two:str) ->(list, str, str):
     """
     OFB mode. Similar to CBC, but encrypt the iv instead of the plaintext block. XOR the iv encrypted result with the
@@ -1982,7 +2291,7 @@ def encrypt_ofb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 
     # Generate an IV (and prepend it to keys)
-    iv = secrets.randbits(block_size) ^ (1 << (block_size - 1))
+    iv = secrets.randbits(block_size - 1) ^ (1 << (block_size - 1))
     key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
     key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
 
@@ -2009,7 +2318,7 @@ def encrypt_ofb(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 
 # OFB mode. Exactly the same as the encrypt
-def decrypt_ofb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+def decrypt_ofb_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
                                                                 key_two:str) -> (list, str, str):
     """
     Decrypt with OFB. Reverse what the encrypt did.
@@ -2068,7 +2377,7 @@ def decrypt_ofb(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blo
 
 
 # CTR mode. It encrypts an iv and a counter, and XORs the result with the plaintext
-def encrypt_ctr(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
+def encrypt_ctr_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
                                                                 key_two:str) ->(list, str, str):
     """
     CTR mode. It encrypts with a block, the upper bits being the IV, and the lower bits being the counter. The result of
@@ -2095,8 +2404,8 @@ def encrypt_ctr(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 
     # Generate an IV (and prepend it to keys). IV is half the size of the block (will be upper bits so shift)
-    iv = secrets.randbits(block_size // 2) ^ (1 << ((block_size // 2) - 1))         # IV is half the block (round down)
-    iv = iv << int(math.ceil(block_size / 2))                                       # Shift to upper bits (round up)
+    iv = secrets.randbits((block_size // 2) - 1) ^ (1 << ((block_size // 2) - 1))    # IV is half the block (round down)
+    iv = iv << int(math.ceil(block_size / 2))                                        # Shift to upper bits (round up)
     key_one = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_one
     key_two = int_to_chars_encoding_scheme_pad(iv, encoding, block_size) + key_two
 
@@ -2123,7 +2432,7 @@ def encrypt_ctr(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_bloc
 
 
 # CTR mode. Same as encrypt, but switch plaintext_block and ciphertext_block
-def decrypt_ctr(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
+def decrypt_ctr_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertext_blocks:list, key_one:str,
                                                                 key_two:str) -> (list, str, str):
     """
     Decrypt with CTR. Same as encrypt, but switch plaintext_block and ciphertext_block
