@@ -35,7 +35,7 @@ class VigenereMultiplicative(Cipher):
                     "",              0,              0,            source_location,     output_location    )
 
 
-
+  
     # Algorithm to encrypt plaintext
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
     def encrypt_plaintext(self) -> None:
