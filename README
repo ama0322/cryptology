@@ -141,19 +141,19 @@ MISC.PY
 
     Structure:
         I.   Resources - this area hold resources that generally deal with the type of encryptions/decryptions and
-             character sets available. Also, some resources necessary for algorithms in the same file is also stored
-             here.
+                 character sets available. Also, some resources necessary for algorithms in the same file is also stored
+                 here.
 
         II.  User Interfacing and Function Calls - these functions are called from files from Decryption and Encryption
-             when their execute() function is called. It makes calls to Section IV in order to get
-             user data and write down useful information. These functions also return the encrypted/decrypted text back
-             to execute()
+                 when their execute() function is called. It makes calls to Section IV in order to get
+                 user data and write down useful information. These functions also return the encrypted/decrypted text
+                 back to execute()
 
         III. Useful Algorithms - this contains algorithms that are used in encrypt() and decrypt() from files in
-             Encryption and Decryption
+                 Encryption and Decryption
 
         IV.  Helper Functions - functions to process user input and write down relevant information. Called from
-             functions in Section II for convenience.
+                 functions in Section II for convenience.
 
 
 TEST.PY
@@ -162,7 +162,39 @@ TEST.PY
 
 
 
+Package Ciphers
 
+
+    ### GENERAL FILE FORMAT ###
+        I.   Cipher info - Class variables that describe what the cipher is, and how to use the cipher.
+
+        II.  Constructor - Constructor that instantiates objects with the instance variables. Encryption and decrytion
+                 are done with these constructed objects and their methods.
+
+        III. def encrypt_plaintext() - This is the method that encypts the object's plaintext variable. This variable,
+                 along with all other parameters for encryption (such as char_set, mode_of_op, etc.) must be set before
+                 encrypt_plaintext() is called.
+
+        IV.  def decrypt_ciphertext() - This method decrypts the object's ciphertext variable. Like
+                 encrypt_plaintext(), the object's relevant instance variables must be set before usage.
+
+        V.   def write_statistics(file_path) - This method writes out statistics of the encryption/decryption for
+                 testing mode (This is not used when a regular info file is created in cryptography_runner). This works
+                 by calling the super method in class Cipher in file _cipher, which is write_statistics(file_path,
+                 extra_lines). For many cases, extra_lines is a blank dictionary.
+                     Sometimes, we want additional statistics* to be written (additional meaning more than the default
+                 statistics that the super method writes). In that case, extra_lines is no longer blank. It becomes the
+                 dictionary in which the KEYS are the line numbers that extra statistics are to be inserted into, and
+                 the VALUES are the actual line (is a string) to insert in.
+                     *The super method writes different statistics based on the type of cipher the calling object is.
+                 So, for example, the default statistics for an asymmetric block cipher is different from the
+                 default statistics for a regular symmetric cipher.
+
+        VI.  def _ciphername_on_block(block) - BLOCK CIPHERS ONLY. This is the actual algorithm that operates on a
+                 block.
+                     Typically, this static method has some static variables (which are often in some way related to
+                 the key). In this case, all the methods handling the key MUST be run first before this method is
+                 called.
 
 
 
