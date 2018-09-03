@@ -20,7 +20,7 @@ last = "" # Store the path to the last created encrypted/decrypted file
 
 
 ###################################################################################### START OF MAIN FUNCTION ##########
-def main():
+def main() -> None:
 
     # Set the current working directory to be the project "Cryptography_2", two levels above from this file.
     path_here = os.path.realpath(__file__)
@@ -49,10 +49,6 @@ def main():
         # execute the encryption/decryption on the data
         _execute_encryption_or_decryption( encrypt_or_decrypt, cipher, data, source_location, output_location )
 ######################################################################################## END OF MAIN FUNCTION ##########
-
-
-
-
 
 
 
@@ -402,7 +398,7 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
             """
             # Print ouf the prompt for the user
             selection = input("Enter the mode of operation to be used (To use the default scheme, "
-                              "\"ecb\", leave empty): ")
+                              "\"cbc\", leave empty): ")
 
             # Loop while the user gives an invalid alphabet
             while True:
@@ -424,7 +420,7 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
                     continue
 
                 elif selection == "":
-                    selection = "ecb"
+                    selection = "cbc"
                     break
 
 
@@ -487,7 +483,7 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
             """
             # Print ouf the prompt for the user
             selection = input("Enter the mode of operation to be used (To use the default mode, "
-                              "\"ecb\", leave empty): ")
+                              "\"cbc\", leave empty): ")
 
             # Loop while the user gives an invalid alphabet
             while True:
@@ -509,7 +505,7 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
                     continue
 
                 elif selection == "":
-                    selection = "ecb"
+                    selection = "cbc"
                     break
 
 
@@ -573,12 +569,19 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
 
 
         # If symmetric block cipher, then any mode of operation can be used
-        if cipher_obj.CIPHER_TYPE == "SYMMETRIC":
+        if cipher_obj.CIPHER_TYPE == "symmetric":
             if encrypt_or_decrypt == "encrypt":
                 return get_symm_encryption_mode_of_encoding()
 
             elif encrypt_or_decrypt == "decrypt":
                 return get_symm_decryption_mode_of_encoding()
+
+        elif cipher_obj.CIPHER_TYPE == "asymmetric":
+            if encrypt_or_decrypt == "encrypt":
+                return get_asymm_encryption_mode_of_encoding()
+
+            elif encrypt_or_decrypt == "decrypt":
+                return get_asymm_decryption_mode_of_encoding()
 
     # Figure out the block size to use (function handles non-variable block ciphers or non-block ciphers also)
     def get_block_size() -> int:
@@ -596,10 +599,9 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
             """
 
             # Print ouf the prompt for the user
-            selection = input("Enter a block size between {} and {} (To use the default block size, \"{}\", "
+            selection = input("{}. (To use the default block size, \"{}\", "
                               "leave empty): "
-                              .format(cipher_obj.MIN_BLOCK_SIZE, cipher_obj.MAX_BLOCK_SIZE,
-                                      cipher_obj.DEFAULT_BLOCK_SIZE))
+                              .format(cipher_obj.PROMPT_BLOCK_SIZE, cipher_obj.DEFAULT_BLOCK_SIZE))
 
             # Loop while the user gives an invalid block size
             while True:
@@ -613,17 +615,17 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
                 try:
                     selection = int(selection, 10)
                 except:
-                    selection = input("{} is not a number! Enter a block size between {} and {} (To use the default "
+                    selection = input("{} is not a number! {}. (To use the default "
                                       "block size, \"{}\", leave empty): "
-                                      .format(selection, cipher_obj.MIN_BLOCK_SIZE, cipher_obj.MAX_BLOCK_SIZE,
-                                              cipher_obj.DEFAULT_BLOCK_SIZE))
+                                      .format(selection, cipher_obj.PROMPT_BLOCK_SIZE, cipher_obj.DEFAULT_BLOCK_SIZE))
                     continue
 
                 # Not a legitimate block size
-                if cipher_obj.MIN_BLOCK_SIZE <= selection <= cipher_obj.MAX_BLOCK_SIZE:
-                    selection = input("{} is an invalid block size! Enter a block size between {} and {} (To use the "
+                block_size = selection
+                if eval(cipher_obj.EXPRESSION_BLOCK_SIZE) == False:
+                    selection = input("{} is an invalid block size! {}. (To use the "
                                       "default block size, \"{}\", leave empty): "
-                                      .format(selection, cipher_obj.MIN_BLOCK_SIZE, cipher_obj.MAX_BLOCK_SIZE,
+                                      .format(selection, cipher_obj.PROMPT_BLOCK_SIZE,
                                               cipher_obj.DEFAULT_BLOCK_SIZE))
                     continue
 
@@ -641,32 +643,31 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
             """
 
             # Print ouf the prompt for the user
-            selection = input("Enter a block size between {} and {} (To use the default block size, \"{}\", "
-                              "leave empty): "
-                              .format(cipher_obj.MIN_BLOCK_SIZE, cipher_obj.MAX_BLOCK_SIZE,
-                                      cipher_obj.DEFAULT_BLOCK_SIZE))
+            selection = input("{}. Enter it: "
+                              .format(cipher_obj.PROMPT_BLOCK_SIZE))
 
             # Loop while the user gives an invalid block size
             while True:
 
                 # User entered nothing
                 if selection == "":
-                    selection = input("Nothing entered! Enter a block size between {} and {}: "
-                                      .format(selection, cipher_obj.MIN_BLOCK_SIZE, cipher_obj.MAX_BLOCK_SIZE))
+                    selection = input("Nothing entered! {}: "
+                                      .format(cipher_obj.PROMPT_BLOCK_SIZE))
                     break
 
                 # If the user did not enter a number
                 try:
                     selection = int(selection, 10)
                 except:
-                    selection = input("{} is not a number! Enter a block size between {} and {}: "
-                                      .format(selection, cipher_obj.MIN_BLOCK_SIZE, cipher_obj.MAX_BLOCK_SIZE))
+                    selection = input("{} is not a number! E{}: "
+                                      .format(selection, cipher_obj.PROMPT_BLOCK_SIZE))
                     continue
 
                 # Not a legitimate block size
-                if cipher_obj.MIN_BLOCK_SIZE <= selection <= cipher_obj.MAX_BLOCK_SIZE:
-                    selection = input("{} is an invalid block size! Enter a block size between {} and {}: "
-                                      .format(selection, cipher_obj.MIN_BLOCK_SIZE, cipher_obj.MAX_BLOCK_SIZE,))
+                block_size = selection
+                if eval(cipher_obj.EXPRESSION_BLOCK_SIZE) is False:
+                    selection = input("{} is an invalid block size! {}: "
+                                      .format(selection, cipher_obj.PROMPT_BLOCK_SIZE))
                     continue
 
                 # If here, then all clear
@@ -701,11 +702,12 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
             :return: (int) The key size to use
             """
 
-            # Print ouf the prompt for the user
-            selection = input("Enter a key size between {} and {} (To use the default key size, \"{}\", "
+
+
+            # Print out the prompt for the user
+            selection = input("{}. (To use the default key size, \"{}\", "
                               "leave empty): "
-                              .format(cipher_obj.MIN_KEY_SIZE, cipher_obj.MAX_KEY_SIZE,
-                                      cipher_obj.DEFAULT_KEY_SIZE))
+                              .format(cipher_obj.PROMPT_KEY_SIZE, cipher_obj.DEFAULT_KEY_SIZE))
 
             # Loop while the user gives an invalid block size
             while True:
@@ -719,18 +721,17 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
                 try:
                     selection = int(selection, 10)
                 except:
-                    selection = input("{} is not a number! Enter a key size between {} and {} (To use the default "
+                    selection = input("{} is not a number! {}. (To use the default "
                                       "key size, \"{}\", leave empty): "
-                                      .format(selection, cipher_obj.MIN_KEY_SIZE, cipher_obj.MAX_KEY_SIZE,
-                                              cipher_obj.DEFAULT_KEY_SIZE))
+                                      .format(selection, cipher_obj.PROMPT_KEY_SIZE, cipher_obj.DEFAULT_KEY_SIZE))
                     continue
 
-                # Not a legitimate block size
-                if cipher_obj.MIN_BLOCK_SIZE <= selection <= cipher_obj.MAX_BLOCK_SIZE:
-                    selection = input("{} is an invalid key size! Enter a key size between {} and {} (To use the "
+                # Not a legitimate key size
+                key_size = selection
+                if eval(cipher_obj.EXPRESSION_KEY_SIZE) == False:
+                    selection = input("{} is an invalid key size! {}. (To use the "
                                       "default key size, \"{}\", leave empty): "
-                                      .format(selection, cipher_obj.MIN_KEY_SIZE, cipher_obj.MAX_KEY_SIZE,
-                                              cipher_obj.DEFAULT_KEY_SIZE))
+                                      .format(selection, cipher_obj.PROMPT_KEY_SIZE, cipher_obj.DEFAULT_KEY_SIZE))
                     continue
 
                 # If here, then all clear
@@ -746,33 +747,32 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
             :return: (int) The chosen key size
             """
 
-            # Print ouf the prompt for the user
-            selection = input("Enter a key size between {} and {} (To use the default key size, \"{}\", "
-                              "leave empty): "
-                              .format(cipher_obj.MIN_KEY_SIZE, cipher_obj.MAX_KEY_SIZE,
-                                      cipher_obj.DEFAULT_KEY_SIZE))
+            # Print out the prompt for the user
+            selection = input("{}. Enter the key:"
+                              .format(cipher_obj.PROMPT_KEY_SIZE))
 
             # Loop while the user gives an invalid block size
             while True:
 
                 # User entered nothing
                 if selection == "":
-                    selection = input("Nothing entered! Enter a key size between {} and {}: "
-                                      .format(selection, cipher_obj.MIN_KEY_SIZE, cipher_obj.MAX_KEY_SIZE))
+                    selection = input("Nothing entered! {}: "
+                                      .format(cipher_obj.PROMPT_KEY_SIZE))
                     break
 
                 # If the user did not enter a number
                 try:
                     selection = int(selection, 10)
                 except:
-                    selection = input("{} is not a number! Enter a key size between {} and {}: "
-                                      .format(selection, cipher_obj.MIN_KEY_SIZE, cipher_obj.MAX_KEY_SIZE))
+                    selection = input("{} is not a number! {}: "
+                                      .format(selection, cipher_obj.PROMPT_KEY_SIZE))
                     continue
 
                 # Not a legitimate key size
-                if cipher_obj.MIN_KEY_SIZE <= selection <= cipher_obj.MAX_KEY_SIZE:
-                    selection = input("{} is an invalid key size! Enter a key size between {} and {}: "
-                                      .format(selection, cipher_obj.MIN_KEY_SIZE, cipher_obj.MAX_KEY_SIZE,))
+                key_size = selection
+                if eval(cipher_obj.EXPRESSION_KEY_SIZE) == False:
+                    selection = input("{} is an invalid key size! {}: "
+                                      .format(selection, cipher_obj.PROMPT_KEY_SIZE))
                     continue
 
                 # If here, then all clear
@@ -782,10 +782,11 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
             return selection
 
 
-        # If no variable block size, then just return default block size
+        # If no variable key size, then just return default block size
         if cipher_obj.VARIABLE_KEY_SIZE is False:
             return cipher_obj.DEFAULT_KEY_SIZE
 
+        # Else, take the key size
         elif encrypt_or_decrypt == "encrypt":
             return get_encryption_key_size()
 
@@ -882,7 +883,7 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
     key, public_key, private_key = get_key()
     mode_of_op = get_mode_of_op()
     block_size = get_block_size()
-    key_size = get_key_size()
+    key_size   = get_key_size()
 
 
     # Create the actual Cipher object with the correct parameters
@@ -926,8 +927,14 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
 
 
 
+
+
+
+
+
+
 # Print out available Encryption/Decryption types
-def _usage():
+def _usage() -> None:
 
     print("***********************************************************************************************************")
     print("See README for usage."
@@ -941,9 +948,8 @@ def _usage():
     print(*(Cipher.DECRYPTION_SET - Cipher.ENCRYPTION_SET), sep=", ")
     print()
 
-
 # Parse user input and return relevant information
-def _parse_user_input():
+def _parse_user_input() -> (str, str, str, str, str):
     """
     This function parses user input and returns relevant information.
     User input is unix-like, with: command [optional flag] (argument) <optional argument>
@@ -1320,12 +1326,8 @@ def _parse_user_input():
             statement = input("Command (" + command + ") not recognized! Enter another statement: ")
             continue
 
-
-
-
-
 # Print data and the output location
-def _print_data_and_location(data, output_location):
+def _print_data_and_location(data, output_location) -> None:
 
     print("\nTHIS IS THE DATA: \n" + data)
     print("***********************************************************************************************************")
