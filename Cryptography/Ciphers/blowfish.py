@@ -33,8 +33,8 @@ class Blowfish(Cipher):
 
 
     # Cipher resources:
-    p_array = [  # Random digits of pi. Used as a basis for key schedule
-        # region p_array
+    p_array = [
+        # region Random digits of pi. Used as a basis for key schedule
         0x243F6A88, 0x85A308D3, 0x13198A2E, 0x03707344,
         0xA4093822, 0x299F31D0, 0x082EFA98, 0xEC4E6C89,
         0x452821E6, 0x38D01377, 0xBE5466CF, 0x34E90C6C,
@@ -43,8 +43,8 @@ class Blowfish(Cipher):
         # endregion
     ]
 
-    s_boxes = [  # Random digits of pi. Used as a basis for key schedule
-        # region s_boxes
+    s_boxes = [
+        # region Random digits of pi. Used as a basis for key schedule
         [
             0xD1310BA6, 0x98DFB5AC, 0x2FFD72DB, 0xD01ADFB7,
             0xB8E1AFED, 0x6A267E96, 0xBA7C9045, 0xF12C7F99,
@@ -334,21 +334,25 @@ class Blowfish(Cipher):
     @misc.get_time_for_algorithm("self.encrypt_time_for_algorithm", "self.encrypt_time_overall",
                                  "self.encrypt_time_for_key")
     @misc.store_time_in("self.encrypt_time_overall")
-    def encrypt_plaintext(self) -> None:
+    def encrypt_plaintext(self, plaintext="", key_size=0, encoding="", mode_of_op="") -> None:
         """
         This encrypts with a blowfish cipher. Like all block ciphers, the plaintext is changed into 64-bit integer
         blocks. Then, the key schedule is run with a randomly generated key, which sets the "true" key, the p_array and
         s_boxes static variables in the _blowfish_on_block() function.
 
-        :return:          (None)
+        :param plaintext:  (str)  The plaintext to encrypt
+        :param key_size:   (int)  The size of the key to encrypt with
+        :param encoding:   (str)  The name of the character encoding to use
+        :param mode_of_op: (str)  The name of the mode of operation to use
+        :return:           (None)
         """
 
-        # Parameters for encryption
-        plaintext  = self.plaintext
-        key        = self.key
-        key_size   = self.key_size
-        encoding   = self.char_set
-        mode_of_op = self.mode_of_op
+        # Parameters for encryption (if not already filled in)
+        if plaintext == "" and key_size == 0 and encoding == "" and mode_of_op == "":
+            plaintext  = self.plaintext
+            key_size   = self.key_size
+            encoding   = self.char_set
+            mode_of_op = self.mode_of_op
 
 
         # Important variables for encryption
@@ -400,21 +404,27 @@ class Blowfish(Cipher):
     @misc.get_time_for_algorithm("self.decrypt_time_for_algorithm", "self.decrypt_time_overall",
                                  "self.decrypt_time_for_key")
     @misc.store_time_in("self.decrypt_time_overall")
-    def decrypt_ciphertext(self) -> None:
+    def decrypt_ciphertext(self, ciphertext="", key="", key_size=0, encoding="", mode_of_op="") -> None:
         """
         As with all block ciphers, the ciphertext is split into 64-bit integer blocks. This method needs a given key,
         which is read to be used for the key schedule. Blowfish decryption is exactly the same as the encryption,
         except that the p_array must be reversed.
 
+        :param ciphertext: (str)  The ciphertext to decrypt
+        :param key:        (str)  The key to decrypt with
+        :param key_size:   (int)  The bit-length of the key
+        :param encoding:   (str)  The name of the encoding that was used in encryption
+        :param mode_of_op: (str)  The name of the mode of operation that was used in encryption
         :return:           (None)
         """
 
-        # Parameters for encryption
-        ciphertext = self.ciphertext
-        key        = self.key
-        key_size   = self.key_size
-        encoding   = self.char_set
-        mode_of_op = self.mode_of_op
+        # Parameters for encryption (if not given)
+        if ciphertext == "" and key == "" and key_size == 0 and encoding == "" and mode_of_op == "":
+            ciphertext = self.ciphertext
+            key        = self.key
+            key_size   = self.key_size
+            encoding   = self.char_set
+            mode_of_op = self.mode_of_op
 
 
         # Important variables for decryption
