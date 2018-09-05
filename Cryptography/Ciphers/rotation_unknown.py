@@ -40,59 +40,66 @@ class RotationUnknown(Rotation):
 
     # Should only be called with tests
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
-    def encrypt_plaintext(self) -> None:
+    def encrypt_plaintext(self, plaintext="", key="", alphabet="") -> str:
         """
         This is the same thing as rotation's encrypt.
 
-        :return:          (None)
+        :param plaintext: (str) The plaintext to encrypt
+        :param key :      (str) The single character key to encrypt with
+        :param alphabet:  (str) The name of the alphabet to encrypt into
+        :return:          (str) The encrypted ciphertext
         """
 
         # Same exact thing as Rotation's.
-        Rotation.encrypt_plaintext(self)
+        return Rotation.encrypt_plaintext(self)
 
 
-        # Return none
-        return None
 
 
     # Algorithm to decrypt plaintext
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
-    def decrypt_ciphertext(self) -> None:
+    def decrypt_ciphertext(self, ciphertext="", key = "", alphabet="") -> str:
         """
         In order to decrypt, decrypt with rotation with random unicode values to see if the result is in English. For
         this to work, the plaintext must be in mostly English. The "random" unicode values are tested starting from 0 to
         the maximum unicode value.
 
-        :return:           (None)
+        :param ciphertext: (str) The ciphertext to decrypt
+        :param key:        (str) DO NOT TOUCH. Only there to match super-method signature
+        :param alphabet:   (str) The name of the alphabet of the ciphertext
+        :return:           (str)
         """
 
-        # Parameters for decryption
-        ciphertext = self.ciphertext
-        key        = self.key
-        alphabet   = self.char_set
+        # Parameters for decryption (if not provided)
+        if ciphertext == "" and key == "" and alphabet == "":
+            ciphertext = self.ciphertext
+            key        = self.key
+            alphabet   = self.char_set
 
+
+        # Important variables
+        plaintext = ""        # Build plaintext here
+        percent_english = 0.0 # Save the percent of english of "plaintext" here
+        key = ""              # Test random keys here
 
 
         # Try to decrypt the ciphertext using every single unicode value
         for key_val in range(0, Cipher.ALPHABETS.get("unicode")):
 
             # Set the key and proceed to decrypt (temporarily disable printing)
-            self.key = misc.chr_adjusted(key_val)                                # Get key for correctness
+            key = misc.chr_adjusted(key_val)                      # Get key character for correctness
             misc.disable_print()
-            Rotation.decrypt_ciphertext(self)                                    # Decrypt
+            plaintext = Rotation.decrypt_ciphertext(self)         # Decrypt
             misc.enable_print()
 
             # Assess the generated plaintext for correctness (English)
-            is_english, self.percent_english = misc.is_english_bag_of_words(self.plaintext)
+            is_english, percent_english = misc.is_english_bag_of_words(plaintext)
 
             # Print updates
-            #print("Done with: {}\tPercent English: {}%"
-            #      .format(repr(misc.chr_adjusted(key_val)),
-            #              format(self.percent_english * 100, ".2f") ))
             print("{:27}{}"
                   .format("Done with: {}{}{}".format("\u001b[32m", repr(misc.chr_adjusted(key_val)), "\u001b[0m"),
                           "Percent English: {}{}%{}".format("\u001b[32m",
-                                                            format(self.percent_english * 100, ".2f"),
+                                                            format(percent_english * 100, ".2f"),
                                                             "\u001b[0m")))
 
 
@@ -102,15 +109,15 @@ class RotationUnknown(Rotation):
 
 
 
-
         # Fill in self's plaintext and the key
-        self.plaintext       = self.plaintext
-        self.key             = self.key
-        self.percent_english = self.percent_english
+        self.plaintext       = plaintext
+        self.key             = key
+        self.percent_english = percent_english
 
 
         # Return none
-        return None
+        return plaintext
+
 
 
 
