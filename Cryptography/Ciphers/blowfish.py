@@ -334,17 +334,17 @@ class Blowfish(Cipher):
     @misc.get_time_for_algorithm("self.encrypt_time_for_algorithm", "self.encrypt_time_overall",
                                  "self.encrypt_time_for_key")
     @misc.store_time_in("self.encrypt_time_overall")
-    def encrypt_plaintext(self, plaintext="", key_size=0, encoding="", mode_of_op="") -> None:
+    def encrypt_plaintext(self, plaintext="", key_size=0, encoding="", mode_of_op="") -> str:
         """
         This encrypts with a blowfish cipher. Like all block ciphers, the plaintext is changed into 64-bit integer
         blocks. Then, the key schedule is run with a randomly generated key, which sets the "true" key, the p_array and
         s_boxes static variables in the _blowfish_on_block() function.
 
-        :param plaintext:  (str)  The plaintext to encrypt
-        :param key_size:   (int)  The size of the key to encrypt with
-        :param encoding:   (str)  The name of the character encoding to use
-        :param mode_of_op: (str)  The name of the mode of operation to use
-        :return:           (None)
+        :param plaintext:  (str) The plaintext to encrypt
+        :param key_size:   (int) The size of the key to encrypt with
+        :param encoding:   (str) The name of the character encoding to use
+        :param mode_of_op: (str) The name of the mode of operation to use
+        :return:           (str) The encrypted ciphertext
         """
 
         # Parameters for encryption (if not already filled in)
@@ -390,8 +390,8 @@ class Blowfish(Cipher):
         self.chars_per_block = len(ciphertext) / self.num_blocks
 
 
-        # Return nothing
-        return None
+        # Return ciphertext
+        return ciphertext
 
 
 
@@ -404,18 +404,18 @@ class Blowfish(Cipher):
     @misc.get_time_for_algorithm("self.decrypt_time_for_algorithm", "self.decrypt_time_overall",
                                  "self.decrypt_time_for_key")
     @misc.store_time_in("self.decrypt_time_overall")
-    def decrypt_ciphertext(self, ciphertext="", key="", key_size=0, encoding="", mode_of_op="") -> None:
+    def decrypt_ciphertext(self, ciphertext="", key="", key_size=0, encoding="", mode_of_op="") -> str:
         """
         As with all block ciphers, the ciphertext is split into 64-bit integer blocks. This method needs a given key,
         which is read to be used for the key schedule. Blowfish decryption is exactly the same as the encryption,
         except that the p_array must be reversed.
 
-        :param ciphertext: (str)  The ciphertext to decrypt
-        :param key:        (str)  The key to decrypt with
-        :param key_size:   (int)  The bit-length of the key
-        :param encoding:   (str)  The name of the encoding that was used in encryption
-        :param mode_of_op: (str)  The name of the mode of operation that was used in encryption
-        :return:           (None)
+        :param ciphertext: (str) The ciphertext to decrypt
+        :param key:        (str) The key to decrypt with
+        :param key_size:   (int) The bit-length of the key
+        :param encoding:   (str) The name of the encoding that was used in encryption
+        :param mode_of_op: (str) The name of the mode of operation that was used in encryption
+        :return:           (str) The decrypted plaintext
         """
 
         # Parameters for encryption (if not given)
@@ -470,8 +470,8 @@ class Blowfish(Cipher):
         self.chars_per_block = len(plaintext) / self.num_blocks
 
 
-        # Return nothing
-        return None
+        # Return plaintext
+        return plaintext
 
 
 
