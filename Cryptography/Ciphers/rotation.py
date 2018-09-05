@@ -101,10 +101,11 @@ class Rotation(Cipher):
         :return:           (str) The decrypted plaintext
         """
 
-        # Parameters for decryption
-        ciphertext = self.ciphertext
-        key        = self.key
-        alphabet   = self.char_set
+        # Parameters for decryption (if parameters not provided)
+        if ciphertext == "" and key == "" and alphabet == "":
+            ciphertext = self.ciphertext
+            key        = self.key
+            alphabet   = self.char_set
 
         # Other important variables
         plaintext     = []                                # The list to build up the ciphertext, one character at a time
