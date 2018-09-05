@@ -36,18 +36,22 @@ class Rotation(Cipher):
 
     # Algorithm to encrypt plaintext
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
-    def encrypt_plaintext(self) -> None:
+    def encrypt_plaintext(self, plaintext="", key="", alphabet="") -> str:
         """
         This gets the unicode value of the key, and modularly adds it to he unicode value of the plaintext character.
         This is done with all the characters in the plaintext
 
-        :return:          (None)
+        :param plaintext: (str) The plaintext to encrypt
+        :param key:       (str) The single character key to encrypt with
+        :param alphabet:  (str) The name of the alphabet to use
+        :return:          (str) The encrypted ciphertext
         """
 
-        # Parameters for encryption
-        plaintext  = self.plaintext
-        key        = self.key
-        alphabet   = self.char_set
+        # Parameters for encryption (if not already filled in)
+        if plaintext == "" and key == "" and alphabet == "":
+            plaintext  = self.plaintext
+            key        = self.key
+            alphabet   = self.char_set
 
         # Other important variables
         ciphertext    = []                                # The list to build up the ciphertext, one character at a time
@@ -76,7 +80,9 @@ class Rotation(Cipher):
         # Set the self object's ciphertext
         self.ciphertext = ciphertext
 
-        return None
+
+
+        return ciphertext
 
 
 
@@ -84,12 +90,15 @@ class Rotation(Cipher):
 
     # Algorithm to decrypt plaintext
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
-    def decrypt_ciphertext(self) -> None:
+    def decrypt_ciphertext(self, ciphertext="", key="", alphabet="") -> str:
         """
         This modularly subtracts the key's unicode value from the ciphertext character's unicode value to get the
         plaintext character.
 
-        :return:           (None)
+        :param ciphertext: (str) The ciphertext to decrypt
+        :param key:        (str) The key to decrypt with
+        :param alphabet:   (str) The alphabet of the ciphertext
+        :return:           (str) The decrypted plaintext
         """
 
         # Parameters for decryption
@@ -99,7 +108,7 @@ class Rotation(Cipher):
 
         # Other important variables
         plaintext     = []                                # The list to build up the ciphertext, one character at a time
-        alphabet_size = Cipher.ALPHABETS.get(alphabet)      # Size of alphabet (used as modulus)
+        alphabet_size = Cipher.ALPHABETS.get(alphabet)    # Size of alphabet (used as modulus)
 
 
         # Decrypt every single character in the ciphertext
@@ -115,9 +124,7 @@ class Rotation(Cipher):
             # Print updates
             if i % misc.utf_8_to_int_blocks.update_interval == 0:
                 print("Decryption percent done: {}{:.2%}{}"
-                      .format("\u001b[32m",
-                              i / len(ciphertext),
-                              "\u001b[0m"))
+                      .format("\u001b[32m", i / len(ciphertext), "\u001b[0m"))
 
 
         # Concatenate all the characters in the list into one string
@@ -128,7 +135,7 @@ class Rotation(Cipher):
         self.plaintext = plaintext
 
 
-        return None
+        return plaintext
 
 
 
