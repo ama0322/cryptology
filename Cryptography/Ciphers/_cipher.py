@@ -29,16 +29,18 @@ class Cipher(ABC):
     KEY_TYPE            = ""
 
     IS_BLOCK_CIPHER     = False
+
     VARIABLE_BLOCK_SIZE = False
     DEFAULT_BLOCK_SIZE  = 0
     MIN_BLOCKS_SIZE     = 0
     MAX_BLOCK_SIZE      = 0
     TEST_BLOCK_SIZE     = 0
+
     VARIABLE_KEY_SIZE   = False
     DEFAULT_KEY_SIZE    = 0
     MIN_KEY_SIZE        = 0
     MAX_KEY_SIZE        = 0
-    AUTO_TEST_KEY_SIZE       = 0
+    AUTO_TEST_KEY_SIZE  = 0
 
     RESTRICT_ALPHABET   = False
     NEEDS_ENGLISH       = False
@@ -104,7 +106,7 @@ class Cipher(ABC):
 
 
     # Write to a file containing the statistics of encryption and decryption. extra_lines provided by subclass method.
-    def write_statistics_in_file(self, file_path:str, extra_lines:dict) -> None:
+    def write_statistics(self, file_path:str, extra_lines={}) -> None:
         """
         This writes the statistics into file_path. Extra_lines contains extra lines to write in in addition to the
         standard format

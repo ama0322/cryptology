@@ -2,7 +2,7 @@ from Cryptography.Ciphers._cipher             import Cipher     # For abstract s
 from Cryptography                 import misc                   # For miscellaneous functions
 import                                   secrets                # To generate random key
 import                                   copy                   # TO deep-copy p_array and s_boxes
-import                                   test                   # To get manual testing key size
+
 
 class Blowfish(Cipher):
 
@@ -14,17 +14,17 @@ class Blowfish(Cipher):
 
     # Block info
     IS_BLOCK_CIPHER      = True
-    VARIABLE_BLOCK_SIZE  = False
-    DEFAULT_BLOCK_SIZE   = 64
-    MIN_BLOCKS_SIZE      = 64
-    MAX_BLOCK_SIZE       = 64
-    AUTO_TEST_BLOCK_SIZE = 64
 
     VARIABLE_KEY_SIZE    = True
+    PROMPT_KEY_SIZE      = "The key's size must be 32–448 bits"
+    EXPRESSION_KEY_SIZE  = "32 <= key_size <= 448"
     DEFAULT_KEY_SIZE     = 448
-    MIN_KEY_SIZE         = 32
-    MAX_KEY_SIZE         = 448
     AUTO_TEST_KEY_SIZE   = 448
+
+    VARIABLE_BLOCK_SIZE  = False
+    DEFAULT_BLOCK_SIZE   = 64
+    AUTO_TEST_BLOCK_SIZE = 64
+
 
     # Restrictions
     RESTRICT_ALPHABET   = False
@@ -318,14 +318,14 @@ class Blowfish(Cipher):
                     private_key:str, block_size:int, key_size:int, source_location:str, output_location:str) -> None:
 
         # If the given key_size is impossible, use the default
-        if key_size < Blowfish.MIN_KEY_SIZE:
+        if eval(self.EXPRESSION_KEY_SIZE) is False:
             key_size = Blowfish.DEFAULT_KEY_SIZE
 
-        # Blowfish uses a block_size of 64
-        block_size = 64
+        # Blowfish uses a block_size of 64 always
+        block_size = self.DEFAULT_BLOCK_SIZE
 
         super().__init__(plaintext,   ciphertext,     char_set,     mode_of_op,     key,     "",
-                    "",              64,             key_size,     source_location,     output_location    )
+                    "",              block_size,      key_size,     source_location,     output_location    )
 
 
 
@@ -361,7 +361,7 @@ class Blowfish(Cipher):
         # Generate a key and run the key_schedule
         key = secrets.randbits(key_size) ^ (1 << (key_size - 1))                       # Generate key with right size
         key = misc.int_to_chars_encoding_scheme(key, encoding)                         # Turn key to str
-        self._read_blowfish_key_and_run_key_schedule(False, key, encoding, mode_of_op) # Run key schedule
+        self._read_key_and_run_key_schedule(False, key, encoding, mode_of_op) # Run key schedule
 
 
 
@@ -425,7 +425,7 @@ class Blowfish(Cipher):
 
 
         # Key schedule preparation. Same as encryption, but reverse p_array
-        self._read_blowfish_key_and_run_key_schedule(True, key, encoding, mode_of_op)   # Run key schedule
+        self._read_key_and_run_key_schedule(True, key, encoding, mode_of_op)   # Run key schedule
         Blowfish._blowfish_on_block.p_array.reverse()                                   # Reverse the p_array
 
 
@@ -469,23 +469,27 @@ class Blowfish(Cipher):
 
 
     # Write to the file about the statistics of the file (Call super-method)
-    def write_statistics(self, file_path:str) -> None:
+    def write_statistics(self, file_path:str, leave_empty={}) -> None:
         """
         Write statistics
 
         :param file_path:   (str)  The file to write the statistics in
+        :param leave_empty: (dict) Leave empty
         :return:            (None)
         """
 
-        super().write_statistics_in_file(file_path, {})
+        super().write_statistics(file_path)
+
+
+
+
+
 
 
 
 
 
     ##################################################################################### ANCILLARY FUNCTIONS ##########
-
-
 
 
     # Returns: encrypted_block. The actual algorithm run on a 64-bit integer block.
@@ -614,7 +618,7 @@ class Blowfish(Cipher):
 
 
     # Reads key (accounts for mode of operation) and runs the key schedule, which sets static_vars in _blowfish_on_block
-    def _read_blowfish_key_and_run_key_schedule(self, is_decrypt:bool, key:str, encoding:str, mode_of_op:str) -> None:
+    def _read_key_and_run_key_schedule(self, is_decrypt:bool, key:str, encoding:str, mode_of_op:str) -> None:
         """
     	Reads the key. Skips over IV portion of the key, if it exists. Then, it runs the key schedule
 

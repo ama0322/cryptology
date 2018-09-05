@@ -14,13 +14,10 @@ class Vigenere(Cipher):
     IS_BLOCK_CIPHER      = False
     VARIABLE_BLOCK_SIZE  = False
     DEFAULT_BLOCK_SIZE   = 0
-    MIN_BLOCKS_SIZE      = 0
-    MAX_BLOCK_SIZE       = 0
     AUTO_TEST_BLOCK_SIZE = 0
+
     VARIABLE_KEY_SIZE    = False
     DEFAULT_KEY_SIZE     = 0
-    MIN_KEY_SIZE         = 0
-    MAX_KEY_SIZE         = 0
     AUTO_TEST_KEY_SIZE   = 0
 
     RESTRICT_ALPHABET   = True
@@ -54,7 +51,7 @@ class Vigenere(Cipher):
 
         # Other important variables
         ciphertext    = []                              # The list to build up the ciphertext, one character at a time
-        alphabet_size = Cipher.ALPHABETS.get(alphabet)    # The size of the alphabet (used as modulus)
+        alphabet_size = Cipher.ALPHABETS.get(alphabet)  # The size of the alphabet (used as modulus)
         key_index     = 0                               # Index for the vigenere key. Starts from 0
 
 
@@ -146,11 +143,12 @@ class Vigenere(Cipher):
 
 
     # Write to the file about the statistics of the file (Call super-method)
-    def write_statistics(self, file_path:str) -> None:
+    def write_statistics(self, file_path:str, leave_empty={}) -> None:
         """
         Write statistics
 
         :param file_path:   (str)  The file to write the statistics in
+        :param leave_empty: (dict) Exists to match superclass method signature
         :return:            (None)
         """
-        super().write_statistics_in_file(file_path, {})
+        super().write_statistics(file_path)

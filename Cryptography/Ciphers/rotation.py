@@ -14,13 +14,10 @@ class Rotation(Cipher):
     IS_BLOCK_CIPHER      = False
     VARIABLE_BLOCK_SIZE  = False
     DEFAULT_BLOCK_SIZE   = 0
-    MIN_BLOCKS_SIZE      = 0
-    MAX_BLOCK_SIZE       = 0
     AUTO_TEST_BLOCK_SIZE = 0
+
     VARIABLE_KEY_SIZE    = False
     DEFAULT_KEY_SIZE     = 0
-    MIN_KEY_SIZE         = 0
-    MAX_KEY_SIZE         = 0
     AUTO_TEST_KEY_SIZE   = 0
 
     RESTRICT_ALPHABET   = True
@@ -71,9 +68,7 @@ class Rotation(Cipher):
             # Print updates
             if i % misc.utf_8_to_int_blocks.update_interval == 0:
                 print("Encryption percent done: {}{:.2%}{}"
-                      .format("\u001b[32m",
-                              i / len(plaintext),
-                              "\u001b[0m"))
+                      .format("\u001b[32m", i / len(plaintext), "\u001b[0m"))
 
         # Concatenate all the characters in the list into one string
         ciphertext = "".join(ciphertext)
@@ -141,12 +136,13 @@ class Rotation(Cipher):
 
 
     # Write to the file about the statistics of the file (Call super-method)
-    def write_statistics(self, file_path:str) -> None:
+    def write_statistics(self, file_path:str, leave_empty={}) -> None:
         """
         Write statistics
 
         :param file_path:   (str)  The file to write the statistics in
+        :param leave_empty: (dict) Exists to match method signature in superclass
         :return:            (None)
         """
 
-        super().write_statistics_in_file(file_path, {})
+        super().write_statistics(file_path)

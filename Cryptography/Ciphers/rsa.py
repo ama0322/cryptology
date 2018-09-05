@@ -1,7 +1,7 @@
 from Cryptography.Ciphers._cipher                import Cipher     # For abstract superclass
 from Cryptography                 import misc    # For miscellaneous functions
-import                                   secrets # To generate random key
-import                                   test    # To get MANUAL_TEST_KEY_SIZE
+
+
 
 
 class Rsa(Cipher):
@@ -14,17 +14,16 @@ class Rsa(Cipher):
 
     # Block cipher info
     IS_BLOCK_CIPHER      = True
-    VARIABLE_BLOCK_SIZE  = False                 # Don't ask for block_size, is based on key_size
-    VARIABLE_KEY_SIZE    = True
-    DEFAULT_KEY_SIZE     = 1999
-    MIN_KEY_SIZE         = 44
-    MAX_KEY_SIZE         = float("inf")
-    AUTO_TEST_KEY_SIZE   = 256
 
-    DIFF_KEY_SIZE_BLOCK_SIZE = 1                 # Block sizes are this amount smaller than the key size
+    VARIABLE_KEY_SIZE    = True
+    PROMPT_KEY_SIZE      = "The key's size must be 32—∞ bits"
+    EXPRESSION_KEY_SIZE  = "32 <= key_size"
+    DEFAULT_KEY_SIZE     = 1999
+    AUTO_TEST_KEY_SIZE   = 32
+
+    VARIABLE_BLOCK_SIZE      = False          # Don't ask for block_size, it is based on key_size
+    DIFF_KEY_SIZE_BLOCK_SIZE = 1              # Block sizes are one bit smaller than the key size
     DEFAULT_BLOCK_SIZE       = DEFAULT_KEY_SIZE   - DIFF_KEY_SIZE_BLOCK_SIZE
-    MIN_BLOCK_SIZE           = MIN_KEY_SIZE       - DIFF_KEY_SIZE_BLOCK_SIZE
-    MAX_BLOCK_SIZE           = float("inf")
     AUTO_TEST_BLOCK_SIZE     = AUTO_TEST_KEY_SIZE - DIFF_KEY_SIZE_BLOCK_SIZE
 
     # Restrictions
@@ -39,8 +38,8 @@ class Rsa(Cipher):
     def __init__(self, plaintext:str, ciphertext:str, char_set:str, mode_of_op:str, key:str, public_key:str,
                     private_key:str, block_size:int, key_size:int, source_location:str, output_location:str) -> None:
 
-        # If the key_size is impossible, then use the default
-        if key_size < Rsa.MIN_KEY_SIZE:
+        # If the key_size is impossible (from test), then use the default
+        if eval(self.EXPRESSION_KEY_SIZE) is False:
             key_size = Rsa.DEFAULT_KEY_SIZE
 
         # Figure out what the block_size is
@@ -188,15 +187,16 @@ class Rsa(Cipher):
 
 
     # Write to the file about the statistics of the file (Call super-method)
-    def write_statistics(self, file_path:str) -> None:
+    def write_statistics(self, file_path:str, leave_empty={}) -> None:
         """
         Write statistics
 
         :param file_path:   (str)  The file to write the statistics in
+        :param leave_empty: (dict) Exists to match superclass method
         :return:            (None)
         """
 
-        super().write_statistics_in_file(file_path, {})
+        super().write_statistics(file_path)
 
 
 

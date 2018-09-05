@@ -31,11 +31,11 @@ class VigenereMultiplicative(Cipher):
     def __init__(self, plaintext:str, ciphertext:str, char_set:str, mode_of_op:str, key:str, public_key:str,
                     private_key:str, block_size:int, key_size:int, source_location:str, output_location:str) -> None:
 
-        super().__init__(plaintext,   ciphertext,     char_set,     "",                    key,     "",
+        super().__init__(plaintext,   ciphertext,     char_set,     "",             key,     "",
                     "",              0,              0,            source_location,     output_location    )
 
 
-  
+
     # Algorithm to encrypt plaintext
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
     def encrypt_plaintext(self) -> None:
@@ -197,12 +197,13 @@ class VigenereMultiplicative(Cipher):
 
 
     # Write to the file about the statistics of the file (Call super-method)
-    def write_statistics(self, file_path:str) -> None:
+    def write_statistics(self, file_path:str, leave_empty={}) -> None:
         """
         Write statistics
 
         :param file_path:   (str)  The file to write the statistics in
+        :param leave_empty: (dict) Exists to match superclass method signature
         :return:            (None)
         """
 
-        super().write_statistics_in_file(file_path, {})
+        super().write_statistics(file_path)
