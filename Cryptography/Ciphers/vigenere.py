@@ -35,19 +35,23 @@ class Vigenere(Cipher):
 
     # Algorithm to encrypt plaintext
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
-    def encrypt_plaintext(self) -> None:
+    def encrypt_plaintext(self, plaintext="", key="", alphabet="") -> str:
         """
         This works like rotation, but cycles the letters of the key used. So, the first character is encrypted with
         the first letter, the second character with the second letter, and so on. When we run out of characters in
         the key, just start the cycle from the first key again.
 
-        :return:          (None)
+        :param plaintext: (str) The plaintext to encrypt
+        :param key:       (str) The key to encrypt with
+        :param alphabet:  (str) The name of the character set to encrypt into
+        :return:          (str) The encrypted ciphertext
         """
 
-        # Parameters for encryption
-        plaintext  = self.plaintext
-        key        = self.key
-        alphabet   = self.char_set
+        # Parameters for encryption (if not provided)
+        if plaintext == "" and key == "" and alphabet == "":
+            plaintext  = self.plaintext
+            key        = self.key
+            alphabet   = self.char_set
 
         # Other important variables
         ciphertext    = []                              # The list to build up the ciphertext, one character at a time
@@ -82,8 +86,8 @@ class Vigenere(Cipher):
 
 
 
-        # Return none
-        return None
+        # Return ciphertext
+        return ciphertext
 
 
 
@@ -91,17 +95,21 @@ class Vigenere(Cipher):
 
     # Algorithm to decrypt plaintext
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
-    def decrypt_ciphertext(self) -> None:
+    def decrypt_ciphertext(self, ciphertext="", key="", alphabet="") -> str:
         """
         This does the same thing as encrypt, but modularly subtracts to do the reversal.
 
-        :return:           (None)
+        :param ciphertext: (str) The ciphertext to decrypt
+        :param key:        (str) The key to decrypt with
+        :param alphabet:   (str) The name of the alphabet to use
+        :return:           (str) The decrypted plaintext
         """
 
-        # Parameters for decryption
-        ciphertext = self.ciphertext
-        key        = self.key
-        alphabet   = self.char_set
+        # Parameters for decryption (if not provided)
+        if ciphertext == "" and key == "" and alphabet == "":
+            ciphertext = self.ciphertext
+            key        = self.key
+            alphabet   = self.char_set
 
         # Other important variables
         plaintext     = []                              # The list to build up the ciphertext, one character at a time
@@ -122,9 +130,7 @@ class Vigenere(Cipher):
             # Print updates
             if i % misc.utf_8_to_int_blocks.update_interval == 0:
                 print("Decryption percent done: {}{:.2%}{}"
-                      .format("\u001b[32m",
-                              i / len(ciphertext),
-                              "\u001b[0m"))
+                      .format("\u001b[32m", i / len(ciphertext), "\u001b[0m"))
 
 
         # Concatenate all the characters in the list into one string
@@ -135,8 +141,8 @@ class Vigenere(Cipher):
         self.plaintext = plaintext
 
 
-        # Return none
-        return None
+        # Return plaintext
+        return plaintext
 
 
 
@@ -152,3 +158,38 @@ class Vigenere(Cipher):
         :return:            (None)
         """
         super().write_statistics(file_path)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

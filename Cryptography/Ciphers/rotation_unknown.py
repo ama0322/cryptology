@@ -1,5 +1,6 @@
 from Cryptography.Ciphers._cipher             import Cipher     # For abstract superclass
-from Cryptography.Ciphers.rotation             import Rotation  # For Rotation class
+from typing                                   import Tuple      # For tuple type-hint
+from Cryptography.Ciphers.rotation            import Rotation   # For Rotation class
 from Cryptography                 import misc                   # For miscellaneous functions
 
 
@@ -51,29 +52,28 @@ class RotationUnknown(Rotation):
         """
 
         # Same exact thing as Rotation's.
-        return Rotation.encrypt_plaintext(self)
+        return Rotation.encrypt_plaintext(self, plaintext, key, alphabet)
 
 
 
 
     # Algorithm to decrypt plaintext
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
-    def decrypt_ciphertext(self, ciphertext="", key = "", alphabet="") -> str:
+    def decrypt_ciphertext(self, ciphertext="", leave_empty = "", alphabet="") -> Tuple[str, str]:
         """
         In order to decrypt, decrypt with rotation with random unicode values to see if the result is in English. For
         this to work, the plaintext must be in mostly English. The "random" unicode values are tested starting from 0 to
         the maximum unicode value.
 
         :param ciphertext: (str) The ciphertext to decrypt
-        :param key:        (str) DO NOT TOUCH. Only there to match super-method signature
+        :param leave_empty:(str) DO NOT TOUCH. Only there to match super-method signature
         :param alphabet:   (str) The name of the alphabet of the ciphertext
         :return:           (str)
         """
 
         # Parameters for decryption (if not provided)
-        if ciphertext == "" and key == "" and alphabet == "":
+        if ciphertext == "" and leave_empty == "" and alphabet == "":
             ciphertext = self.ciphertext
-            key        = self.key
             alphabet   = self.char_set
 
 
@@ -116,7 +116,7 @@ class RotationUnknown(Rotation):
 
 
         # Return none
-        return plaintext
+        return plaintext, key
 
 
 

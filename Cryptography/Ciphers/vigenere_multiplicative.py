@@ -38,7 +38,7 @@ class VigenereMultiplicative(Cipher):
 
     # Algorithm to encrypt plaintext
     @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
-    def encrypt_plaintext(self) -> None:
+    def encrypt_plaintext(self, plaintext="", key="", alphabet="") -> str:
         """
         This follows a similar format to vigenere, but uses modular multiplication instead of modular addition.
         However, because modular multiplication is not reversible like modular addition in a very straightforward
@@ -46,13 +46,17 @@ class VigenereMultiplicative(Cipher):
         value when the modular multiplication is done. This is done so that the original plaintext character can be
         calculated without confusing it for other unicode values that just happen to coincide.
 
-        :return:          (None)
+        :param plaintext: (str) The plaintext to encrypt
+        :param key:       (str) The key to encrypt with
+        :param alphabet:  (str) The name of the character set to encrypt into
+        :return:          (str) The encrypted ciphertext
         """
 
-        # Parameters for encryption
-        plaintext  = self.plaintext
-        key        = self.key
-        alphabet   = self.char_set
+        # Parameters for encryption (if not provided)
+        if plaintext == "" and key == "" and alphabet == "":
+            plaintext  = self.plaintext
+            key        = self.key
+            alphabet   = self.char_set
 
 
         # Important variables to use during encryption
@@ -111,8 +115,8 @@ class VigenereMultiplicative(Cipher):
         self.ciphertext = ciphertext
 
 
-        # Return none
-        return None
+        # Return ciphertext
+        return ciphertext
 
 
 
@@ -120,7 +124,7 @@ class VigenereMultiplicative(Cipher):
 
     # Algorithm to decrypt plaintext
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
-    def decrypt_ciphertext(self) -> None:
+    def decrypt_ciphertext(self, ciphertext="", key="", alphabet="") -> str:
         """
         In order to reverse the modular multiplication, I have to test unicode values by applying the modular
         multiplication with the key's unicode value to see if it matches the ciphertext value. However, because there
@@ -128,13 +132,17 @@ class VigenereMultiplicative(Cipher):
         must take into account the number of overlaps, which was calculated during encryption. So, when I test values
         up from 0, I can stop when I reach the number of overlaps, indicating that I had reached the original value.
 
-        :return:           (None)
+        :param ciphertext: (str) The ciphertext to decrypt
+        :param key:        (str) The key to decrypt with
+        :param alphabet:   (str) The name of the alphabet to use
+        :return:           (str) The decrypted plaintext
         """
 
-        # Parameters for decryption
-        ciphertext = self.ciphertext
-        key        = self.key
-        alphabet   = self.char_set
+        # Parameters for decryption (if not provided)
+        if ciphertext == "" and key == "" and alphabet == "":
+            ciphertext = self.ciphertext
+            key        = self.key
+            alphabet   = self.char_set
 
         # Other important variables
         plaintext            = []                           # Build up the plaintext here, one character at a time
@@ -189,8 +197,8 @@ class VigenereMultiplicative(Cipher):
 
 
 
-        # Return none
-        return None
+        # Return plaintext
+        return plaintext
 
 
 

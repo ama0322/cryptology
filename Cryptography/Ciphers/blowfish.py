@@ -1,4 +1,5 @@
 from Cryptography.Ciphers._cipher             import Cipher     # For abstract superclass
+from typing                                   import Tuple      # Tuple type-hints
 from Cryptography                 import misc                   # For miscellaneous functions
 import                                   secrets                # To generate random key
 import                                   copy                   # TO deep-copy p_array and s_boxes
@@ -334,7 +335,7 @@ class Blowfish(Cipher):
     @misc.get_time_for_algorithm("self.encrypt_time_for_algorithm", "self.encrypt_time_overall",
                                  "self.encrypt_time_for_key")
     @misc.store_time_in("self.encrypt_time_overall")
-    def encrypt_plaintext(self, plaintext="", key_size=0, encoding="", mode_of_op="") -> str:
+    def encrypt_plaintext(self, plaintext="", key_size=0, encoding="", mode_of_op="") -> Tuple[str, str]:
         """
         This encrypts with a blowfish cipher. Like all block ciphers, the plaintext is changed into 64-bit integer
         blocks. Then, the key schedule is run with a randomly generated key, which sets the "true" key, the p_array and
@@ -345,6 +346,7 @@ class Blowfish(Cipher):
         :param encoding:   (str) The name of the character encoding to use
         :param mode_of_op: (str) The name of the mode of operation to use
         :return:           (str) The encrypted ciphertext
+        :return            (str) The key in encoded form
         """
 
         # Parameters for encryption (if not already filled in)
@@ -363,8 +365,8 @@ class Blowfish(Cipher):
 
 
         # Generate a key and run the key_schedule
-        key = secrets.randbits(key_size) ^ (1 << (key_size - 1))                       # Generate key with right size
-        key = misc.int_to_chars_encoding_scheme(key, encoding)                         # Turn key to str
+        key = secrets.randbits(key_size) ^ (1 << (key_size - 1))              # Generate key with right size
+        key = misc.int_to_chars_encoding_scheme(key, encoding)                # Turn key to str
         self._read_key_and_run_key_schedule(False, key, encoding, mode_of_op) # Run key schedule
 
 
@@ -390,8 +392,8 @@ class Blowfish(Cipher):
         self.chars_per_block = len(ciphertext) / self.num_blocks
 
 
-        # Return ciphertext
-        return ciphertext
+        # Return ciphertext AND key
+        return ciphertext, key
 
 
 

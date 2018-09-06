@@ -1,4 +1,5 @@
 from Cryptography.Ciphers._cipher                import Cipher     # For abstract superclass
+from typing                                      import Tuple      # For tuple type-hints
 from Cryptography                 import misc    # For miscellaneous functions
 
 
@@ -55,24 +56,37 @@ class Rsa(Cipher):
     @misc.get_time_for_algorithm("self.encrypt_time_for_algorithm", "self.encrypt_time_overall",
                                  "self.encrypt_time_for_key")
     @misc.store_time_in("self.encrypt_time_overall")
-    def encrypt_plaintext(self) -> None:
+    def encrypt_plaintext(self, plaintext="", public_key="", key_size=0, encoding="",
+                                                                            mode_of_op="")  -> Tuple[str, str, str]:
         """
         This encrypts with an rsa cipher. The user can choose to either provide a public key, in which case that key
         will be used to encrypt, or to leave the public key blank, in which case a pair of asymmetric keys will be
         generated. In either case, the exponent for encryption is saved into the _rsa_on_blocK() as a static variable.
 
-        :return:          (None)
+        :param plaintext:  (str) The plaintext to encrypt
+        :param public_key: (str) The public key to use (If left empty, will generate own public/private key set)
+        :param key_size:   (int) The size of the key
+        :param encoding:   (str) The name of the encoding to use
+        :param mode_of_op  (str) The name of mode of operation to use
+        :return:           (str) The ciphertext
+        :return:           (str) The public key
+        :return:           (str) The private key
         """
 
 
-        # Parameters for encryption
-        plaintext   = self.plaintext
-        public_key  = self.public_key
-        private_key = self.private_key
-        key_size    = self.key_size
-        block_size  = self.block_size   # This is the bits in the message "m". Technically, block size is key_size
-        encoding    = self.char_set
-        mode_of_op  = self.mode_of_op
+        # Parameters for encryption (if not provided)
+        if plaintext == "" and public_key == "" and key_size == 0 and encoding == 0 and mode_of_op == "":
+            plaintext   = self.plaintext
+            public_key  = self.public_key
+            private_key = self.private_key
+            key_size    = self.key_size
+            block_size  = self.block_size   # This is the bits in the message "m". Technically, block size is key_size
+            encoding    = self.char_set
+            mode_of_op  = self.mode_of_op
+
+        # Parameters provided, still need to figure out block_size
+        else:
+            block_size = key_size - 1
 
 
         # Important variables for encryption
@@ -113,8 +127,8 @@ class Rsa(Cipher):
         self.chars_per_block = len(ciphertext) / self.num_blocks
 
 
-        # Return nothing
-        return None
+        # Return encryption results
+        return ciphertext, public_key, private_key
 
 
 
@@ -122,23 +136,34 @@ class Rsa(Cipher):
 
     # Algorithm to decrypt ciphertext
     @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
-    def decrypt_ciphertext(self) -> None:
+    def decrypt_ciphertext(self, ciphertext="", private_key="", key_size=0, encoding="", mode_of_op="") -> str:
         """
         This method requires that the self object be given a private key. This private key is read for its exponent,
         which is set as a static variable in the class function _rsa_on_block().
 
-        :return:           (None)
+        :param ciphertext  (str) The ciphertext to decrypt
+        :param private_key (str) The key to decrypt with
+        :param key_size    (int) The size of the key
+        :param encoding    (str) The name of the encoding to use
+        :param mode_of_op  (str) The name of the mode of operation to use
+        :return:           (str) The decrypted plaintext
         """
 
 
-        # Parameters for encryption
-        ciphertext  = self.ciphertext
-        public_key  = self.public_key
-        private_key = self.private_key
-        key_size    = self.key_size
-        block_size  = self.block_size
-        encoding    = self.char_set
-        mode_of_op  = self.mode_of_op
+        # Parameters for encryption (if not provided)
+        if ciphertext == "" and private_key == "" and key_size == 0 and encoding == "" and mode_of_op == "":
+            ciphertext  = self.ciphertext
+            public_key  = self.public_key
+            private_key = self.private_key
+            key_size    = self.key_size
+            block_size  = self.block_size
+            encoding    = self.char_set
+            mode_of_op  = self.mode_of_op
+
+        # Parameters provided, but need additional info
+        else:
+            block_size = key_size - 1
+            public_key = ""
 
 
         # Important variables for decryption
@@ -178,8 +203,8 @@ class Rsa(Cipher):
         self.chars_per_block = len(plaintext) / self.num_blocks
 
 
-        # Return nothing
-        return None
+        # Return plaintext
+        return plaintext
 
 
 
