@@ -4,6 +4,13 @@ from Cryptography                 import misc                   # For miscellane
 
 
 class Rotation(Cipher):
+    """
+        The rotation cipher is a substitution cipher wherein every plaintext character is replaced by some other
+    character that is a fixed number of positions down the alphabet. That "fixed number of positions" is determined
+    by the unicode value of the key, which is only a single-character. Should attemting to move the plaintext
+    character by the fixed number of positions result in going out of bounds of the alphabet, a modulo operation is
+    applied, so that whatever positions are out of bounds are counted from the very beginning of the alphabet.
+    """
 
     # Cipher info:
     CIPHER_NAME         = "Rotation using Modular Addition"
@@ -35,7 +42,8 @@ class Rotation(Cipher):
 
 
     # Algorithm to encrypt plaintext
-    @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
+    @misc.process_times("self.encrypt_time_for_algorithm", "self.encrypt_time_overall", "self.encrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def encrypt_plaintext(self, plaintext="", key="", alphabet="") -> str:
         """
         This gets the unicode value of the key, and modularly adds it to he unicode value of the plaintext character.
@@ -89,7 +97,8 @@ class Rotation(Cipher):
 
 
     # Algorithm to decrypt plaintext
-    @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
+    @misc.process_times("self.decrypt_time_for_algorithm", "self.decrypt_time_overall", "self.decrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def decrypt_ciphertext(self, ciphertext="", key="", alphabet="") -> str:
         """
         This modularly subtracts the key's unicode value from the ciphertext character's unicode value to get the

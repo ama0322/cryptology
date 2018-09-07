@@ -40,7 +40,8 @@ class RotationUnknown(Rotation):
 
 
     # Should only be called with tests
-    @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
+    @misc.process_times("self.encrypt_time_for_algorithm", "self.encrypt_time_overall", "self.encrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def encrypt_plaintext(self, plaintext="", key="", alphabet="") -> str:
         """
         This is the same thing as rotation's encrypt.
@@ -58,7 +59,8 @@ class RotationUnknown(Rotation):
 
 
     # Algorithm to decrypt plaintext
-    @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
+    @misc.process_times("self.decrypt_time_for_algorithm", "self.decrypt_time_overall", "self.decrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def decrypt_ciphertext(self, ciphertext="", leave_empty = "", alphabet="") -> Tuple[str, str]:
         """
         In order to decrypt, decrypt with rotation with random unicode values to see if the result is in English. For
@@ -142,3 +144,25 @@ class RotationUnknown(Rotation):
 
 
         Cipher.write_statistics(self, file_path, extra_lines)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

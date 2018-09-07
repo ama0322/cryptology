@@ -33,7 +33,8 @@ class VigenereExponential(Cipher):
 
 
     # Algorithm to encrypt plaintext
-    @misc.store_time_in("self.encrypt_time_overall", "self.encrypt_time_for_algorithm")
+    @misc.process_times("self.encrypt_time_for_algorithm", "self.encrypt_time_overall", "self.encrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def encrypt_plaintext(self, plaintext="", key="", alphabet="") -> str:
         """
         This follows a similar format to vigenere, but uses modular exponentiation instead of modular addition.
@@ -117,7 +118,8 @@ class VigenereExponential(Cipher):
 
 
     # Algorithm to decrypt plaintext
-    @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
+    @misc.process_times("self.decrypt_time_for_algorithm", "self.decrypt_time_overall", "self.decrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def decrypt_ciphertext(self, ciphertext="", key="", alphabet="") -> str:
         """
         In order to reverse the modular exponentiation, I have to test unicode values by applying the modular
