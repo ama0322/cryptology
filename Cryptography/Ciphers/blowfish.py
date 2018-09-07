@@ -6,7 +6,9 @@ import                                   copy                   # TO deep-copy p
 
 
 class Blowfish(Cipher):
-
+    """
+        A Feistel cipher that requires a key schedule, followed by 16 of round functions.
+    """
     # Cipher info:
     CIPHER_NAME         = "Blowfish"
     CHAR_SET            = "encoding scheme"
@@ -332,9 +334,8 @@ class Blowfish(Cipher):
 
 
     # Algorithm to encrypt plaintext
-    @misc.get_time_for_algorithm("self.encrypt_time_for_algorithm", "self.encrypt_time_overall",
-                                 "self.encrypt_time_for_key")
-    @misc.store_time_in("self.encrypt_time_overall")
+    @misc.process_times("self.encrypt_time_for_algorithm", "self.encrypt_time_overall", "self.encrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def encrypt_plaintext(self, plaintext="", key_size=0, encoding="", mode_of_op="") -> Tuple[str, str]:
         """
         This encrypts with a blowfish cipher. Like all block ciphers, the plaintext is changed into 64-bit integer
@@ -365,9 +366,10 @@ class Blowfish(Cipher):
 
 
         # Generate a key and run the key_schedule
-        key = secrets.randbits(key_size) ^ (1 << (key_size - 1))              # Generate key with right size
-        key = misc.int_to_chars_encoding_scheme(key, encoding)                # Turn key to str
-        self._read_key_and_run_key_schedule(False, key, encoding, mode_of_op) # Run key schedule
+        key = secrets.randbits(key_size) ^ (1 << (key_size - 1))                  # Generate key with right size
+        key = misc.int_to_chars_encoding_scheme(key, encoding)                    # Turn key to str
+        Blowfish._read_key_and_run_key_schedule(False, key, encoding, mode_of_op) # Run key schedule
+
 
 
 
@@ -376,7 +378,7 @@ class Blowfish(Cipher):
         # Encrypt the text using the proper mode of encryption
         ciphertext_blocks, key, ignore_this = eval("misc.encrypt_{}_symm(self, Blowfish._blowfish_on_block, "
                                                    "plaintext_blocks, key, \"\")"
-                                                   .format(self.mode_of_op))
+                                                   .format(mode_of_op))
 
 
 
@@ -403,9 +405,8 @@ class Blowfish(Cipher):
 
 
     # Algorithm to decrypt ciphertext
-    @misc.get_time_for_algorithm("self.decrypt_time_for_algorithm", "self.decrypt_time_overall",
-                                 "self.decrypt_time_for_key")
-    @misc.store_time_in("self.decrypt_time_overall")
+    @misc.process_times("self.decrypt_time_for_algorithm", "self.decrypt_time_overall", "self.decrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def decrypt_ciphertext(self, ciphertext="", key="", key_size=0, encoding="", mode_of_op="") -> str:
         """
         As with all block ciphers, the ciphertext is split into 64-bit integer blocks. This method needs a given key,
@@ -437,30 +438,30 @@ class Blowfish(Cipher):
 
 
         # Key schedule preparation. Same as encryption, but reverse p_array
-        self._read_key_and_run_key_schedule(True, key, encoding, mode_of_op)   # Run key schedule
-        Blowfish._blowfish_on_block.p_array.reverse()                                   # Reverse the p_array
+        Blowfish._read_key_and_run_key_schedule(True, key, encoding, mode_of_op)   # Run key schedule
+        Blowfish._blowfish_on_block.p_array.reverse()                              # Reverse the p_array
 
 
 
 
 
         # Decrypt when DECRYPT block algorithm is used for the mode of operation
-        if self.mode_of_op in ["ecb", "cbc", "pcbc"]:
+        if mode_of_op in ["ecb", "cbc", "pcbc"]:
             plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}_symm(self, Blowfish._blowfish_on_block, "
                                                                            "ciphertext_blocks, key, \"\")"
-                                                      .format(self.mode_of_op))
+                                                      .format(mode_of_op))
         # Else, when ENCRYPT block algorithm is used for the mode of operation
         else:
             # Un-reverse the p_array, because we want the encrypt block algorithm
             Blowfish._blowfish_on_block.p_array.reverse()
             plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}_symm(self, Blowfish._blowfish_on_block, "
                                                                            "ciphertext_blocks, key, \"\")"
-                                                      .format(self.mode_of_op))
+                                                      .format(mode_of_op))
 
 
 
         # Get the plaintext from the encrypted integer blocks
-        plaintext = misc.int_blocks_to_utf_8(plaintext_blocks, self.DEFAULT_BLOCK_SIZE)
+        plaintext = misc.int_blocks_to_utf_8(plaintext_blocks, Blowfish.DEFAULT_BLOCK_SIZE)
 
 
 
@@ -575,8 +576,9 @@ class Blowfish(Cipher):
 
 
     # Key schedule setup for the algorithm. Sets static_vars in _blowfish_on_block
-    @misc.store_time_in("self.encrypt_time_for_key", "self.decrypt_time_for_key")
-    def _key_schedule(self, key:int) -> None:
+    @staticmethod
+    @misc.store_time_in("encrypt_plaintext.time_key", "decrypt_ciphertext.time_key")
+    def _key_schedule(key:int) -> None:
         """
         Key setup for blowfish
 
@@ -629,8 +631,11 @@ class Blowfish(Cipher):
 
 
 
+
+
     # Reads key (accounts for mode of operation) and runs the key schedule, which sets static_vars in _blowfish_on_block
-    def _read_key_and_run_key_schedule(self, is_decrypt:bool, key:str, encoding:str, mode_of_op:str) -> None:
+    @staticmethod
+    def _read_key_and_run_key_schedule(is_decrypt:bool, key:str, encoding:str, mode_of_op:str) -> None:
         """
     	Reads the key. Skips over IV portion of the key, if it exists. Then, it runs the key schedule
 
@@ -647,7 +652,7 @@ class Blowfish(Cipher):
 
             # Cut out the part of the key that is relevant to the IV
 
-            len_to_skip = len(misc.int_to_chars_encoding_scheme_pad(1, encoding, self.DEFAULT_BLOCK_SIZE))
+            len_to_skip = len(misc.int_to_chars_encoding_scheme_pad(1, encoding, Blowfish.DEFAULT_BLOCK_SIZE))
             key = key[len_to_skip:]
 
         # Decode the key to get the actual blowfish int key
@@ -655,7 +660,7 @@ class Blowfish(Cipher):
 
 
         # Run the key schedule
-        self._key_schedule(key)
+        Blowfish._key_schedule(key)
 
 
 
