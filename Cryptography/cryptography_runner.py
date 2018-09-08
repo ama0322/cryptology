@@ -21,8 +21,13 @@ last = "" # Store the path to the last created encrypted/decrypted file
 
 ###################################################################################### START OF MAIN FUNCTION ##########
 def main() -> None:
+    """
+    This runs when the program runs. It takes commands and executes them.
 
-    # Set the current working directory to be the project "Cryptography_2", two levels above from this file.
+    :return: (None)
+    """
+
+    # Set the current working directory to be the project "Cryptography", two levels above from this file.
     path_here = os.path.realpath(__file__)
     one_above = path_here[:path_here.rfind("\\")]
     two_above = path_here[:one_above.rfind("\\")]
@@ -932,7 +937,6 @@ def _execute_encryption_or_decryption( encrypt_or_decrypt:str, cipher_module:str
 
 
 
-
 # Print out available Encryption/Decryption types
 def _usage() -> None:
 
@@ -1344,3 +1348,26 @@ def _print_data_and_location(data, output_location) -> None:
 # Call the main function
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
