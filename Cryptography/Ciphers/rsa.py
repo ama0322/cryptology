@@ -53,9 +53,8 @@ class Rsa(Cipher):
 
 
     # Algorithm to encrypt plaintext
-    @misc.get_time_for_algorithm("self.encrypt_time_for_algorithm", "self.encrypt_time_overall",
-                                 "self.encrypt_time_for_key")
-    @misc.store_time_in("self.encrypt_time_overall")
+    @misc.process_times("self.encrypt_time_for_algorithm", "self.encrypt_time_overall", "self.encrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def encrypt_plaintext(self, plaintext="", public_key="", key_size=0, encoding="",
                                                                             mode_of_op="")  -> Tuple[str, str, str]:
         """
@@ -75,7 +74,7 @@ class Rsa(Cipher):
 
 
         # Parameters for encryption (if not provided)
-        if plaintext == "" and public_key == "" and key_size == 0 and encoding == 0 and mode_of_op == "":
+        if plaintext == "" and public_key == "" and key_size == 0 and encoding == "" and mode_of_op == "":
             plaintext   = self.plaintext
             public_key  = self.public_key
             private_key = self.private_key
@@ -100,7 +99,7 @@ class Rsa(Cipher):
 
 
         # Read/generate key
-        public_key, private_key = self._read_public_or_private_key(False, public_key, private_key, key_size, block_size,
+        public_key, private_key = Rsa._read_public_or_private_key(False, public_key, private_key, key_size, block_size,
                                                                                     encoding, mode_of_op)
 
 
@@ -127,6 +126,7 @@ class Rsa(Cipher):
         self.chars_per_block = len(ciphertext) / self.num_blocks
 
 
+
         # Return encryption results
         return ciphertext, public_key, private_key
 
@@ -135,7 +135,8 @@ class Rsa(Cipher):
 
 
     # Algorithm to decrypt ciphertext
-    @misc.store_time_in("self.decrypt_time_overall", "self.decrypt_time_for_algorithm")
+    @misc.process_times("self.decrypt_time_for_algorithm", "self.decrypt_time_overall", "self.decrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def decrypt_ciphertext(self, ciphertext="", private_key="", key_size=0, encoding="", mode_of_op="") -> str:
         """
         This method requires that the self object be given a private key. This private key is read for its exponent,
@@ -174,13 +175,12 @@ class Rsa(Cipher):
 
 
         # Read the private key
-        public_key, private_key = self._read_public_or_private_key(True, public_key, private_key, key_size,
+        public_key, private_key = Rsa._read_public_or_private_key(True, public_key, private_key, key_size,
                                                                    block_size, encoding, mode_of_op)
 
 
 
         # Decrypt the text using the proper mode of encryption
-
         plaintext_blocks, public_key, private_key = eval("misc.decrypt_{}_asymm(self, Rsa._rsa_on_block, "
                                                                                "ciphertext_blocks, "
                                                                                "public_key, private_key, "
@@ -254,7 +254,9 @@ class Rsa(Cipher):
 
 
     # Reads key (accounts for mode of op) and runs the key gen, which sets static_vars in _blowfish_on_block
-    def _read_public_or_private_key(self, is_decrypt:bool, public_key:str, private_key:str, key_size:int,
+    @staticmethod
+    @misc.add_time_in("Rsa.encrypt_plaintext.time_key", "Rsa.decrypt_ciphertext.time_key")
+    def _read_public_or_private_key(is_decrypt:bool, public_key:str, private_key:str, key_size:int,
                                     block_size:int, encoding:str, mode_of_op:str) -> (str, str):
         """
     	Reads the key. If it is a public key and is empty (""), then generate own pair of public and private keys.
@@ -276,7 +278,7 @@ class Rsa(Cipher):
         if private_key == "" and public_key == "":
 
             # Create and return the public and private keys
-            public_key, private_key = self._generate_public_and_private_keys(key_size, encoding)
+            public_key, private_key = Rsa._generate_public_and_private_keys(key_size, encoding)
 
 
 
@@ -328,8 +330,8 @@ class Rsa(Cipher):
 
 
     # Generates a public and private key. Sets static_var exponent in _rsa_on_block() to be used for ENCRYPTION
-    @misc.store_time_in("self.encrypt_time_for_key", "self.decrypt_time_for_key")
-    def _generate_public_and_private_keys(self, key_size:int, encoding_scheme: str) -> (str, str):
+    @staticmethod
+    def _generate_public_and_private_keys(key_size:int, encoding_scheme: str) -> (str, str):
         """
         Given two primes, calculate the private and public key
 
@@ -374,6 +376,21 @@ class Rsa(Cipher):
 
         # Return the public and private keys
         return public_key, private_key
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
