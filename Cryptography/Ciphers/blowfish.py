@@ -575,9 +575,51 @@ class Blowfish(Cipher):
 
 
 
+
+
+    # Reads key (accounts for mode of operation) and runs the key schedule, which sets static_vars in _blowfish_on_block
+    @staticmethod
+    @misc.add_time_in("Blowfish.encrypt_plaintext.time_key", "Blowfish.decrypt_ciphertext.time_key")
+    def _read_key_and_run_key_schedule(is_decrypt:bool, key:str, encoding:str, mode_of_op:str) -> None:
+        """
+    	Reads the key. Skips over IV portion of the key, if it exists. Then, it runs the key schedule
+
+        :param is_decrypt (bool) If in decrypting mode
+        :param key:       (str) The key to read
+        :param encoding:  (str) The character encoding used
+        :param mode_of_op (str) The name of the mode of operation to use
+    	:return:          (str) The new key, adjusted for mode_of_operation
+    	"""
+
+
+        # If encoding and if in a mode that uses IV—everything other than ECB—then cut out the part that uses the IV.
+        if is_decrypt is True and mode_of_op != "ecb":
+
+            # Cut out the part of the key that is relevant to the IV
+
+            len_to_skip = len(misc.int_to_chars_encoding_scheme_pad(1, encoding, Blowfish.DEFAULT_BLOCK_SIZE))
+            key = key[len_to_skip:]
+
+        # Decode the key to get the actual blowfish int key
+        key = misc.chars_to_int_decoding_scheme(key, encoding)
+
+
+        # Run the key schedule
+        Blowfish._key_schedule(key)
+
+
+
+        return None
+
+
+
+
+
+
+
+
     # Key schedule setup for the algorithm. Sets static_vars in _blowfish_on_block
     @staticmethod
-    @misc.store_time_in("encrypt_plaintext.time_key", "decrypt_ciphertext.time_key")
     def _key_schedule(key:int) -> None:
         """
         Key setup for blowfish
@@ -631,40 +673,6 @@ class Blowfish(Cipher):
 
 
 
-
-
-    # Reads key (accounts for mode of operation) and runs the key schedule, which sets static_vars in _blowfish_on_block
-    @staticmethod
-    def _read_key_and_run_key_schedule(is_decrypt:bool, key:str, encoding:str, mode_of_op:str) -> None:
-        """
-    	Reads the key. Skips over IV portion of the key, if it exists. Then, it runs the key schedule
-
-        :param is_decrypt (bool) If in decrypting mode
-        :param key:       (str) The key to read
-        :param encoding:  (str) The character encoding used
-        :param mode_of_op (str) The name of the mode of operation to use
-    	:return:          (str) The new key, adjusted for mode_of_operation
-    	"""
-
-
-        # If encoding and if in a mode that uses IV—everything other than ECB—then cut out the part that uses the IV.
-        if is_decrypt is True and mode_of_op != "ecb":
-
-            # Cut out the part of the key that is relevant to the IV
-
-            len_to_skip = len(misc.int_to_chars_encoding_scheme_pad(1, encoding, Blowfish.DEFAULT_BLOCK_SIZE))
-            key = key[len_to_skip:]
-
-        # Decode the key to get the actual blowfish int key
-        key = misc.chars_to_int_decoding_scheme(key, encoding)
-
-
-        # Run the key schedule
-        Blowfish._key_schedule(key)
-
-
-
-        return None
 
 
 
