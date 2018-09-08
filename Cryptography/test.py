@@ -1,9 +1,11 @@
-from Cryptography.Ciphers._cipher import          Cipher   # To get the abstract superclass
-from Cryptography.Ciphers         import *                 # To construct Cipher objects
-from Cryptography                 import misc              # To get misc functions
-import                                   datetime          # for labelling the date that files are created
-import                                   os                # for deleting files
+from Cryptography.Ciphers._cipher import          Cipher       # To get the abstract superclass
+from line_profiler                import          LineProfiler # To profile functions
 
+from Cryptography.Ciphers         import *                     # To construct Cipher objects
+from Cryptography                 import misc                  # To get misc functions
+import                                   datetime              # for labelling the date that files are created
+import                                   os                    # for deleting files
+import                                   undecorated           # To get the undecorated function/method
 
 
 
@@ -17,9 +19,9 @@ testing_key_size                         = 0
 testing_block_size                       = 0
 
 testing_encoding_scheme                  = "base85"
-testing_alphabet                         = "ascii"
+testing_alphabet                         = "unicode_plane0"
 
-testing_mode_of_operation                = "cbc"
+testing_mode_of_operation                = "ecb"
 
 
 
@@ -326,6 +328,13 @@ def automated_testing() -> None:
     testing_key_size          = original_testing_key_size
     testing_block_size        = original_testing_block_size
 
+
+
+
+
+
+
+
 ######################################################################################### ANCILLARY FUNCTIONS ##########
 
 
@@ -334,7 +343,7 @@ def _get_testing_info(decrypt_cipher:str) -> Cipher:
     """
     Generate a cipher object for testing based on the testing settings variables up above.
 
-    :param decrypt_cipher: (str)           The name of the decryption cipher to use
+    :param decrypt_cipher: (str)           The name of the decryption cipher to use (same as module name)
     :return:               (cipher.Cipher) The general object to return
     """
 
@@ -393,7 +402,7 @@ def _get_testing_info(decrypt_cipher:str) -> Cipher:
 
     # Set the key and block size
     key_size = testing_key_size
-    block_size = eval("{}.{}.TEST_BLOCK_SIZE".format(decrypt_cipher, class_name))
+    block_size = eval("{}.{}.AUTO_TEST_BLOCK_SIZE".format(decrypt_cipher, class_name))
 
 
 
@@ -419,9 +428,22 @@ def _conduct_test_and_write_stats(cipher_obj:Cipher) -> bool:
 
 
 
-    # Run the encryption, and then run the decryption
-    cipher_obj.encrypt_plaintext()
-    cipher_obj.decrypt_ciphertext()
+    # Wrap the encrypt_plaintext and decrypt_ciphertext. Then, run them
+    lp = LineProfiler()
+
+    # Handle encrypt_plaintext()
+    lp.add_function(undecorated.undecorated(cipher_obj.encrypt_plaintext))
+    lp_wrapped = lp(cipher_obj.encrypt_plaintext)
+    lp_wrapped()
+    lp.print_stats()
+
+    # Handle decrypt_ciphertext()
+    lp.add_function(undecorated.undecorated(cipher_obj.decrypt_ciphertext))
+    lp_wrapped = lp(cipher_obj.decrypt_ciphertext)
+    lp_wrapped()
+    lp.print_stats()
+
+
 
 
     # Generate file name and write to that file containing the statistics of the encryption and decryption
@@ -434,6 +456,38 @@ def _conduct_test_and_write_stats(cipher_obj:Cipher) -> bool:
 
     # Return the correctness of the encryption and decryption
     return cipher_obj.original_plaintext == cipher_obj.plaintext
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
