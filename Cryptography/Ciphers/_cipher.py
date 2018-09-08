@@ -23,27 +23,33 @@ class Cipher(ABC):
     ASYMMETRIC_MODES_OF_OPERATION = ["ecb", "cbc", "pcbc"]
 
     # Cipher info of the class of the particular instantiation (overridden when specific cipher object is created):
-    CIPHER_NAME         = ""
-    CHAR_SET            = ""
-    CIPHER_TYPE         = ""
-    KEY_TYPE            = ""
+    CIPHER_NAME = ""
+    CHAR_SET    = ""
+    CIPHER_TYPE = ""
+    KEY_TYPE    = ""
 
-    IS_BLOCK_CIPHER     = False
+    # BLOCK CIPHER INFO
+    IS_BLOCK_CIPHER       = False
 
-    VARIABLE_BLOCK_SIZE = False
-    DEFAULT_BLOCK_SIZE  = 0
-    MIN_BLOCKS_SIZE     = 0
-    MAX_BLOCK_SIZE      = 0
-    TEST_BLOCK_SIZE     = 0
+    VARIABLE_BLOCK_SIZE   = False
+    PROMPT_BLOCK_SIZE     = "Decription in English of what the block_size needs to be"
+    EXPRESSION_BLOCK_SIZE = "expression(block_size) is True"
+    DEFAULT_BLOCK_SIZE    = 0     # The blok size should none be provided by the user
+    MIN_BLOCKS_SIZE       = 0
+    MAX_BLOCK_SIZE        = 0
+    AUTO_TEST_BLOCK_SIZE  = 0     # This is the block size used in "test -a". Sometimes a small number for convenience
 
-    VARIABLE_KEY_SIZE   = False
-    DEFAULT_KEY_SIZE    = 0
-    MIN_KEY_SIZE        = 0
-    MAX_KEY_SIZE        = 0
-    AUTO_TEST_KEY_SIZE  = 0
+    VARIABLE_KEY_SIZE     = False
+    PROMPT_KEY_SIZE       = "Decription of what the key_size needs to be"
+    EXPRESSION_KEY_SIZE   = "expression(key_size) is True"
+    DEFAULT_KEY_SIZE      = 0     # The key size should none be provided by the user
+    MIN_KEY_SIZE          = 0
+    MAX_KEY_SIZE          = 0
+    AUTO_TEST_KEY_SIZE    = 0     # This is the key size used in "test -a". Usually a small number for convenience
 
-    RESTRICT_ALPHABET   = False
-    NEEDS_ENGLISH       = False
+    # MISCELLANEOUS INFO
+    RESTRICT_ALPHABET = False     # This means that the ciphertext's alphabet <= plaintext's alphabet
+    NEEDS_ENGLISH     = False     # If the plaintext needs to be english for its ciphertext to be decrypted
 
     # Constructor
     def __init__(self, plaintext:str, ciphertext:str, char_set:str, mode_of_op:str, key:str, public_key:str,
@@ -78,6 +84,9 @@ class Cipher(ABC):
         self.decrypt_time_for_algorithm = 0.0      # (float) The time_overall - time_for_key
         self.decrypt_time_for_key       = 0.0      # (float) The time it takes to handle keys (gen, schedule, ...)
 
+        self.encrypt_line_profile = "" # (str) String containing line profile for all relevant encrypt functions/methods
+        self.decrypt_line_profile = "" # (str) String containing line profile for all relevant decrypt functions/methods
+
 
 
 
@@ -94,6 +103,7 @@ class Cipher(ABC):
         pass
 
 
+
     # The algorithm to decrypt plaintext
     @abstractmethod
     def decrypt_ciphertext(self) -> None:
@@ -103,6 +113,7 @@ class Cipher(ABC):
         :return: (None)
         """
         pass
+
 
 
     # Write to a file containing the statistics of encryption and decryption. extra_lines provided by subclass method.
@@ -215,14 +226,14 @@ class Cipher(ABC):
         # Print out either "CORRECT" or "INCORRECT", (along with the number of incorrect chars if necessary)
         if self.original_plaintext == self.plaintext:
             num_diff_chars = sum(1 for a, b in zip(self.original_plaintext, self.plaintext) if a != b)
-            lines.append("CORRECT\t\t\t\t\tPercent similarity: {}%\t\t\t\t\tCharacters different: {}"
+            lines.append("CORRECT\t\t\t\t\tPercent similarity: {}%\t\t\t\t\tCharacters different: {} of {}"
                          .format(format(100 - ((num_diff_chars / len(self.original_plaintext)) * 100), ".2f"),
-                                 num_diff_chars))
+                                 num_diff_chars, "{:,}".format(len(self.original_plaintext))))
         else:
             num_diff_chars = sum(1 for a, b in zip(self.original_plaintext, self.plaintext) if a != b)
-            lines.append("INCORRECT\t\t\t\t\tPercent similarity: {}%\t\t\t\t\tCharacters different: {}"
+            lines.append("INCORRECT\t\t\t\t\tPercent similarity: {}%\t\t\t\t\tCharacters different: {} of {}"
                          .format(format(100 - ((num_diff_chars / len(self.original_plaintext)) * 100), ".2f"),
-                                 num_diff_chars))
+                                 num_diff_chars, "{:,}".format(len(self.original_plaintext))))
 
         # Print out an area for notes, along with extra lines underneath that
         lines.append("Notes: ")
@@ -303,7 +314,7 @@ class Cipher(ABC):
             lines.append("―――――――― {}-bit key ".format(self.key_size).ljust(73, "―"))
             lines.append("{}".format(self.key))
             lines.append(("――――――――"
-                          + " {}(s) ".format(format(self.encrypt_time_for_key, ".20f")[0:len(str(self.key_size)) + 5]))
+                          + " {}(s) ".format(format(self.decrypt_time_for_key, ".20f")[0:len(str(self.key_size)) + 5]))
                             .ljust(73, "―"))
             lines.append("―" * 67)
 
@@ -313,7 +324,7 @@ class Cipher(ABC):
             lines.append("―――――――― {}-bit private key ".format(self.key_size).ljust(73 + 3, "―"))
             lines.append("{}".format(self.public_key))
             lines.append(("――――――――"
-                          + " {}(s) ".format(format(self.encrypt_time_for_key,
+                          + " {}(s) ".format(format(self.decrypt_time_for_key,
                                                     ".20f")[0:len(str(self.key_size)) + 13]))
                             .ljust(73 + 3, "―"))
             lines.append("―" * 67)
