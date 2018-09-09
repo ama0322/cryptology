@@ -71,12 +71,10 @@ class Vigenere(Cipher):
             encrypted_char = misc.chr_adjusted((plain_val + key_val) % alphabet_size)
             ciphertext.append(encrypted_char)
 
+
             # Print updates
-            if i % misc.utf_8_to_int_blocks.update_interval == 0:
-                print("Encryption percent done: {}{:.2%}{}"
-                      .format("\u001b[32m",
-                              i / len(plaintext),
-                              "\u001b[0m"))
+            misc.print_updates("ENCRYPTION", i + 1, len(plaintext))
+
 
 
         # Concatenate all the characters in the list into one string
@@ -89,6 +87,9 @@ class Vigenere(Cipher):
 
         # Return ciphertext
         return ciphertext
+
+
+
 
 
 
@@ -115,8 +116,10 @@ class Vigenere(Cipher):
 
         # Other important variables
         plaintext     = []                              # The list to build up the ciphertext, one character at a time
-        alphabet_size = Cipher.ALPHABETS.get(alphabet)    # Size of alphabet (used as modulus)
+        alphabet_size = Cipher.ALPHABETS.get(alphabet)  # Size of alphabet (used as modulus)
         key_index     = 0                               # Index for the vigenere key. Starts from 0
+
+
 
         # Decrypt every single character in the ciphertext
         for i in range(0, len(ciphertext)):
@@ -124,15 +127,16 @@ class Vigenere(Cipher):
             key_val    = misc.ord_adjusted(key[key_index])        # Figure out the unicode value of the key character
             key_index  = (key_index + 1) % len(key)               # Update the key_index
 
+
+
             # Figure out the decrypted character val
             decrypted_char = misc.chr_adjusted((cipher_val - key_val) % alphabet_size)
             plaintext.append(decrypted_char)
 
 
             # Print updates
-            if i % misc.utf_8_to_int_blocks.update_interval == 0:
-                print("Decryption percent done: {}{:.2%}{}"
-                      .format("\u001b[32m", i / len(ciphertext), "\u001b[0m"))
+            misc.print_updates("DECRYPTION", i + 1, len(ciphertext))
+
 
 
         # Concatenate all the characters in the list into one string
@@ -145,6 +149,9 @@ class Vigenere(Cipher):
 
         # Return plaintext
         return plaintext
+
+
+
 
 
 

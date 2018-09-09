@@ -78,9 +78,8 @@ class Rotation(Cipher):
             ciphertext.append(encrypted_char)
 
             # Print updates
-            if i % misc.utf_8_to_int_blocks.update_interval == 0:
-                print("Encryption percent done: {}{:.2%}{}"
-                      .format("\u001b[32m", i / len(plaintext), "\u001b[0m"))
+            misc.print_updates("ENCRYPTION", i + 1, len(plaintext))
+
 
         # Concatenate all the characters in the list into one string
         ciphertext = "".join(ciphertext)
@@ -132,9 +131,8 @@ class Rotation(Cipher):
 
 
             # Print updates
-            if i % misc.utf_8_to_int_blocks.update_interval == 0:
-                print("Decryption percent done: {}{:.2%}{}"
-                      .format("\u001b[32m", i / len(ciphertext), "\u001b[0m"))
+            misc.print_updates("DECRYPTION", i + 1, len(ciphertext))
+
 
 
         # Concatenate all the characters in the list into one string

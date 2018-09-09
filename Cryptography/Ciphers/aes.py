@@ -118,9 +118,8 @@ class Aes(Cipher):
 
 
     # Algorithm to encrypt plaintext
-    @misc.get_time_for_algorithm("self.encrypt_time_for_algorithm", "self.encrypt_time_overall",
-                                 "self.encrypt_time_for_key")
-    @misc.store_time_in("self.encrypt_time_overall")
+    @misc.process_times("self.encrypt_time_for_algorithm", "self.encrypt_time_overall", "self.encrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def encrypt_plaintext(self) -> None:
         """
         This encrypts with a blowfish cipher. Like all block ciphers, the plaintext is changed into 64-bit integer
@@ -154,9 +153,8 @@ class Aes(Cipher):
 
 
     # Algorithm to decrypt ciphertext
-    @misc.get_time_for_algorithm("self.decrypt_time_for_algorithm", "self.decrypt_time_overall",
-                                 "self.decrypt_time_for_key")
-    @misc.store_time_in("self.decrypt_time_overall")
+    @misc.process_times("self.decrypt_time_for_algorithm", "self.decrypt_time_overall", "self.decrypt_time_for_key")
+    @misc.static_vars(time_overall=0, time_algorithm=0, time_key=0)
     def decrypt_ciphertext(self) -> None:
         """
         As with all block ciphers, the ciphertext is split into 64-bit integer blocks. This method needs a given key,
@@ -367,11 +365,51 @@ class Aes(Cipher):
 
 
 
+    # Reads key (accounts for mode of operation) and runs the key schedule, which sets static_vars in _blowfish_on_block
+    @staticmethod
+    @misc.add_time_in("self.encrypt_time_for_key", "self.decrypt_time_for_key")
+    def _read_aes_key_and_run_key_schedule(is_decrypt:bool, key:str, encoding:str, mode_of_op:str) -> None:
+        """
+    	Reads the key. Skips over IV portion of the key, if it exists. Then, it runs the key schedule
+
+        :param is_decrypt (bool) If in decrypting mode
+        :param key:       (str) The key to read
+        :param encoding:  (str) The character encoding used
+        :param mode_of_op (str) The name of the mode of operation to use
+    	:return:          (str) The new key, adjusted for mode_of_operation
+    	"""
+
+
+        # If encoding and if in a mode that uses IV—everything other than ECB—then cut out the part that uses the IV.
+        if is_decrypt is True and mode_of_op != "ecb":
+
+            # Cut out the part of the key that is relevant to the IV
+            len_to_skip = len(misc.int_to_chars_encoding_scheme_pad(1, encoding, Aes.DEFAULT_BLOCK_SIZE))
+            key = key[len_to_skip:]
+
+
+        # Decode the key to get the actual twofish int key
+        key = misc.chars_to_int_decoding_scheme(key, encoding)
+
+
+        # Run the key schedule
+        Aes._key_schedule(key)
+
+
+
+        return None
+
+
+
+
+
+
+
 
 
     # Expand the given key.
-    @misc.store_time_in("self.encrypt_time_for_key", "self.decrypt_time_for_key")
-    def _key_schedule(self, key:int) -> None:
+    @staticmethod
+    def _key_schedule(key:int) -> None:
         """
         Key setup for blowfish
 
@@ -388,37 +426,28 @@ class Aes(Cipher):
 
 
 
-    # Reads key (accounts for mode of operation) and runs the key schedule, which sets static_vars in _blowfish_on_block
-    def _read_aes_key_and_run_key_schedule(self, is_decrypt:bool, key:str, encoding:str, mode_of_op:str) -> None:
-        """
-    	Reads the key. Skips over IV portion of the key, if it exists. Then, it runs the key schedule
-
-        :param is_decrypt (bool) If in decrypting mode
-        :param key:       (str) The key to read
-        :param encoding:  (str) The character encoding used
-        :param mode_of_op (str) The name of the mode of operation to use
-    	:return:          (str) The new key, adjusted for mode_of_operation
-    	"""
-
-
-        # If encoding and if in a mode that uses IV—everything other than ECB—then cut out the part that uses the IV.
-        if is_decrypt is True and mode_of_op != "ecb":
-
-            # Cut out the part of the key that is relevant to the IV
-            len_to_skip = len(misc.int_to_chars_encoding_scheme_pad(1, encoding, self.DEFAULT_BLOCK_SIZE))
-            key = key[len_to_skip:]
-
-
-        # Decode the key to get the actual twofish int key
-        key = misc.chars_to_int_decoding_scheme(key, encoding)
-
-
-        # Run the key schedule
-        self._key_schedule(key)
 
 
 
-        return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

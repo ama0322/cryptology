@@ -13,9 +13,15 @@ ALGORITHM GOALS/FIXES:
 
 GENERAL GOALS/FIXES:
 
-    RSA only works part of time. Blocks are sometimes not done correctly.
-    Create own ord() and chr() functions that automatically adjusts for surrogates
-    Add default keys for everything
+
+    Finish misc.print_updates()
+
+    For test, add a "-f" flag to print out the entire ciphertext/plaintext (is shortened by default).
+
+
+    Add expressions for determining if block_sizes or key_sizes are okay to be used.
+    In testing mode, make a check for asymmetric block ciphers' mode of encryption since they are different from
+        symmetric block ciphers.
     Refine source_location
     Fix formatting of relevant files (probably using .format())
 
@@ -29,6 +35,13 @@ NEED TO ADD:
 
 TRY:
     Stuff with C for optimization
+
+
+
+
+
+
+
 
 
 

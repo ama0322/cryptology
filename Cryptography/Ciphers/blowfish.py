@@ -450,7 +450,7 @@ class Blowfish(Cipher):
             plaintext_blocks, key, ignore_this = eval("misc.decrypt_{}_symm(self, Blowfish._blowfish_on_block, "
                                                                            "ciphertext_blocks, key, \"\")"
                                                       .format(mode_of_op))
-        # Else, when ENCRYPT block algorithm is used for the mode of operation
+        # Else, when the mode of operation uses the ENCRYPT block algorithm
         else:
             # Un-reverse the p_array, because we want the encrypt block algorithm
             Blowfish._blowfish_on_block.p_array.reverse()

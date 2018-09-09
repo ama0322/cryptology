@@ -289,6 +289,8 @@ class Rsa(Cipher):
             # Set key to whichever one we are using (prefer private_key b/c testing)
             if private_key != "":
                 key = private_key
+
+            # At this point, encrypt using a given public_key
             else:
                 key = public_key
 

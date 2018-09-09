@@ -58,6 +58,9 @@ class VigenereMultiplicative(Cipher):
             plaintext  = self.plaintext
             key        = self.key
             alphabet   = self.char_set
+            alphabet_size = Cipher.ALPHABETS.get(alphabet)
+        else:
+            alphabet_size = Cipher.ALPHABETS.get(alphabet)
 
 
         # Important variables to use during encryption
@@ -73,7 +76,7 @@ class VigenereMultiplicative(Cipher):
 
             # Print updates (every 1000 characters)
             characters_encrypted += 1
-            if characters_encrypted % 1000 == 0 or characters_encrypted == len(self.plaintext):
+            if characters_encrypted % 1000 == 0 or characters_encrypted == len(plaintext):
                 print("ENCRYPTION\tPercent of text done: {}{}%{} with {} characters"
                       .format("\u001b[32m",
                               format((characters_encrypted / len(plaintext)) * 100, ".2f"),
@@ -90,14 +93,15 @@ class VigenereMultiplicative(Cipher):
 
 
             # Figure out the encrypted character
-            encrypted_val = (plain_val * key_val) % Cipher.ALPHABETS.get(self.char_set)
+            encrypted_val = (plain_val * key_val) % alphabet_size
             encrypted_char = misc.chr_adjusted(encrypted_val)
 
             # Obtain the number of overlaps that come before this one (this plain_val) and NOT including this one
             overlap_counter = 0
             for i in range(0, plain_val):
+
                 # If it is an overlap character
-                if (i * key_val) % Cipher.ALPHABETS.get(self.char_set) == encrypted_val and i != plain_val:
+                if (i * key_val) % alphabet_size == encrypted_val and i != plain_val:
                     overlap_counter += 1
 
 
@@ -112,9 +116,9 @@ class VigenereMultiplicative(Cipher):
         # Join the ciphertext
         ciphertext = "".join(ciphertext)
 
+
         # Set the self object's ciphertext
         self.ciphertext = ciphertext
-
 
         # Return ciphertext
         return ciphertext
@@ -142,9 +146,12 @@ class VigenereMultiplicative(Cipher):
 
         # Parameters for decryption (if not provided)
         if ciphertext == "" and key == "" and alphabet == "":
-            ciphertext = self.ciphertext
-            key        = self.key
-            alphabet   = self.char_set
+            ciphertext    = self.ciphertext
+            key           = self.key
+            alphabet      = self.char_set
+            alphabet_size = Cipher.ALPHABETS.get(alphabet)
+        else:
+            alphabet_size = Cipher.ALPHABETS.get(alphabet)
 
         # Other important variables
         plaintext            = []                           # Build up the plaintext here, one character at a time
@@ -187,17 +194,24 @@ class VigenereMultiplicative(Cipher):
             for i in range(0, 1114112):
 
                 # If overlap(count has not yet reached number)
-                if (i * key_val) % Cipher.ALPHABETS.get(self.char_set) == cipher_val:
+                if (i * key_val) % alphabet_size == cipher_val:
                     if overlap_counter != num_to_reach:                # Not at right plaintext char yet
                         overlap_counter += 1
                         continue
                     else:                                              # At the right plaintext char
+                        plain_char = misc.chr_adjusted(i)
                         break
 
             # Add plain char to plaintext
-            plaintext += plain_char
+            plaintext.append(plain_char)
 
 
+
+        # Join the plaintext together
+        plaintext = "".join(plaintext)
+
+        # Save the plaintext
+        self.plaintext = plaintext
 
         # Return plaintext
         return plaintext

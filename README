@@ -3,84 +3,108 @@
 
 
 Needed Non-Standard Modules:
+    I.   line_profiler (to profile line-by-line)
+    II.  Cython (need it for line_profiler)
+    III. undecorated (related to line_profiler)
+
+
 
 
 
 ################################################################################# USAGE OF AVAILABLE COMMANDS ##########
-    User input is unix-like, with: command [optional flag] (argument) <optional argument>
-    File paths with spaces must escape spaces with : "\ "
-    The working directory is the outer Cryptography file. For example, the file path of Clarissa.txt in Resources is
-        Resources/Library/Clarissa.txt
 
-    encrypt (cipher) (plaintext_file_path*)  <output_file_path>
-        This encrypts with "cipher" using the text from "plaintext_file_path" as a plaintext. There will be two files
-        created as a result of this encryption: the encrypted file AND info about the encryption. "output_file_path",
-        if provided, is the location where the encrypted file is created. Otherwise, a default file path will be
-        created. The info about the encryption is stored in a file with the same name as the "output_file_path" but
-        appended with "_(Relevant information)".
+BRIEF NOTES:
+    I.   User input is unix-like, with: command [optional flag] (argument) <optional argument>
+    II.  File paths with spaces must escape spaces with : "\ "
+    III. The working directory is the outer Cryptography file. For example, the file path of Clarissa.txt in
+             Resources is Resources/Library/Clarissa.txt
 
-        *the "plaintext_file_path" may be shortened to just the file name and not the whole file path. For example,
-        Resources/Library/Clarissa.txt can be passed in as Clarissa.txt and the command will still work. This will only
-        work for the files in The four folders in the Resources folder.
 
-    decrypt (cipher) (ciphertext_file_path) <output_file_path>
-        Does the same thing as encrypt, but decrypts. Note that there are more decryption ciphers than encryption ones.
-        This is because some decryption ciphers only decrypt.
+AVAILABLE COMMANDS:
+    I.   encrypt
+        1. encrypt (cipher) (plaintext_file_path*)  <output_file_path>
+           This encrypts with "cipher" using the text from "plaintext_file_path" as a plaintext. There will be two files
+           created as a result of this encryption: the encrypted file AND info about the encryption. "output_file_path",
+           if provided, is the location where the encrypted file is created. Otherwise, a default file path will be
+           created. The info about the encryption is stored in a file with the same name as the "output_file_path" but
+           appended with "_(Relevant information)".
 
-    test    OR    test [flag]    OR    test (decryption_cipher)
+           * The "plaintext_file_path" may be shortened to just the file name and not the whole file path. For example,
+           Resources/Library/Clarissa.txt can be passed in as Clarissa.txt and the command will still work. This will
+           only work for the files in The four folders in the Resources folder.
+
+
+
+    II.  decrypt
+        1. decrypt (cipher) (ciphertext_file_path) <output_file_path>
+           Does the same thing as encrypt, but decrypts. Note that there are more decryption ciphers than
+           encryption ones. This is because some decryption ciphers only decrypt.
+
+
+
+    III. test
         1. test
-            Just typing "test" will enter into testing mode, where the word "test" is already provided as the first
-            command and [optional flag] or (decryption_cipher) must be inputted
+           Just typing "test" will enter into testing mode, where the word "test" is already provided as the first
+           command and [optional flag] or (decryption_cipher) must be inputted
 
         2. test [flag]
-            -e: exit the testing mode back into regular mode where commands other than "test" can be used
+           -e: exit the testing mode back into regular mode where commands other than "test" can be used
 
-            -a: automated testing. Tests are run automatically on all decryption* ciphers. If this flag is provided
-                    while NOT already in testing mode, then the user is automatically exited out of testing mode upon
-                    completion. Otherwise, if ALREADY IN testing mode, then program will continue in testing mode.
+           -a: automated testing. Tests are run automatically on all decryption* ciphers. If this flag is provided
+               while NOT already in testing mode, then the user is automatically exited out of testing mode upon
+               completion. Otherwise, if ALREADY IN testing mode, then program will continue in testing mode.
 
-                    * The encryption cipher corresponding to the decryption cipher should never raise an error.
+               * The encryption cipher corresponding to the decryption cipher should never raise an error.
 
-            -c: will clear all logs in Resources/Files_Logs
+           -c: Will clear all logs in Resources/Files_Logs.
 
         3. test (decryption_cipher)
-            This command will run a test with parameters (such as plaintext, key...) described in Cryptography/test.py.
-            The corresponding encrypt cipher to the user provided "decryption_cipher" will be used to encrypt the
-            plaintext. Then, the ciphertext will be decrypted with the user provided "decryption_cipher". This
-            decryption result will be compared against the plaintext for correctness.
+           This command will run a test with parameters (such as plaintext, key...) described in Cryptography/test.py.
+           The corresponding encrypt cipher to the user provided "decryption_cipher" will be used to encrypt the
+           plaintext. Then, the ciphertext will be decrypted with the user provided "decryption_cipher". This
+           decryption result will be compared against the plaintext for correctness.
 
-    database [flags] (cipher) (new_database_file_name)    OR     database [flags] (database_file_name)
-             OR     database [flags]
-        1. database [flags] (cipher) (new_database_file_name)
-            -n (cipher) (new_database_file_name): Create a new database with name: "new_database_file_name". The
-            method of encryption is "cipher", which must be a valid encryption cipher. The program will ask for the
-            key for encryption and/or decryption later on if necessary.
 
-            -e (cipher) (abs_file_path_to_new_database): The file pointed to by "abs_file_path_to_new_database"
-            will be turned into a new database file with info file. "cipher" will be the encrypting cipher used.
 
-        2. database [flags] (database_file_name)
-            -o (database_file_name): Open up the encrypted database named: "database_file_name"
+    IV.  database
+         1. database [flags] (cipher) (new_database_file_name)
+            -n: Create a new database with name: "new_database_file_name". The
+                method of encryption is "cipher", which must be a valid encryption cipher. The program will ask for the
+                key for encryption and/or decryption later on if necessary.
 
-        3. database [flags]
+            -e: The file pointed to by "new_database_file_name" will be turned into a new database file with info file.
+                "cipher" will be the encrypting cipher used.
+
+         2. database [flags] (database_file_name)
+            -o: Open up the encrypted database named: "database_file_name"
+
+         3. database [flags]
             -c: Clear all files in the Resources/Database folder. The program will ask the user for a check before
-            the deletion actually occurs.
+                the deletion actually occurs.
 
             -i: Print out the usage of database.
 
-    help
-        Will print out helpful information
 
-    exit
-        Will exit the program
 
-    clear     OR     clear [flags]
-        1. clear:
-            Clears files in Files_Decrypted and Files_Encrypted
+    V.    help
+        1. help
+           Will print out helpful information.
 
-        2. clear [flags]:
-            -a: Clear everything in Resources/Databases, Resources/Files_Decrypted, Resources/Files_Encrypted, and
-                                    Resources/Logs
+
+
+    VI.   exit
+        1. exit
+           Will exit the program.
+
+
+
+    VII.  clear
+        1. clear
+           Clears files in Files_Decrypted and Files_Encrypted.
+
+        2. clear [flags]
+           -a: Clear everything in Resources/Databases, Resources/Files_Decrypted, Resources/Files_Encrypted,
+               and Resources/Logs.
 
 
 
@@ -100,27 +124,27 @@ Needed Non-Standard Modules:
 PROJECT STRUCTURE (Cryptography)
     This project has six main components, as well as five folders for storage.
 
-        The six main components (in Cryptography) are:
-            -cryptography_runner.py - this file holds the main runner program that takes in user input, and performs the
-                                            encryption/decryption.
-            -misc.py                - this file holds functions and resources useful throughout the project.
-            -test.py                - this file runs the decryption/encryption functions and tests for correctness and
-                                            performance
-            -database.py            - this file holds everything necessary for handling the encryption/decryption of
-                                            databases.
-            -package Ciphers        - this package holds all the different cipher objects, each one containing a method
-                                            encryption and decryption. It also contains the .py file for the superclass
-                                            of all the different cipher objects.
+    The six main components (in Cryptography) are:
+        -cryptography_runner.py - this file holds the main runner program that takes in user input, and performs the
+                                      encryption/decryption.
+        -misc.py                - this file holds functions and resources useful throughout the project.
+        -test.py                - this file runs the decryption/encryption functions and tests for correctness and
+                                      performance.
+        -database.py            - this file holds everything necessary for handling the encryption/decryption of
+                                      databases.
+        -package Ciphers        - this package holds all the different cipher objects, each one containing a method
+                                      encryption and decryption. It also contains the .py file for the superclass
+                                      of all the different cipher objects.
 
 
-        The five folders are:
-            -Resources/Algorithm_Resources - Files that some misc functions use as resources. NOT used by user.
-            -Resources/Library             - this folder stores all text files you want to use with this program (most
+    The five folders are:
+        -Resources/Algorithm_Resources - Files that some misc functions use as resources. NOT used by user.
+        -Resources/Library             - this folder stores all text files you want to use with this program (most
                                              likely as plaintext)
-            -Resources/Files_Decrypted     - this is where the generated decrypted files go
-            -Resources/Files_Encrypted     - this is where the generated encrypted files go
-            -Resources/Files_Logs          - where the logs from testing go
-            -Resources/Databases           - holds encrypted databases, along with info files about those databases.
+        -Resources/Files_Decrypted     - this is where the generated decrypted files go
+        -Resources/Files_Encrypted     - this is where the generated encrypted files go
+        -Resources/Files_Logs          - where the logs from testing go
+        -Resources/Databases           - holds encrypted databases, along with info files about those databases.
 
 
 
@@ -136,23 +160,24 @@ DATABASE.PY
 
 
 
+
 MISC.PY
     This file holds functions and resources useful throughout the project
 
     Structure:
-        I.   Resources - this area hold resources that generally deal with the type of encryptions/decryptions and
+        𝐈. 𝐑𝐞𝐬𝐨𝐮𝐫𝐜𝐞𝐬 - this area hold resources that generally deal with the type of encryptions/decryptions and
                  character sets available. Also, some resources necessary for algorithms in the same file is also stored
                  here.
 
-        II.  User Interfacing and Function Calls - these functions are called from files from Decryption and Encryption
+        𝐈𝐈. 𝐔𝐬𝐞𝐫 𝐈𝐧𝐭𝐞𝐫𝐟𝐚𝐜𝐢𝐧𝐠 𝐚𝐧𝐝 𝐅𝐮𝐧𝐜𝐭𝐢𝐨𝐧 𝐂𝐚𝐥𝐥𝐬 - these functions are called from files from Decryption and Encryption
                  when their execute() function is called. It makes calls to Section IV in order to get
                  user data and write down useful information. These functions also return the encrypted/decrypted text
                  back to execute()
 
-        III. Useful Algorithms - this contains algorithms that are used in encrypt() and decrypt() from files in
+        𝐈𝐈𝐈. 𝐔𝐬𝐞𝐟𝐮𝐥 𝐀𝐥𝐠𝐨𝐫𝐢𝐭𝐡𝐦𝐬 - this contains algorithms that are used in encrypt() and decrypt() from files in
                  Encryption and Decryption
 
-        IV.  Helper Functions - functions to process user input and write down relevant information. Called from
+        𝐈𝐕. 𝐇𝐞𝐥𝐩𝐞𝐫 𝐅𝐮𝐧𝐜𝐭𝐢𝐨𝐧𝐬 - functions to process user input and write down relevant information. Called from
                  functions in Section II for convenience.
 
 
@@ -166,35 +191,55 @@ Package Ciphers
 
 
     ### GENERAL FILE FORMAT ###
-        I.   Cipher info - Class variables that describe what the cipher is, and how to use the cipher.
+        𝐈. 𝐂𝐢𝐩𝐡𝐞𝐫 𝐢𝐧𝐟𝐨 - Class variables that describe what the cipher is, and how to use the cipher.
 
-        II.  Constructor - Constructor that instantiates objects with the instance variables. Encryption and decrytion
-                 are done with these constructed objects and their methods.
+        𝐈𝐈. 𝐂𝐨𝐧𝐬𝐭𝐫𝐮𝐜𝐭𝐨𝐫 - Constructor that instantiates objects with the instance variables. Encryption and decrytion
+                are done with these constructed objects and their methods.
 
-        III. def encrypt_plaintext() - This is the method that encypts the object's plaintext variable. This variable,
-                 along with all other parameters for encryption (such as char_set, mode_of_op, etc.) must be set before
-                 encrypt_plaintext() is called.
+        𝐈𝐈𝐈. 𝐝𝐞𝐟 𝐞𝐧𝐜𝐫𝐲𝐩𝐭_𝐩𝐥𝐚𝐢𝐧𝐭𝐞𝐱𝐭() - This is the method that encypts the object's plaintext variable. This method can
+                can be used two ways:
+                    1. Necessary instance variables (which are the same as the optional parameters) for the encryption
+                       care set into the Cipher object before calling this method WITHOUT any parameters.
+                    2. Parameters are given to encrypt_plaintext(), in which case they will take precedence, regardless
+                       of the instance variables in the calling object. This is NOT RECOMMENDED
 
-        IV.  def decrypt_ciphertext() - This method decrypts the object's ciphertext variable. Like
-                 encrypt_plaintext(), the object's relevant instance variables must be set before usage.
+        𝐈𝐕. 𝐝𝐞𝐟 𝐝𝐞𝐜𝐫𝐲𝐩𝐭_𝐜𝐢𝐩𝐡𝐞𝐫𝐭𝐞𝐱𝐭() - This method decrypts the object's ciphertext variable. See above for usage.
 
-        V.   def write_statistics(file_path) - This method writes out statistics of the encryption/decryption for
-                 testing mode (This is not used when a regular info file is created in cryptography_runner). This works
-                 by calling the super method in class Cipher in file _cipher, which is write_statistics(file_path,
-                 extra_lines). For many cases, extra_lines is a blank dictionary.
-                     Sometimes, we want additional statistics* to be written (additional meaning more than the default
-                 statistics that the super method writes). In that case, extra_lines is no longer blank. It becomes the
-                 dictionary in which the KEYS are the line numbers that extra statistics are to be inserted into, and
-                 the VALUES are the actual line (is a string) to insert in.
-                     *The super method writes different statistics based on the type of cipher the calling object is.
-                 So, for example, the default statistics for an asymmetric block cipher is different from the
-                 default statistics for a regular symmetric cipher.
+        𝐕. 𝐝𝐞𝐟 𝐰𝐫𝐢𝐭𝐞_𝐬𝐭𝐚𝐭𝐢𝐬𝐭𝐢𝐜𝐬(𝐟𝐢𝐥𝐞_𝐩𝐚𝐭𝐡) - This method writes out statistics of the encryption/decryption for
+                testing mode (This is not used when a regular info file is created in cryptography_runner). This works
+                by calling the super method in class Cipher in file _cipher, which is write_statistics(file_path,
+                extra_lines). For many cases, extra_lines is a blank dictionary.
+                    Sometimes, we want additional statistics* to be written (additional meaning more than the default
+                statistics that the super method writes). In that case, extra_lines is no longer blank. It becomes the
+                dictionary in which the KEYS are the line numbers that extra statistics are to be inserted into, and
+                the VALUES are the actual line (is a string) to insert in.
+                    *The super method writes different statistics based on the type of cipher the calling object is.
+                So, for example, the default statistics for an asymmetric block cipher is different from the
+                default statistics for a regular symmetric cipher.
 
-        VI.  def _ciphername_on_block(block) - BLOCK CIPHERS ONLY. This is the actual algorithm that operates on a
-                 block.
-                     Typically, this static method has some static variables (which are often in some way related to
-                 the key). In this case, all the methods handling the key MUST be run first before this method is
-                 called.
+        𝐕𝐈. 𝐝𝐞𝐟 _𝐜𝐢𝐩𝐡𝐞𝐫𝐧𝐚𝐦𝐞_𝐨𝐧_𝐛𝐥𝐨𝐜𝐤(𝐛𝐥𝐨𝐜𝐤) - BLOCK CIPHERS ONLY. This is the actual algorithm that operates on a
+                block.
+                    Typically, this static method has some static variables (which are often in some way related to
+                the key). In this case, all the methods handling the key MUST be run first before this method is
+                called.
+
+        𝐕𝐈𝐈. 𝐌𝐢𝐬𝐜𝐞𝐥𝐥𝐚𝐧𝐞𝐨𝐮𝐬 𝐚𝐧𝐜𝐢𝐥𝐥𝐚𝐫𝐲 𝐟𝐮𝐧𝐜𝐭𝐢𝐨𝐧𝐬 - Some ciphers need additional ancillary functions, especially block
+                ciphers.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

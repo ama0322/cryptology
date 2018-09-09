@@ -6,7 +6,7 @@ from Cryptography                 import misc                  # To get misc fun
 import                                   datetime              # for labelling the date that files are created
 import                                   os                    # for deleting files
 import                                   undecorated           # To get the undecorated function/method
-
+import                                   inspect               # To inspect classes
 
 
 ########################################################################################### PRIMARY FUNCTIONS ##########
@@ -428,18 +428,26 @@ def _conduct_test_and_write_stats(cipher_obj:Cipher) -> bool:
 
 
 
-    # Wrap the encrypt_plaintext and decrypt_ciphertext. Then, run them
-    lp = LineProfiler()
+    # Setup for encrypting/decryptin with profiling
+    lp = LineProfiler()                                      # Set up the line-profiler object
+    module_name = str(type(cipher_obj)).split(".")[-2]       # Get the name of the module that cipher_obj uses
+    class_name =  str(type(cipher_obj)).split(".")[-1][0:-2] # Get the class that cipher_obj is
+    functions = eval("inspect.getmembers({}.{}, "
+                     "predicate=inspect.isfunction)"
+                     .format(module_name, class_name))
+    functions = [item[0] for item in functions][1:]          # Only want names. Also, ignore first element (init)
 
-    # Handle encrypt_plaintext()
+    # TODO
+
+    # Add all function/method to profile
     lp.add_function(undecorated.undecorated(cipher_obj.encrypt_plaintext))
-    lp_wrapped = lp(cipher_obj.encrypt_plaintext)
-    lp_wrapped()
-    lp.print_stats()
-
-    # Handle decrypt_ciphertext()
     lp.add_function(undecorated.undecorated(cipher_obj.decrypt_ciphertext))
-    lp_wrapped = lp(cipher_obj.decrypt_ciphertext)
+    lp.add_function(misc.print_updates)
+
+    # Encrypt and decrypt. Also, profile
+    lp_wrapped = lp(cipher_obj.encrypt_plaintext)      # Wrap encrypt_plaintext()
+    lp_wrapped()
+    lp_wrapped = lp(cipher_obj.decrypt_ciphertext)     # Wrap decrypt_ciphertext()
     lp_wrapped()
     lp.print_stats()
 
@@ -450,7 +458,7 @@ def _conduct_test_and_write_stats(cipher_obj:Cipher) -> bool:
     cipher_name = str(type(cipher_obj))
     cipher_name = cipher_name[cipher_name.rfind(".") + 1: -2]
     stats_file_path = "Resources/Files_Logs/{}__{}"\
-                      .format(cipher_name, datetime.datetime.now().strftime("%Y-%m-%d_h%Hm%Ms%S"))
+                      .format(cipher_name, datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss"))
     cipher_obj.write_statistics(stats_file_path)
 
 

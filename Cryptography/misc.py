@@ -9,7 +9,8 @@ import csv     # To read csv format
 import copy    # To make deep-copies
 import sys     # To get access to the system (to suppress print() calls)
 import os      # To get access to os         (to suppress print() calls)
-import math    # TO get various math functions
+import math    # To get various math functions
+import inspect # To determine if things are function, methods, etc.
 
 ################################################################################################### RESOURCES ##########
 
@@ -24,51 +25,160 @@ import math    # TO get various math functions
 
 ########## MISCELLANEOUS ##########
 # region Miscellaneous
+
+
+
 # This decorator gives static vars to the decorated function. Parameters: (static_one=1, static_two=2, ...)
-def static_vars(**kwargs:dict):
+def static_vars(**kwargs:dict) -> Callable:
     def decorate(function_to_decorate):
+
+
+
+        # Give attributes to the function
         for k in kwargs:
             setattr(function_to_decorate, k, kwargs[k])
+
+
         return function_to_decorate
     return decorate
 
-# This decorator sets the object's instance variable with the time it takes for the function to run
-def store_time_in(*args:str):
 
-    def decorate_method(method_to_decorate):
+# This decorator stores the time that the decorated function takes in the parameter variable
+def add_time_in(*args:str) -> Callable:
 
-        # Same method signature as the wrapped function
-        def wrapper(self, *parameters) -> None:
+    def decorate_function_or_method(function_or_method_to_decorate):
 
-            start_time = time.time()
-            output = method_to_decorate(self, *parameters)
-            elapsed_time = time.time() - start_time + 0.00000000000000001      # Prevent the time from being 0.0
+        # Same signature as the wrapped function/method
+        def function_wrapper(*parameters):
 
-            for arg in args:                     # Store the time in all kwargs
-                exec("{} = elapsed_time".format(arg))
+            start_time = time.perf_counter()
+            output = function_or_method_to_decorate(*parameters)
+            elapsed_time = time.perf_counter() - start_time
 
+            # Import the class that the function is in
+            class_name = function_or_method_to_decorate.__qualname__.split(".")[0]
+            module_name = str(inspect.getsourcefile(function_or_method_to_decorate)).split("\\")[-1].split(".")[0]
+
+            # Import the Class to get access to function_or_method_to_decorate's static_vars
+            exec("from Cryptography.Ciphers.{} import {}".format(module_name, class_name))
+
+
+            for arg in args:                # Store the time in all args
+                try:
+                    exec("{} += elapsed_time".format(arg))
+                except:
+                    exec("{} = elapsed_time".format(arg))
 
             return output
 
-        return wrapper
-    return decorate_method
+        # Same signature for the wrapped method
+        def method_wrapper(self, *parameters) -> None:
 
-# This decorator sets the time_for_algorithm with (time_overall - time_for_keys). Used on encrypt() or decrypt()
-def get_time_for_algorithm(time_for_algorithm:str, time_overall:str, time_for_keys:str):
+            start_time = time.perf_counter()
+            output = function_or_method_to_decorate(self, *parameters)
+            elapsed_time = time.perf_counter() - start_time
 
-    def decorate_method(method_to_decorate):
 
-        # Same method signature as the wrapped function
-        def wrapper(self) -> None:
+            # Import the class that the function is in
+            class_name = function_or_method_to_decorate.__qualname__.split(".")[0]
+            module_name = str(inspect.getsourcefile(function_or_method_to_decorate)).split("\\")[-1].split(".")[0]
 
-            # Run the method as usual, and save the result
-            result = method_to_decorate(self)
+            # Import the Class to get access to function_or_method_to_decorate's static_vars
+            exec("from Cryptography.Ciphers.{} import {}".format(module_name, class_name))
 
-            # Calculate and set the time_for_algorithm
-            exec("{} = {} - {}".format(time_for_algorithm, time_overall, time_for_keys))
 
-            # Return the result
+            for arg in args:                # Store the time in all args
+                try:
+                    exec("{} += elapsed_time".format(arg))
+                except:
+                    exec("{} = elapsed_time".format(arg))
+            return output
+
+
+
+        # Test if the given method/function is a method
+        sig = str(inspect.signature(function_or_method_to_decorate))
+        if sig[1:6] == "self,":
+            return method_wrapper
+        else:
+            return function_wrapper
+
+
+
+    return decorate_function_or_method
+
+
+
+# This decorator calculates and stores time_for_algorithm, time_for_keys,and time_overall.
+def process_times(time_algorithm:str, time_overall:str, time_key:str) -> Callable:
+
+    def decorate_method(method_to_decorate) -> Callable:
+
+        # Same signature as the wrapped method
+        def wrapper(self, *args):
+
+
+            # Import the class that the function is in
+            class_name = method_to_decorate.__qualname__.split(".")[0]
+            module_name = str(inspect.getsourcefile(method_to_decorate)).split("\\")[-1].split(".")[0]
+
+            # Import the Class to get access to function_or_method_to_decorate's static_vars
+            exec("from Cryptography.Ciphers.{} import {}".format(module_name, class_name))
+
+            # Clear decrypt_ciphertext's time_key (there may be leftovers from encrypt_plaintext())
+            exec("{}.decrypt_ciphertext.time_key = 0".format(class_name))
+
+
+
+            # Run the method as usual, and save the result and the time it took
+            start_time = time.perf_counter()
+            result = method_to_decorate(self, *args)
+            elapsed_time = time.perf_counter() - start_time
+
+
+            # If in encrypt_plaintext
+            if time_algorithm[0:12] == "self.encrypt":
+                # Store time values in method's static variables
+                exec("{}.encrypt_plaintext.time_overall = elapsed_time".format(class_name))
+                try:  # ({}.encrypt_plaintext.time_key may be 0, in which case it does not work)
+                    exec("{}.encrypt_plaintext.time_algorithm = elapsed_time - {}.encrypt_plaintext.time_key"
+                         .format(class_name, class_name))
+                except:
+                    exec("{}.encrypt_plaintext.time_key = 0".format(class_name))
+                    exec("{}.encrypt_plaintext.time_algorithm = elapsed_time - {}.encrypt_plaintext.time_key"
+                         .format(class_name, class_name))
+
+                # Store time values in self object
+                exec("{} = {}.encrypt_plaintext.time_algorithm".format(time_algorithm, class_name))
+                exec("{} = {}.encrypt_plaintext.time_overall".format(time_overall, class_name))
+                exec("{} = {}.encrypt_plaintext.time_key".format(time_key, class_name))
+
+            # Else in decrypt_plaintext
+            else:
+                # Store time values in method's static variables
+                exec("{}.decrypt_ciphertext.time_overall = elapsed_time".format(class_name))
+                try: # ({}.encrypt_plaintext.time_key may be 0, in which case it does not work)
+                    exec("{}.decrypt_ciphertext.time_algorithm = elapsed_time - {}.decrypt_ciphertext.time_key"
+                         .format(class_name, class_name))
+                except:
+                    exec("{}.decrypt_ciphertext.time_key = 0".format(class_name))
+                    exec("{}.decrypt_ciphertext.time_algorithm = elapsed_time - {}.decrypt_ciphertext.time_key"
+                         .format(class_name, class_name))
+
+                # Store time values in self object
+                exec("{} = {}.decrypt_ciphertext.time_algorithm".format(time_algorithm, class_name))
+                exec("{} = {}.decrypt_ciphertext.time_overall".format(time_overall, class_name))
+                exec("{} = {}.decrypt_ciphertext.time_key".format(time_key, class_name))
+
+
+
+            # return the original method' output
             return result
+
+
+        # Save the original function in a place where it is accessible
+        #wrapper._original = method_to_decorate
+
 
         return wrapper
     return decorate_method
@@ -76,10 +186,20 @@ def get_time_for_algorithm(time_for_algorithm:str, time_overall:str, time_for_ke
 
 # Disable print() calls by setting the standard output to null
 def disable_print() -> None:
+    """
+    Disables printing until enable_print() is called.
+
+    :return: (None)
+    """
     sys.stdout = open(os.devnull, 'w')
 
 # Restore by resetting the standard output to what it should be
 def enable_print() -> None:
+    """
+    Enable printing.
+
+    :return: (None)
+    """
     sys.stdout = sys.__stdout__
 
 # Function of ord() that automatically adjusts for surrogates
@@ -96,7 +216,7 @@ def ord_adjusted(character:str) -> int:
 
     # Adjust the ord result
     if ord_result >= 57343:               # 55296 is the UPPER INCLUSIVE bound of the surrogates
-        ord_result = ord_result - 2048    # 2048 is the number of surrogate characters
+        ord_result -= 2048    # 2048 is the number of surrogate characters
 
     return ord_result
 
@@ -111,7 +231,7 @@ def chr_adjusted(unicode_val:int) -> str:
 
     # Adjust the unicode value if necessary
     if unicode_val >= 55296:                # 55296 is the LOWER INCLUSIVE bound of the surrogates
-        unicode_val = unicode_val + 2048    # 2048 is the number of surrogate characters
+        unicode_val += 2048    # 2048 is the number of surrogate characters
 
     return chr(unicode_val)
 
@@ -137,7 +257,14 @@ def format_to_colon(lines: list, column=35) -> list:
     return lines
 
 # Allow division by zero
-def safe_div(x:int,y:int):
+def safe_div(x:int,y:int) -> float:
+    """
+    Regular division, but allow division by 0, which returns 0
+
+    :param x: (int)   The numerator
+    :param y: (int)   The denominator
+    :return:  (float) The result of the division
+    """
     if y == 0:
         return 0
     return x / y
@@ -172,6 +299,63 @@ def mod_inverse(x:int, modulus:int) -> int:
     # Calculate the modular multiplicative inverse by a % m
     if b != -1:
         return a % modulus
+
+
+
+
+# Print updates at some interval
+@static_vars(time_interval_in_secs=0.01, time_last_print=0, chars_total_len=0)
+def print_updates(prompt:str, chars_finished:int, chars_total:int) -> None:
+
+
+    # Print if first character
+    if chars_finished == 1:
+
+        # Set the static var for chars_total_len
+        print_updates.chars_total_len = len("{:,}".format(chars_total))
+
+        # Print, and update the time
+        print("\r{}\t\t\tPercent of text done: {}{}%{} \t\t\t\twith {} characters"
+              .format(prompt,
+                      "\u001b[32m",
+                      format(chars_finished / chars_total * 100, ".2f").rjust(6, " "),
+                      "\u001b[0m",
+                      "{:,}".format(chars_finished).rjust(print_updates.chars_total_len, " ")), end="")
+        print_updates.time_last_print = time.time()
+
+
+    # Print if an interval has passed
+    elif time.time() - print_updates.time_last_print >= print_updates.time_interval_in_secs:
+
+        # Print and update the time
+        print("\r{}\t\t\tPercent of text done: {}{}%{} \t\t\t\twith {} characters"
+              .format(prompt,
+                      "\u001b[32m",
+                      format(chars_finished / chars_total * 100, ".2f").rjust(6, " "),
+                      "\u001b[0m",
+                      "{:,}".format(chars_finished).rjust(print_updates.chars_total_len, " ")  ), end="")
+        print_updates.time_last_print = time.time()
+
+
+
+
+    # Print if on last character. This line is not to be overwritten
+    elif chars_finished == chars_total:
+
+        # Set static vars back to 0 (aside from the interval) for the next encryption/decryption
+        print_updates.time_last_print = 0
+        print_updates.chars_total_len = 0
+
+        # Print and update the time
+        print("\r{}\t\t\tPercent of text done: {}{}%{} \t\t\t\twith {} characters"
+              .format(prompt,
+                      "\u001b[32m",
+                      format(chars_finished / chars_total * 100, ".2f"),
+                      "\u001b[0m",
+                      "{:,}".format(chars_finished).rjust(print_updates.chars_total_len, " ")  ))
+        print_updates.time_last_print = time.time()
+
+
 
 
 
@@ -328,6 +512,10 @@ def int_blocks_to_utf_8(int_blocks:list, block_size:int) -> str:
 # endregion
 
 
+
+
+
+
 ########## RELEVANT TO GENERATING A CIPHER OBJECT ##########
 # region For generating a cipher object
 # Figure out the ClassName for the given module name
@@ -345,7 +533,6 @@ def get_class_name(module:str) -> str:
 
 
 # Figure out the character set of the given data automatically if possible. Inaccurate for short texts
-# noinspection SpellCheckingInspection
 @static_vars(short_text_len=300)
 def get_char_set(data: str, cipher_char_set: str, is_encrypt:bool) -> str:
     """
@@ -534,6 +721,7 @@ def adjust_alphabet(data: str, alphabet: str, cipher_char_set: str, restrict_alp
 
 
 ########## TEXT/CHAR ENCODING SCHEMES ##########
+# region Converting between integers and characters with encoding schemes
 # This function converts the ciphertext in integer form into the proper character encoding scheme . Pads up to keysize
 def int_to_chars_encoding_scheme_pad(number:int, encoding:str, key_size:int) -> str:
     """
@@ -999,7 +1187,7 @@ def chars_to_chars_decoding_scheme(string:str, encoding:str) -> str:
         # Turn the hexstring into a regular string with utf-8 encoding
         decoded = codecs.decode(decoded, "hex").decode("utf-8") # Decode hex to string using utf-8
     return decoded
-
+# endregion
 
 
 
@@ -1119,13 +1307,10 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
                 4973, 4987, 4993, 4999
             ]
 
-            # If 1 or less, not prime. Just return false
-            if candidate <= 1:
-                return False, 0
 
             # Check that number not evenly divisible by small primes
             for prime in small_primes:
-                if candidate % prime == 0:
+                if candidate != candidate and candidate % prime == 0:
                     return False, prime
 
             # All the small primes have been checked, so the number passes the small primes test
@@ -1190,7 +1375,7 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
         while True:
 
             # Generate a number that needs to be tested for primality
-            num_to_test = secrets.randbits(bit_length) ^ (1 << (bit_length - 1))
+            num_to_test = secrets.randbits(bit_length - 1) ^ (1 << (bit_length - 1))
 
             # Print updates and update
             print(str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
@@ -1527,7 +1712,7 @@ def is_english_n_grams(data:str) ->(bool, float):
 
 
 ########## MODES OF ENCODING ##########
-
+# region The modes of encoding
 # ECB mode. Just a straightforward encryption on each block. Nothing special
 def encrypt_ecb_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], plaintext_blocks:list, key_one:str,
                                                                         key_two:str) -> (list, str, str):
@@ -2482,7 +2667,7 @@ def decrypt_ctr_symm(cipher_obj:Cipher, algorithm:Callable[[int],int], ciphertex
 
     # Return
     return plaintext_blocks, key_one, key_two
-
+# endregion
 
 
 
