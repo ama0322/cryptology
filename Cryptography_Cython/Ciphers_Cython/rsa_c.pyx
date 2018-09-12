@@ -39,8 +39,8 @@ cpdef tuple generate_prime_pair(int prime_bits):#region...
     cdef list primes_list = [generate_prime(prime_bits // 2)]  # List to store primes
     generate_prime_pair_PrimesFound += 1
     cdef int i = 1                                             # Looping variable
-    cdef int prime_one = 0                                     # Store a prime here
-    cdef int prime_two = 0                                     # Store another prime here
+    prime_one = 0                                     # Store a prime here
+    prime_two = 0                                     # Store another prime here
 
 
     # If prime_bits is odd, then, alternate between generating primes of half_length and half_length+1
@@ -62,9 +62,9 @@ cpdef tuple generate_prime_pair(int prime_bits):#region...
                 # If the primes work out to make a key of correct size
                 if (prime_one * prime_two).bit_length() == prime_bits:
                     # Print updates, reset static_vars, and return
-                    print("{} numbers tested for primality. Primes found: {}"
-                          .format("{:,}".format(generate_prime_pair_NumbersTested),
-                                  "{:,}".format(generate_prime_pair_PrimesFound)   ))
+                    print ("\r{} numbers tested for primality. Primes found: {}"
+                           .format("{:,}".format(generate_prime_pair_NumbersTested),
+                                   "{:,}".format(generate_prime_pair_PrimesFound)   )),
                     generate_prime_pair_PrimesFound = 0
                     generate_prime_pair_NumbersTested = 0
                     return prime_one, prime_two
@@ -72,7 +72,7 @@ cpdef tuple generate_prime_pair(int prime_bits):#region...
             # add this current prime into the list for testing
             primes_list.append(prime_one)
 
-
+            print([prime.bit_length() for prime in primes_list])
 
 
     # Else, prime_bits is even, so this is straightforward. Just generate primes that are half the bit_length
@@ -92,9 +92,9 @@ cpdef tuple generate_prime_pair(int prime_bits):#region...
                 if (prime_one * prime_two).bit_length() == prime_bits:
 
                     # Print updates, reset static_vars, and return
-                    print("{} numbers tested for primality. Primes found: {}"
-                          .format("{:,}".format(generate_prime_pair_NumbersTested),
-                                  "{:,}".format(generate_prime_pair_PrimesFound)   ))
+                    print ("\r{} numbers tested for primality. Primes found: {}"
+                           .format("{:,}".format(generate_prime_pair_NumbersTested),
+                                   "{:,}".format(generate_prime_pair_PrimesFound)   )),
                     generate_prime_pair_PrimesFound = 0
                     generate_prime_pair_NumbersTested = 0
                     return prime_one, prime_two
@@ -108,10 +108,6 @@ cpdef tuple generate_prime_pair(int prime_bits):#region...
 
 
 #endregion
-
-
-
-
 
 
 
@@ -200,7 +196,7 @@ cdef list generate_prime_SmallPrimes = [
                 4973, 4987, 4993, 4999
                 #endregion
             ]
-cdef int generate_prime(int bit_length):#region...
+cdef generate_prime(bit_length):#region...
     """
     This function returns a large prime number of bit_length size. This works by producing a random number
     that is of size bit_length(in base 10). Then, the number is tested for primality. This is done by testing
@@ -220,7 +216,7 @@ cdef int generate_prime(int bit_length):#region...
 
     # Useful variables
     cdef int failed_prime = 0
-    cdef int candidate = 0
+    candidate = 0
 
 
     # Loop until a prime number has been generated
@@ -230,8 +226,8 @@ cdef int generate_prime(int bit_length):#region...
         candidate = secrets.randbits(bit_length - 1) ^ (1 << (bit_length - 1))
 
         # Print updates and update
-        print(str(generate_prime_pair_NumbersTested) + " numbers tested for primality. Primes found: "
-                  + str(generate_prime_pair_PrimesFound))
+        print ("\r" + str(generate_prime_pair_NumbersTested) + " numbers tested for primality. Primes found: "
+                    + str(generate_prime_pair_PrimesFound)),
         generate_prime_pair_NumbersTested += 1
 
         # Set the lowest bit to 1 to make the number odd
@@ -241,8 +237,8 @@ cdef int generate_prime(int bit_length):#region...
         failed_prime = small_primes_primality_test(candidate)
         while failed_prime != 0:
             # Print updates
-            print(str(generate_prime_pair_NumbersTested) + " numbers tested for primality. Primes found: "
-                      + str(generate_prime_pair_PrimesFound))
+            print ("\r" + str(generate_prime_pair_NumbersTested) + " numbers tested for primality. Primes found: "
+                        + str(generate_prime_pair_PrimesFound)),
             generate_prime_pair_NumbersTested += 1
 
             # Update the number, and run small primes test again
@@ -271,8 +267,10 @@ cdef int generate_prime(int bit_length):#region...
 
 
 
+
+
 # Small primes primality test
-cdef int small_primes_primality_test(int candidate):#region...
+cdef int small_primes_primality_test(candidate):#region...
     """
     Tests if small primes divide into this candidate. 
         
@@ -294,7 +292,7 @@ cdef int small_primes_primality_test(int candidate):#region...
 #endregion
 
 # Fermat primality test
-cdef bint fermat_primality_test(int candidate):#region...
+cdef bint fermat_primality_test(candidate):#region...
     """
     Uses fermat's little theorem to rule out many composite numbers. Fermat's primality test is probabalistic.
         
@@ -307,7 +305,7 @@ cdef bint fermat_primality_test(int candidate):#region...
     """
 
     # FERMAT'S LITTLE THEOREM: First, find "a" where "1 > a > candidate" and "candidate not divisible by a"
-    cdef int a = secrets.randbelow(candidate)  # Get a number to test with
+    a = secrets.randbelow(candidate - 1)  # Get a number to test with
 
 
     # Return test results
@@ -315,7 +313,7 @@ cdef bint fermat_primality_test(int candidate):#region...
 #endregion
 
 # Rabin miller primality test
-cdef bint rabin_miller_primality_test(int candidate):#region...
+cdef bint rabin_miller_primality_test(candidate):#region...
     """
     Runs rabin_miller test on candidate. Although rabin_miller is probabilistic, the test is run so many times, the 
     test is almost 100% accurate. 
@@ -328,11 +326,11 @@ cdef bint rabin_miller_primality_test(int candidate):#region...
 
     # Useful variables
     cdef int i      = 0      # Looping variable
-    cdef int result = 0      # Rabin-miller variable
+    result = 0               # Rabin-miller variable
 
 
     # Setup for rabin miller
-    cdef int s = candidate - 1
+    s = candidate - 1
     cdef int power = 0
     while s % 2 == 0:
         s = s // 2
