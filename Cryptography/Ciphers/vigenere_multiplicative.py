@@ -2,7 +2,7 @@ from Cryptography.Ciphers._cipher             import Cipher     # For abstract s
 from Cryptography                 import misc                   # For miscellaneous functions
 import pyximport; pyximport.install()
 
-
+ 
 
 class VigenereMultiplicative(Cipher):
 
