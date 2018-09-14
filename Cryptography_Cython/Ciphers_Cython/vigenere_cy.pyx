@@ -1,5 +1,5 @@
 # noinspection PyUnresolvedReferences
-from Cryptography_Cython.misc_c cimport *
+from Cryptography_Cython.misc_cy cimport *
 
 
 
@@ -9,7 +9,7 @@ from Cryptography_Cython.misc_c cimport *
 
 
 # Called from vigenere's encrypt_plaintext()
-cpdef str encrypt_plaintext_loop(str plaintext, str key, int alphabet_size):#region...
+cpdef str encrypt_plaintext(str plaintext, str key, int alphabet_size):#region...
     """
     Encrypt the plaintext
     
@@ -41,8 +41,6 @@ cpdef str encrypt_plaintext_loop(str plaintext, str key, int alphabet_size):#reg
         key_index = (key_index + 1) % key_len            # Update the key index
 
 
-        # Print updates
-        #misc_c.print_updates("DECRYPTION", i + 1, len(plaintext))
 
 
     # Join the ciphertext and return
@@ -56,7 +54,7 @@ cpdef str encrypt_plaintext_loop(str plaintext, str key, int alphabet_size):#reg
 
 
 # Called from vigenere's decrypt_ciphertext()
-cpdef str decrypt_ciphertext_loop(str ciphertext, str key, int alphabet_size):#region...
+cpdef str decrypt_ciphertext(str ciphertext, str key, int alphabet_size):#region...
     """
     Loop algorithm to decrypt the ciphertext
     
@@ -68,10 +66,10 @@ cpdef str decrypt_ciphertext_loop(str ciphertext, str key, int alphabet_size):#r
 
 
     # Important variables
-    cdef list plaintext                                 # Build up the plaintext here
-    cdef int key_index = 0                              # This is the index used for extracting the key_char
-    cdef int key_len = len(key)                         # Length of key
-    cdef int i = 0                                      # To iterate through a list
+    cdef list plaintext                          # Build up the plaintext here
+    cdef int key_index = 0                       # This is the index used for extracting the key_char
+    cdef int key_len = len(key)                  # Length of key
+    cdef int i = 0                               # To iterate through a list
     cdef list int_key = [ord_adjusted(character) # List of unicode values of the key characters
                          for character in key]
 
@@ -95,8 +93,6 @@ cpdef str decrypt_ciphertext_loop(str ciphertext, str key, int alphabet_size):#r
 
 
 
-            # Print updates
-            #misc_c.print_updates("DECRYPTION", i + 1, len(ciphertext))
 
         # Join the plaintext together into a string, and return
         return "".join(plaintext)
@@ -121,9 +117,6 @@ cpdef str decrypt_ciphertext_loop(str ciphertext, str key, int alphabet_size):#r
             # Update the key index for the next character
             key_index = (key_index + 1) % key_len            # Update the key index
 
-
-            # Print updates
-            #misc_c.print_updates("DECRYPTION", i + 1, len(ciphertext))
 
 
 
