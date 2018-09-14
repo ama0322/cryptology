@@ -1,5 +1,6 @@
 from Cryptography.Ciphers._cipher             import Cipher     # For abstract superclass
 from Cryptography                 import misc                   # For miscellaneous functions
+import pyximport; pyximport.install()
 
 
 
@@ -96,9 +97,6 @@ class VigenereExponential(Cipher):
                 # If it is an overlap character
                 if pow(i, key_val, alphabet_size) == encrypted_val and i != plain_val:
                     overlap_counter += 1
-
-
-
 
 
             # Add the block of information to the ciphertext

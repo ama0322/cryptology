@@ -19,7 +19,7 @@ testing_key_size                         = 0
 testing_block_size                       = 0
 
 testing_encoding_scheme                  = "base85"
-testing_alphabet                         = "unicode_plane0"
+testing_alphabet                         = "extended_ascii"
 
 testing_mode_of_operation                = "ecb"
 
@@ -335,6 +335,13 @@ def automated_testing() -> None:
 
 
 
+
+
+
+
+
+
+
 ######################################################################################### ANCILLARY FUNCTIONS ##########
 
 
@@ -428,7 +435,7 @@ def _conduct_test_and_write_stats(cipher_obj:Cipher) -> bool:
 
 
 
-    # Setup for encrypting/decryptin with profiling
+    # Setup for encrypting/decrypting with profiling
     lp = LineProfiler()                                      # Set up the line-profiler object
     module_name = str(type(cipher_obj)).split(".")[-2]       # Get the name of the module that cipher_obj uses
     class_name =  str(type(cipher_obj)).split(".")[-1][0:-2] # Get the class that cipher_obj is
@@ -436,15 +443,21 @@ def _conduct_test_and_write_stats(cipher_obj:Cipher) -> bool:
                      "predicate=inspect.isfunction)"
                      .format(module_name, class_name))
     functions = [item[0] for item in functions][1:]          # Only want names. Also, ignore first element (init)
+    functions.remove("encrypt_plaintext")
+    functions.remove("decrypt_ciphertext")
+    functions.remove("write_statistics")
 
-    # TODO
+
 
     # Add all function/method to profile
     lp.add_function(undecorated.undecorated(cipher_obj.encrypt_plaintext))
     lp.add_function(undecorated.undecorated(cipher_obj.decrypt_ciphertext))
-    lp.add_function(misc.print_updates)
+    for function in functions:
+        exec("lp.add_functions(undecorated.undecorated({}.{}.{}))"
+             .format(module_name, class_name, function))
 
-    # Encrypt and decrypt. Also, profile
+
+    # Encrypt and decrypt. Also, profile TODO
     lp_wrapped = lp(cipher_obj.encrypt_plaintext)      # Wrap encrypt_plaintext()
     lp_wrapped()
     lp_wrapped = lp(cipher_obj.decrypt_ciphertext)     # Wrap decrypt_ciphertext()

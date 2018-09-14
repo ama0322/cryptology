@@ -32,15 +32,15 @@ class Cipher(ABC):
     IS_BLOCK_CIPHER       = False
 
     VARIABLE_BLOCK_SIZE   = False
-    PROMPT_BLOCK_SIZE     = "Decription in English of what the block_size needs to be"
+    PROMPT_BLOCK_SIZE     = "Description in English of what the block_size needs to be"
     EXPRESSION_BLOCK_SIZE = "expression(block_size) is True"
-    DEFAULT_BLOCK_SIZE    = 0     # The blok size should none be provided by the user
+    DEFAULT_BLOCK_SIZE    = 0     # The block size should none be provided by the user
     MIN_BLOCKS_SIZE       = 0
     MAX_BLOCK_SIZE        = 0
     AUTO_TEST_BLOCK_SIZE  = 0     # This is the block size used in "test -a". Sometimes a small number for convenience
 
     VARIABLE_KEY_SIZE     = False
-    PROMPT_KEY_SIZE       = "Decription of what the key_size needs to be"
+    PROMPT_KEY_SIZE       = "Description of what the key_size needs to be"
     EXPRESSION_KEY_SIZE   = "expression(key_size) is True"
     DEFAULT_KEY_SIZE      = 0     # The key size should none be provided by the user
     MIN_KEY_SIZE          = 0
@@ -149,7 +149,6 @@ class Cipher(ABC):
             return lines
 
         # Figure out the character set of the given data automatically.
-        # noinspection SpellCheckingInspection
         def get_char_set(data: str, cipher_char_set: str) -> str:
             """
             This calculates the character set of the given data automatically.
@@ -228,12 +227,14 @@ class Cipher(ABC):
             num_diff_chars = sum(1 for a, b in zip(self.original_plaintext, self.plaintext) if a != b)
             lines.append("CORRECT\t\t\t\t\tPercent similarity: {}%\t\t\t\t\tCharacters different: {} of {}"
                          .format(format(100 - ((num_diff_chars / len(self.original_plaintext)) * 100), ".2f"),
-                                 num_diff_chars, "{:,}".format(len(self.original_plaintext))))
+                                 "{:,}".format(num_diff_chars),
+                                 "{:,}".format(len(self.original_plaintext))))
         else:
             num_diff_chars = sum(1 for a, b in zip(self.original_plaintext, self.plaintext) if a != b)
             lines.append("INCORRECT\t\t\t\t\tPercent similarity: {}%\t\t\t\t\tCharacters different: {} of {}"
                          .format(format(100 - ((num_diff_chars / len(self.original_plaintext)) * 100), ".2f"),
-                                 num_diff_chars, "{:,}".format(len(self.original_plaintext))))
+                                 "{:,}".format(num_diff_chars),
+                                 "{:,}".format(len(self.original_plaintext))))
 
         # Print out an area for notes, along with extra lines underneath that
         lines.append("Notes: ")
@@ -408,6 +409,54 @@ class Cipher(ABC):
         all_lines = "\n".join(lines)
         stats_file.write(all_lines)
         stats_file.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

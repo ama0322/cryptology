@@ -1,0 +1,29 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+September 13, 2018
+    NOTE: VIGENERE_EXPONENTIAL AND VIGENERE_MULTIPLICATIVE NOT WORKING
+        They have no access to misc_c functions. Will be fixed when _cy versions of both are created
+    Printing out line-profiling to cipher logs
+        Can print python functions out to terminal
+    Optimize vigenere_c
+        At ~10MB/second
+    Finish AES
+        Finished _aes_on_block
+    Replace timing method
+        Have a timing method in Cython that is repeatedly called every loop (too inefficient)

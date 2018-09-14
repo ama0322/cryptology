@@ -26,8 +26,6 @@ import inspect # To determine if things are function, methods, etc.
 ########## MISCELLANEOUS ##########
 # region Miscellaneous
 
-
-
 # This decorator gives static vars to the decorated function. Parameters: (static_one=1, static_two=2, ...)
 def static_vars(**kwargs:dict) -> Callable:
     def decorate(function_to_decorate):
@@ -106,6 +104,40 @@ def add_time_in(*args:str) -> Callable:
 
 
     return decorate_function_or_method
+
+# Same as ord(), but adjusted to avoid surrogates
+def ord_adjusted(character:str):
+    """
+    Because the regular ord doesn't adjust for surrogates, this one does.
+
+    :param character: (str) The character to get the ord() of, adjusted for surrogates. MUST be a character
+    :return:          (int) The adjusted ord() result
+    """
+
+    ord_result = ord(character)
+
+
+    # Adjust the ord result
+    if ord_result >= 57343:   # 55296 is the UPPER INCLUSIVE bound of the surrogates
+        ord_result -= 2048    # 2048 is the number of surrogate characters
+
+    return ord_result
+
+
+# Same as chr(), but adjusted to avoid surrogates
+def chr_adjusted(unicode_val:int):
+    """
+    Same as chr() but adjusts to skip surrogates
+
+    :param unicode_val: (int) the unicode value to get the char of
+    :return:            (str) the character to return
+    """
+
+    # Adjust the unicode value if necessary
+    if unicode_val >= 55296:   # 55296 is the LOWER INCLUSIVE bound of the surrogates
+        unicode_val += 2048    # 2048 is the number of surrogate characters
+
+    return chr(unicode_val)
 
 
 
@@ -202,38 +234,6 @@ def enable_print() -> None:
     """
     sys.stdout = sys.__stdout__
 
-# Function of ord() that automatically adjusts for surrogates
-def ord_adjusted(character:str) -> int:
-    """
-    Because the regular ord doesn't adjust for surrogates, this one does.
-
-    :param character: (str) The character to get the ord() of, adjusted for surrogates
-    :return:          (int) The adjusted ord() result
-    """
-
-    ord_result = ord(character[0])
-
-
-    # Adjust the ord result
-    if ord_result >= 57343:               # 55296 is the UPPER INCLUSIVE bound of the surrogates
-        ord_result -= 2048    # 2048 is the number of surrogate characters
-
-    return ord_result
-
-# Function of chr() that automatically adjusts for surrogates
-def chr_adjusted(unicode_val:int) -> str:
-    """
-    Same as chr() but adjusts to skip surrogates
-
-    :param unicode_val: (int) the unicode value to get the char of
-    :return:            (str) the character to return
-    """
-
-    # Adjust the unicode value if necessary
-    if unicode_val >= 55296:                # 55296 is the LOWER INCLUSIVE bound of the surrogates
-        unicode_val += 2048    # 2048 is the number of surrogate characters
-
-    return chr(unicode_val)
 
 # This function formats a list of strings to line up with the colon. The entire thing can be right-shifted
 def format_to_colon(lines: list, column=35) -> list:
@@ -1231,6 +1231,7 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
             :return: (int) indicating the number that caused the failed test (0 if test passed)
             """
             small_primes = [
+                #region...
                 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101,
                 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199,
                 211,
@@ -1305,6 +1306,7 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
                 4817, 4831, 4861, 4871, 4877, 4889, 4903, 4909, 4919, 4931, 4933, 4937, 4943, 4951, 4957, 4967,
                 4969,
                 4973, 4987, 4993, 4999
+                #endregion
             ]
 
 
@@ -1315,18 +1317,16 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
 
             # All the small primes have been checked, so the number passes the small primes test
             return True, 0
-
         # Test for primality using fermat's little theorem.
         def fermat_primality_test(candidate):
 
             # FERMAT"S LITTLE THEOREM: First, find 1 > i > number where number not divisible by i
-            fermat_test_num = secrets.randbelow(candidate)
+            fermat_test_num = secrets.randbelow(candidate - 1)
             while num_to_test % fermat_test_num == 0:
-                fermat_test_num = secrets.randbelow(candidate)
+                fermat_test_num = secrets.randbelow(candidate - 1)
 
             # Return test results
             return pow(fermat_test_num, candidate - 1, candidate) == 1
-
         # rabin-miller test
         def rabin_miller_primality_test(num, times_to_test):
             """
@@ -1375,22 +1375,22 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
         while True:
 
             # Generate a number that needs to be tested for primality
-            num_to_test = secrets.randbits(bit_length - 1) ^ (1 << (bit_length - 1))
-
+            num_to_test = (secrets.randbits(bit_length - 1) ^ (1 << (bit_length - 1)))
+            bit_length = num_to_test.bit_length()
             # Print updates and update
-            print(str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
-                  + str(generate_prime_pair.primes_found))
+            print("\r" + str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
+                  + str(generate_prime_pair.primes_found), end="")
             generate_prime.numbers_tested += 1
 
             # Set the lowest bit to 1 to make the number odd.
             num_to_test = num_to_test | 1
 
-            # While small primes test fails, update number with += 2. Do until number no longer fits.
+            # While small primes test fails, update number with += 2. Do until number no longer fits (too many bits)
             test_result, failed_prime = small_primes_primality_test(num_to_test)
             while test_result == False and num_to_test.bit_length() == bit_length:
                 # Print updates
-                print(str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
-                      + str(generate_prime_pair.primes_found))
+                print("\r" + str(generate_prime.numbers_tested) + " numbers tested for primality. Primes found: "
+                      + str(generate_prime_pair.primes_found), end="")
                 generate_prime.numbers_tested += 1
 
                 # Update the number, and run small primes test again
@@ -1429,7 +1429,7 @@ def generate_prime_pair(prime_bits: int) -> (int, int):
                 # If the primes work out to make a key of correct size
                 if (prime_one * prime_two).bit_length() == prime_bits:
                     # Print updates
-                    print("{} numbers tested for primality. Primes found: {}"
+                    print("\r{} numbers tested for primality. Primes found: {}"
                           .format(generate_prime.numbers_tested, generate_prime_pair.primes_found))
 
                     return prime_one, prime_two

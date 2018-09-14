@@ -1,7 +1,8 @@
 from Cryptography.Ciphers._cipher                import Cipher     # For abstract superclass
 from typing                                      import Tuple      # For tuple type-hints
 from Cryptography                 import misc    # For miscellaneous functions
-
+import pyximport; pyximport.install()
+from Cryptography_Cython.Ciphers_Cython import rsa_cy
 
 
 
@@ -19,7 +20,7 @@ class Rsa(Cipher):
     VARIABLE_KEY_SIZE    = True
     PROMPT_KEY_SIZE      = "The key's size must be 32—∞ bits"
     EXPRESSION_KEY_SIZE  = "32 <= key_size"
-    DEFAULT_KEY_SIZE     = 1999
+    DEFAULT_KEY_SIZE     = 10000
     AUTO_TEST_KEY_SIZE   = 32
 
     VARIABLE_BLOCK_SIZE      = False          # Don't ask for block_size, it is based on key_size
@@ -344,8 +345,8 @@ class Rsa(Cipher):
         """
 
 
-        prime_one, prime_two = misc.generate_prime_pair(key_size)
-
+        #prime_one, prime_two = misc.generate_prime_pair(key_size)
+        prime_one, prime_two = rsa_cy.generate_prime_pair(key_size)
 
 
         modulus = prime_one * prime_two                      # Calculate modulus by multiplying the two primes

@@ -1,5 +1,7 @@
 from Cryptography.Ciphers._cipher             import Cipher     # For abstract superclass
 from Cryptography                 import misc                   # For miscellaneous functions
+import pyximport; pyximport.install()
+from Cryptography_Cython.Ciphers_Cython import vigenere_cy
 
 
 
@@ -57,35 +59,16 @@ class Vigenere(Cipher):
         # Other important variables
         ciphertext    = []                              # The list to build up the ciphertext, one character at a time
         alphabet_size = Cipher.ALPHABETS.get(alphabet)  # The size of the alphabet (used as modulus)
-        key_index     = 0                               # Index for the vigenere key. Starts from 0
-
-
-        # Encrypt every single character in the plaintext
-        for i in range(0, len(plaintext)):
-
-            plain_val = misc.ord_adjusted(plaintext[i])            # The unicode value for the current plaintext char
-            key_val   = misc.ord_adjusted(key[key_index])          # Figure out the unicode value of the key character
-            key_index = (key_index + 1) % len(key)                 # Update the key index
-
-            # Figure out the encrypted character val
-            encrypted_char = misc.chr_adjusted((plain_val + key_val) % alphabet_size)
-            ciphertext.append(encrypted_char)
-
-
-            # Print updates
-            misc.print_updates("ENCRYPTION", i + 1, len(plaintext))
 
 
 
-        # Concatenate all the characters in the list into one string
-        ciphertext = "".join(ciphertext)
+        # Encrypt the plaintext
+        ciphertext = vigenere_cy.encrypt_plaintext(plaintext, key, alphabet_size)
 
-        # Set the self object's ciphertext
+
+
+        # Set variables, and return
         self.ciphertext = ciphertext
-
-
-
-        # Return ciphertext
         return ciphertext
 
 
@@ -114,40 +97,24 @@ class Vigenere(Cipher):
             key        = self.key
             alphabet   = self.char_set
 
+
         # Other important variables
         plaintext     = []                              # The list to build up the ciphertext, one character at a time
         alphabet_size = Cipher.ALPHABETS.get(alphabet)  # Size of alphabet (used as modulus)
-        key_index     = 0                               # Index for the vigenere key. Starts from 0
 
 
 
-        # Decrypt every single character in the ciphertext
-        for i in range(0, len(ciphertext)):
-            cipher_val = misc.ord_adjusted(ciphertext[i])         # The unicode value for the current ciphertext char
-            key_val    = misc.ord_adjusted(key[key_index])        # Figure out the unicode value of the key character
-            key_index  = (key_index + 1) % len(key)               # Update the key_index
 
 
 
-            # Figure out the decrypted character val
-            decrypted_char = misc.chr_adjusted((cipher_val - key_val) % alphabet_size)
-            plaintext.append(decrypted_char)
-
-
-            # Print updates
-            misc.print_updates("DECRYPTION", i + 1, len(ciphertext))
+        # Decrypt the ciphertext
+        plaintext = vigenere_cy.decrypt_ciphertext(ciphertext, key, alphabet_size)
 
 
 
-        # Concatenate all the characters in the list into one string
-        plaintext = "".join(plaintext)
 
-
-        # Fill in self's plaintext
+        # Set variables and return
         self.plaintext = plaintext
-
-
-        # Return plaintext
         return plaintext
 
 

@@ -1,13 +1,14 @@
 from Cryptography.Ciphers._cipher             import Cipher     # For abstract superclass
 from Cryptography                 import misc                   # For miscellaneous functions
-
+import pyximport; pyximport.install()
+from Cryptography_Cython.Ciphers_Cython import rotation_cy
 
 
 class Rotation(Cipher):
     """
         The rotation cipher is a substitution cipher wherein every plaintext character is replaced by some other
     character that is a fixed number of positions down the alphabet. That "fixed number of positions" is determined
-    by the unicode value of the key, which is only a single-character. Should attemting to move the plaintext
+    by the unicode value of the key, which is only a single-character. Should attempting to move the plaintext
     character by the fixed number of positions result in going out of bounds of the alphabet, a modulo operation is
     applied, so that whatever positions are out of bounds are counted from the very beginning of the alphabet.
     """
@@ -62,33 +63,17 @@ class Rotation(Cipher):
             alphabet   = self.char_set
 
         # Other important variables
-        ciphertext    = []                                # The list to build up the ciphertext, one character at a time
-        alphabet_size = Cipher.ALPHABETS.get(alphabet)      # The size of the alphabet (used as modulus)
+        ciphertext    = []                              # The list to build up the ciphertext, one character at a time
+        alphabet_size = Cipher.ALPHABETS.get(alphabet)  # The size of the alphabet (used as modulus)
 
 
-        # Encrypt every single character in the plaintext
-        for i in range(0, len(plaintext)):
-
-            plain_val = misc.ord_adjusted(plaintext[i])   # The unicode value for the current plaintext char
-            key_val   = misc.ord_adjusted(key[0])         # Figure out the unicode value of the key character
+        # Encrypt the plaintext
+        ciphertext = rotation_cy.encrypt_plaintext(plaintext, key, alphabet_size)
 
 
-            # Figure out the encrypted character val
-            encrypted_char = misc.chr_adjusted((plain_val + key_val) % alphabet_size)
-            ciphertext.append(encrypted_char)
 
-            # Print updates
-            misc.print_updates("ENCRYPTION", i + 1, len(plaintext))
-
-
-        # Concatenate all the characters in the list into one string
-        ciphertext = "".join(ciphertext)
-
-        # Set the self object's ciphertext
+        # Set the self object's ciphertext and return
         self.ciphertext = ciphertext
-
-
-
         return ciphertext
 
 
@@ -120,18 +105,11 @@ class Rotation(Cipher):
         alphabet_size = Cipher.ALPHABETS.get(alphabet)    # Size of alphabet (used as modulus)
 
 
-        # Decrypt every single character in the ciphertext
-        for i in range(0, len(ciphertext)):
-            cipher_val = misc.ord_adjusted(ciphertext[i])  # The unicode value for the current ciphertext char
-            key_val    = misc.ord_adjusted(key[0])         # Figure out the unicode value of the key character
-
-            # Figure out the decrypted character val
-            decrypted_char = misc.chr_adjusted((cipher_val - key_val) % alphabet_size)
-            plaintext.append(decrypted_char)
 
 
-            # Print updates
-            misc.print_updates("DECRYPTION", i + 1, len(ciphertext))
+        # Decrypt the plaintext
+        plaintext = rotation_cy.decrypt_ciphertext(ciphertext, key, alphabet_size)
+
 
 
 
@@ -139,10 +117,8 @@ class Rotation(Cipher):
         plaintext = "".join(plaintext)
 
 
-        # Fill in self's plaintext
+        # Fill in self's plaintext and return
         self.plaintext = plaintext
-
-
         return plaintext
 
 

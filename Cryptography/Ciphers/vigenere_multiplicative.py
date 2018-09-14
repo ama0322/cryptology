@@ -1,5 +1,6 @@
 from Cryptography.Ciphers._cipher             import Cipher     # For abstract superclass
 from Cryptography                 import misc                   # For miscellaneous functions
+import pyximport; pyximport.install()
 
 
 
