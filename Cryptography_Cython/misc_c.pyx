@@ -23,7 +23,7 @@ import time # To get access to current time
 
 
 # Same as ord(), but adjusted to avoid surrogates
-cpdef int ord_adjusted(str character):#region...
+cdef int ord_adjusted(str character):#region...
     """
     Because the regular ord doesn't adjust for surrogates, this one does.
 
@@ -35,14 +35,14 @@ cpdef int ord_adjusted(str character):#region...
 
 
     # Adjust the ord result
-    if ord_result >= 57343:               # 55296 is the UPPER INCLUSIVE bound of the surrogates
+    if ord_result >= 57343:   # 55296 is the UPPER INCLUSIVE bound of the surrogates
         ord_result -= 2048    # 2048 is the number of surrogate characters
 
     return ord_result
 # endregion
 
 # Same as chr(), but adjusted to avoid surrogates
-cpdef str chr_adjusted(int unicode_val):#region...
+cdef str chr_adjusted(int unicode_val):#region...
     """
     Same as chr() but adjusts to skip surrogates
 
