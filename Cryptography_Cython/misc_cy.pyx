@@ -1,4 +1,5 @@
-import time # To get access to current time
+import time                 # To get access to current time
+import threading            # To create threading for the ProgressBar
 
 
 
@@ -11,9 +12,135 @@ import time # To get access to current time
 
 
 
+# Wraps around range-type objects to allow for access to the current iteration
+class RangePlus:#region...
+    """
+    This class is a replacement for the range-type object returned by range(). This is done because I cannot access the
+    current index that is iterating in the range-type object. As a result, this class is essentially the same as the
+    range-type, except that it adds three main things.
+
+    1. An int instance variable that keeps track of the iterating index
+    2. A string instance variable named "prompt". As this will be used in the progress-bar, this variable "prompt"
+       describes what this loop is doing.
+    3. Multiple string class variables that serve as possible "prompts". Use these when creating RangePlus objects as
+       the first parameter (see the docstring for __init__())
+    """
+
+    # Possible prompts used to describe the for-loop (All same length so progress-bars look nice)
+    ENCRYPTING_CHARS = "Encrypting characters:    "
+    DECRYPTING_CHARS = "Decrypting characters:    "
+    ENCRYPTING_BLOCS = "Encrypting blocks:        "
+    DECRYPTING_BLOCS = "Decrypting blocks:        "
 
 
 
+    # Construct the object by wrapping an iterator around range(). ALSO, BEGINS THE PROGRESSBAR THREAD
+    def __init__(self, *params):#region...
+        """
+        This takes in *params which are the same parameters for range()*. This initializer wraps an iter() around the
+        object returned by range(), and allows for better access into the for-loop variables.
+
+        *Actually, the first parameter is the string description of the process that is going on. The other parameters
+        following this first parameter are exactly the same though.
+
+        :param params[0]:   (string) The prompt that tells what the progress-bar is for
+        :param params[>=1]: (int)    Same as range()'s parameters
+        """
+        self.range_iterator = iter(range(*params))
+        self.current = None
+        self.prompt = params[0]
+        self.start = 0
+        self.end = 0
+        self.step = 1
+
+        # If all three parameters given, fill them in
+        if len(params) == 4:
+            self.start = params[1]
+            self.end = params[2]
+            self.step = params[3]
+
+        # If both start and end given, fill those in
+        elif len(params) == 3:
+            self.start = params[1]
+            self.end = params[2]
+
+        # Else, only end is given, so fill that in
+        else:
+            self.start = 0
+            self.end = params[1]
+
+
+        # Create the ProgressBar thread, and run it
+        thread = ProgressBar(self)
+        thread.start()
+
+
+    #endregion
+
+
+    # Called by "in"-operator. Returns the iterator (itself)
+    def __iter__(self):#region...
+        return self
+    #endregion
+
+
+    # Called by "in"-operator. Used in for-loops to advance to the next element in this range
+    def __next__(self):#region...
+        self.current = next(self.range_iterator)
+        return self.current
+    #endregion
+#endregion
+
+
+
+
+# This class contains everything to handle creating a progress bar
+class ProgressBar(threading.Thread):#region...
+
+
+    # This is the constructor for the loading object
+    def __init__(self, range_plus):#region...
+        """
+        Creates the ProgressBar, and sets up important variables
+
+        :param range_plus: (BarRange) The iterator that the for-loop uses
+        """
+
+        # Setup for variables
+        self.range_plus = range_plus
+        self.start_time = time.time()
+
+        self.prompt     = range_plus.prompt
+
+        self.start      = range_plus.start
+        self.end        = range_plus.end
+        self.step       = range_plus.step
+        self.current    = range_plus.start
+
+        # Call super-method
+        super().__init__()
+    #endregion
+
+
+    # Called from RangePlus constructor. This runs the progress-bar
+    def run(self):
+        """
+        This function runs the progress-bar, printing in one line how far progress has gone.
+
+        :return: None
+        """
+
+        # Important variables
+        bar_length = 30
+        progress_bar = "{}{}%|{}| {}/{} [Time elapsed:{}, Time estimated:{}, {} {}/sec]"
+
+
+        # Print out for the first time (No iterations taken place yet)
+
+
+        pass
+
+#endregion
 
 
 
