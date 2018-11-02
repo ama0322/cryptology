@@ -142,7 +142,6 @@ class ProgressBar(threading.Thread):#region...
 
         pass
     #endregion
-
 #endregion
 
 

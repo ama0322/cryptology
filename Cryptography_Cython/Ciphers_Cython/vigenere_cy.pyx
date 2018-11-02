@@ -30,21 +30,36 @@ cpdef str encrypt_plaintext(str plaintext, str key, int alphabet_size):#region..
                          for character in key]
 
 
+    # If extended_ascii or less, use ord() and chr() because faster
+    if alphabet_size <= 256:
+        for i in range(0, len(plaintext)):
+
+            # Figure out the encrypted character val and set in ciphertext
+            ciphertext[i] = chr( (ord(plaintext[i]) + int_key[key_index]) % alphabet_size )
+
+            # Update the key index for the next character
+            key_index = (key_index + 1) % key_len            # Update the key index
+
+
+        # Join the ciphertext and return
+        return "".join(ciphertext)
+
+
+
+
     # Loop through each character, and encrypt them
-    for i in range(0, len(plaintext)):
+    else:
+        for i in range(0, len(plaintext)):
 
-        # Figure out the encrypted character val and set in ciphertext
-        ciphertext[i] = chr_adjusted( (ord_adjusted(plaintext[i]) + int_key[key_index])
-                                             % alphabet_size )
+            # Figure out the encrypted character val and set in ciphertext
+            ciphertext[i] = chr_adjusted( (ord_adjusted(plaintext[i]) + int_key[key_index]) % alphabet_size )
 
-        # Update the key index for the next character
-        key_index = (key_index + 1) % key_len            # Update the key index
-
-
+            # Update the key index for the next character
+            key_index = (key_index + 1) % key_len            # Update the key index
 
 
-    # Join the ciphertext and return
-    return "".join(ciphertext)
+        # Join the ciphertext and return
+        return "".join(ciphertext)
 #endregion
 
 
@@ -84,10 +99,8 @@ cpdef str decrypt_ciphertext(str ciphertext, str key, int alphabet_size):#region
         # Loop through every character, and decrypt them
         for i in range(0, len(ciphertext)):
 
-            # Figure out the decrypted character val, and place in plaintext
+            # Figure out the decrypted character val, and update index
             plaintext[i] = chr( (ord(ciphertext[i]) - int_key[key_index]) % alphabet_size )
-
-            # Update the key index for the next character
             key_index = (key_index + 1) % key_len            # Update the key index
 
 
@@ -110,11 +123,8 @@ cpdef str decrypt_ciphertext(str ciphertext, str key, int alphabet_size):#region
         for i in range(0, len(ciphertext)):
 
 
-            # Figure out the decrypted character val, and place in plaintext
-            plaintext[i] = chr_adjusted( (ord_adjusted(ciphertext[i]) - int_key[key_index])
-                                                % alphabet_size )
-
-            # Update the key index for the next character
+            # Figure out the decrypted character val, and update key
+            plaintext[i] = chr_adjusted( (ord_adjusted(ciphertext[i]) - int_key[key_index]) % alphabet_size )
             key_index = (key_index + 1) % key_len            # Update the key index
 
 

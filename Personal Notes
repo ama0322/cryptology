@@ -13,6 +13,8 @@ ALGORITHM GOALS/FIXES:
 
 GENERAL GOALS/FIXES:
 
+    For test command, show the currently loaded file for encryption
+
     Try to fix long loading times (lazy importing).
     Finish misc.print_updates()
 

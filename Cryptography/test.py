@@ -12,7 +12,7 @@ import                                   inspect               # To inspect clas
 ########################################################################################### PRIMARY FUNCTIONS ##########
 
 # MODIFY THESE VALUES
-testing_plaintext_source                 = "Resources/Library/Eleonora"
+testing_plaintext_source                 = "Resources/Library/unicode_10MB"
 
 testing_key                              = "This is a key for testing"
 testing_key_size                         = 0
