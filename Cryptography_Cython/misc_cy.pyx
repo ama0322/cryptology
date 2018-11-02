@@ -123,7 +123,7 @@ class ProgressBar(threading.Thread):#region...
 
 
     # Called from RangePlus constructor. This runs the progress-bar
-    def run(self):
+    def run(self):#region...
         """
         This function runs the progress-bar, printing in one line how far progress has gone.
 
@@ -131,14 +131,17 @@ class ProgressBar(threading.Thread):#region...
         """
 
         # Important variables
-        bar_length = 30
+        bar_length = 100
         progress_bar = "{}{}%|{}| {}/{} [Time elapsed:{}, Time estimated:{}, {} {}/sec]"
 
 
         # Print out for the first time (No iterations taken place yet)
+        print ("\r" + progress_bar
+               .format(self.prompt, 0, "▏" * bar_length)),
 
 
         pass
+    #endregion
 
 #endregion
 
