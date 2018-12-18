@@ -12,7 +12,7 @@ import                                   inspect               # To inspect clas
 ########################################################################################### PRIMARY FUNCTIONS ##########
 
 # MODIFY THESE VALUES
-testing_plaintext_source                 = "Resources/Library/unicode_10MB"
+testing_plaintext_source                 = "Resources/Library/Gorgias"
 
 testing_key                              = "This is a key for testing"
 testing_key_size                         = 0
@@ -453,8 +453,9 @@ def _conduct_test_and_write_stats(cipher_obj:Cipher) -> bool:
     lp.add_function(undecorated.undecorated(cipher_obj.encrypt_plaintext))
     lp.add_function(undecorated.undecorated(cipher_obj.decrypt_ciphertext))
     for function in functions:
-        exec("lp.add_functions(undecorated.undecorated({}.{}.{}))"
+        exec("lp.add_function(undecorated.undecorated({}.{}.{}))"
              .format(module_name, class_name, function))
+
 
 
     # Encrypt and decrypt. Also, profile TODO
