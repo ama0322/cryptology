@@ -10,10 +10,7 @@ from abc                      import ABC, abstractmethod # To create abstract cl
 
 class Cipher(ABC):
 
-    DECRYPTION_SET = {"blowfish", "rotation", "rotation_unknown", "rsa", "vigenere", "vigenere_exponential",
-                      "vigenere_multiplicative"}
-    ENCRYPTION_SET = {"blowfish", "rotation", "rsa", "vigenere", "vigenere_exponential", "vigenere_multiplicative"}
-
+    # Unicode alphabets are subtracted with 2048 because the 2048 surrogates are unprintable, so they're skipped over
     ALPHABETS = {"ascii": 128, "extended_ascii": 256, "unicode_plane0": 65536 - 2048, "unicode": 1114112 - 2048}
 
     ENCODING_SCHEMES = {"base16":16, "base32":32, "base64":64, "base85":85, "extended_ascii":256, "base4096":4096}
@@ -22,29 +19,38 @@ class Cipher(ABC):
 
     ASYMMETRIC_MODES_OF_OPERATION = ["ecb", "cbc", "pcbc"]
 
-    # Cipher info of the class of the particular instantiation (overridden when specific cipher object is created):
-    CIPHER_NAME = ""
-    CHAR_SET    = ""
-    CIPHER_TYPE = ""
-    KEY_TYPE    = ""
+    DECRYPTION_SET = {"blowfish", "rotation", "rotation_n", "rsa", "vigenere", "vigenere_exponential",
+                      "vigenere_multiplicative"}
+    ENCRYPTION_SET = {"blowfish", "rotation", "rsa", "vigenere", "vigenere_exponential", "vigenere_multiplicative"}
 
-    # BLOCK CIPHER INFO
+    # Cipher info of the class of the particular instantiation (overridden when specific cipher object is created):
+    CIPHER_NAME = ""    # The name of the cipher
+    CHAR_SET    = ""    # Either "encoding scheme" or "alphabet"
+    CIPHER_TYPE = ""    # Either "symmetric"       or "asymmetric"
+    KEY_TYPE    = ""    # Block ciphers     - "multiple generated characters"
+                        # Non-block ciphers - "zero characters" or "single characters" or "multiple characters"
+                        # Keyless ciphers   - "calculated characters"
+
+
+
+
+    # Block cipher info (ignore for non-block ciphers)
     IS_BLOCK_CIPHER       = False
 
     VARIABLE_BLOCK_SIZE   = False
-    PROMPT_BLOCK_SIZE     = "Description in English of what the block_size needs to be"
-    EXPRESSION_BLOCK_SIZE = "expression(block_size) is True"
-    DEFAULT_BLOCK_SIZE    = 0     # The block size should none be provided by the user
-    MIN_BLOCKS_SIZE       = 0
-    MAX_BLOCK_SIZE        = 0
+    PROMPT_BLOCK_SIZE     = ""    # Description in English of what the block_size needs to be
+    EXPRESSION_BLOCK_SIZE = ""    # In Python syntax: expression(block_size) is True
+    DEFAULT_BLOCK_SIZE    = 0     # The block size should no size be entered
+    MIN_BLOCKS_SIZE       = 0     # Inclusive, the minimum size possible for a block
+    MAX_BLOCK_SIZE        = 0     # Inclusive, the maximum size possible for a block
     AUTO_TEST_BLOCK_SIZE  = 0     # This is the block size used in "test -a". Sometimes a small number for convenience
 
     VARIABLE_KEY_SIZE     = False
-    PROMPT_KEY_SIZE       = "Description of what the key_size needs to be"
-    EXPRESSION_KEY_SIZE   = "expression(key_size) is True"
-    DEFAULT_KEY_SIZE      = 0     # The key size should none be provided by the user
-    MIN_KEY_SIZE          = 0
-    MAX_KEY_SIZE          = 0
+    PROMPT_KEY_SIZE       = ""    # Description in English of what the key_size needs to be
+    EXPRESSION_KEY_SIZE   = ""    # In Python syntax: expression(key_size) is True
+    DEFAULT_KEY_SIZE      = 0     # The key size should no size be entered
+    MIN_KEY_SIZE          = 0     # Inclusive, the minimum size possible for a block
+    MAX_KEY_SIZE          = 0     # Inclusive, the maximum size possible for a block
     AUTO_TEST_KEY_SIZE    = 0     # This is the key size used in "test -a". Usually a small number for convenience
 
     # MISCELLANEOUS INFO
@@ -56,7 +62,7 @@ class Cipher(ABC):
                  private_key:str, block_size:int, key_size:int, source_location:str, output_location:str) -> None:
         super().__init__()
 
-        # Variables that detail the manner in which the encryption/decryption is done. Not all must be set
+        # Variables that detail the manner in which the encryption/decryption is done. Not all must be set.
         self.plaintext         = plaintext         # (str) The plaintext
         self.ciphertext        = ciphertext        # (str) The ciphertext
         self.char_set          = char_set          # (str) The name of the character set to use
@@ -72,7 +78,7 @@ class Cipher(ABC):
         self.source_location   = source_location   # (str) The filepath of the source of the plaintext/ciphertext
         self.output_location   = output_location   # (str) The filepath of the output file
 
-        # Variables that hold information about the encryption/decryption. Set these during/after encryption/decryption
+        # Variables that hold information about the encryption/decryption. Set these during/after encryption/decryption.
         self.original_plaintext = self.plaintext   # (str)   The original plaintext, to compare with the decrypt result
         self.num_blocks         = 0                # (int)   The number of blocks used during encryption/decryption
         self.chars_per_block    = 0.0              # (float) Number of characters per block
