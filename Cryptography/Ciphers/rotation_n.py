@@ -2,7 +2,7 @@ from Cryptography.Ciphers._cipher             import Cipher     # For abstract s
 from typing                                   import Tuple      # For tuple type-hint
 from Cryptography.Ciphers.rotation            import Rotation   # For Rotation class
 from Cryptography                 import misc                   # For miscellaneous functions
-import pyximport; pyximport.install()
+
 
 
 
