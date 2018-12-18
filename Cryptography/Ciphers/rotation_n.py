@@ -6,7 +6,7 @@ import pyximport; pyximport.install()
 
 
 
-class RotationUnknown(Rotation):
+class RotationN(Rotation):
 
     # Cipher info:
     CIPHER_NAME         = "Rotation without Given Key"
@@ -136,8 +136,9 @@ class RotationUnknown(Rotation):
 
         extra_lines = {}
 
-        extra_lines[22] = "Microseconds per rotation: {}(µs)".format(format(self.decrypt_time_for_algorithm
-                                                                  / misc_c.ord_adjusted(self.key)* 1000000, ".12f")[0:14])
+        extra_lines[22] = "Microseconds per rotation: {}(µs)"\
+                              .format(format(self.decrypt_time_for_algorithm
+                                               / misc_c.ord_adjusted(self.key)* 1000000, ".12f")[0:14])
         extra_lines[23] = "Percent of text in English: {}".format("{:.2%}".format(self.percent_english))
 
 
