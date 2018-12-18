@@ -90,9 +90,9 @@ class RotationN(Rotation):
         for key_val in range(0, Cipher.ALPHABETS.get("unicode")):
 
             # Set the key and proceed to decrypt (temporarily disable printing)
-            key = misc_c.chr_adjusted(key_val)                      # Get key character for correctness
+            key = misc.chr_adjusted(key_val)                      # Get key character for correctness
             misc.disable_print()
-            plaintext = Rotation.decrypt_ciphertext(self)         # Decrypt
+            plaintext = Rotation.decrypt_ciphertext(self, ciphertext, key, alphabet)         # Decrypt
             misc.enable_print()
 
             # Assess the generated plaintext for correctness (English)
@@ -100,7 +100,7 @@ class RotationN(Rotation):
 
             # Print updates
             print("{:27}{}"
-                  .format("Done with: {}{}{}".format("\u001b[32m", repr(misc_c.chr_adjusted(key_val)), "\u001b[0m"),
+                  .format("Done with: {}{}{}".format("\u001b[32m", repr(misc.chr_adjusted(key_val)), "\u001b[0m"),
                           "Percent English: {}{}%{}".format("\u001b[32m",
                                                             format(percent_english * 100, ".2f"),
                                                             "\u001b[0m")))
@@ -137,8 +137,8 @@ class RotationN(Rotation):
         extra_lines = {}
 
         extra_lines[22] = "Microseconds per rotation: {}(µs)"\
-                              .format(format(self.decrypt_time_for_algorithm
-                                               / misc_c.ord_adjusted(self.key)* 1000000, ".12f")[0:14])
+                              .format(format(self.decrypt_time_for_algorithm / (misc.ord_adjusted(self.key) + 1)
+                                                 * 1000000, ".12f")[0:14])
         extra_lines[23] = "Percent of text in English: {}".format("{:.2%}".format(self.percent_english))
 
 
